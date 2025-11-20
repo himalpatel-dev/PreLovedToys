@@ -16,4 +16,16 @@ export class ProductService {
   getProductDetails(id: number) {
     return this.api.get(`products/${id}`);
   }
+
+  // New Function: Upload Image
+  uploadImage(file: File) {
+    const formData = new FormData();
+    formData.append('image', file); // 'image' must match backend key
+    return this.api.post('upload', formData); // Note: Your ApiService might need tweaking for FormData
+  }
+
+  // Create Product (Already exists, just verifying)
+  createProduct(data: any) {
+    return this.api.post('products', data);
+  }
 }

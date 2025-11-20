@@ -29,6 +29,13 @@ export class ApiService {
 
   // Generic POST request
   post(endpoint: string, data: any) {
+    // If data is FormData, don't set Content-Type (Browser does it automatically)
+    if (data instanceof FormData) {
+      // Clone headers but remove Content-Type so browser sets boundary
+      let headers = this.getHeaders();
+      return this.http.post(`${this.baseUrl}/${endpoint}`, data, { headers });
+    }
+
     return this.http.post(`${this.baseUrl}/${endpoint}`, data, { headers: this.getHeaders() });
   }
 

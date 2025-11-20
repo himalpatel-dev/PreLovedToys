@@ -4,7 +4,7 @@ import { IonicModule, NavController } from '@ionic/angular'; // Import NavContro
 import { CategoryService } from 'src/app/core/services/category.service';
 import { ProductService } from 'src/app/core/services/product.service';
 import { addIcons } from 'ionicons';
-import { cartOutline, receiptOutline } from 'ionicons/icons';
+import { cartOutline, receiptOutline, add } from 'ionicons/icons';
 import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-home',
@@ -23,11 +23,27 @@ export class HomePage implements OnInit {
     private productService: ProductService,
     private navCtrl: NavController
   ) {
-    addIcons({ cartOutline, receiptOutline });
+    addIcons({ cartOutline, receiptOutline, add });
   }
 
   ngOnInit() {
     this.loadData();
+  }
+
+  handleRefresh(event: any) {
+    // 1. Re-fetch Categories
+    // Add ': any' here vvv
+    this.categoryService.getAllCategories().subscribe((res: any) => {
+      this.categories = res;
+    });
+
+    // 2. Re-fetch Products
+    // Add ': any' here vvv
+    this.productService.getAllProducts().subscribe((res: any) => {
+      this.products = res;
+      // Stop the spinner
+      event.target.complete();
+    });
   }
 
   loadData() {

@@ -1,0 +1,59 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Sell Toy</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <div class="image-upload-box" (click)="fileInput.click()">
+    <img *ngIf="previewImage" [src]="previewImage" />
+    <div *ngIf="!previewImage" class="placeholder">
+      <ion-icon name="camera-outline"></ion-icon>
+      <p>Tap to add photo</p>
+    </div>
+  </div>
+
+  <input type="file" accept="image/*" #fileInput (change)="onFileSelected($event)" style="display: none;" />
+
+  <form (ngSubmit)="onSubmit()">
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-label position="floating">Title</ion-label>
+      <ion-input [(ngModel)]="product.title" name="title" required></ion-input>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-label position="floating">Price (₹)</ion-label>
+      <ion-input type="number" [(ngModel)]="product.price" name="price" required></ion-input>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-label position="floating">Description</ion-label>
+      <ion-textarea rows="3" [(ngModel)]="product.description" name="desc" required></ion-textarea>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-select label="Category" placeholder="Select" [(ngModel)]="product.categoryId" name="cat">
+        <ion-select-option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-select label="Condition" placeholder="Select" [(ngModel)]="product.condition" name="cond">
+        <ion-select-option value="New">New</ion-select-option>
+        <ion-select-option value="Like New">Like New</ion-select-option>
+        <ion-select-option value="Good">Good</ion-select-option>
+        <ion-select-option value="Fair">Fair</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-button expand="block" type="submit" [disabled]="isSubmitting || !previewImage">
+      {{ isSubmitting ? 'Publishing...' : 'List Item' }}
+    </ion-button>
+
+  </form>
+</ion-content>
