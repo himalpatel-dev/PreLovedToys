@@ -1,0 +1,46 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/cart"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Checkout</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <div class="checkout-form">
+    <h3>Shipping Details</h3>
+    <p class="ion-text-muted">Where should we send your toys?</p>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-label position="floating">Full Address</ion-label>
+      <ion-textarea rows="4" [(ngModel)]="address"></ion-textarea>
+    </ion-item>
+
+    <h3>Payment Method</h3>
+    <ion-list>
+      <ion-radio-group value="cod">
+        <ion-item lines="full">
+          <ion-label>Cash on Delivery</ion-label>
+          <ion-radio slot="start" value="cod"></ion-radio>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>UPI / Online (Coming Soon)</ion-label>
+          <ion-radio slot="start" value="online" disabled></ion-radio>
+        </ion-item>
+      </ion-radio-group>
+    </ion-list>
+
+  </div>
+
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-toolbar class="ion-padding">
+    <ion-button expand="block" size="large" (click)="placeOrder()" [disabled]="isSubmitting">
+      <span *ngIf="!isSubmitting">Confirm Order</span>
+      <span *ngIf="isSubmitting">Processing...</span>
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

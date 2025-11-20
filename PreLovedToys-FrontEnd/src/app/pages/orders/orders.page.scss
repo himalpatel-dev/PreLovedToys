@@ -1,0 +1,21 @@
+.order-card {
+    margin-bottom: 15px;
+    border-radius: 10px;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.date {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+
+ion-thumbnail {
+    --size: 40px;
+    border-radius: 4px;
+}

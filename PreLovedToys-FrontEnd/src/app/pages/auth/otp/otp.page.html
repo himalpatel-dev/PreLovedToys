@@ -1,0 +1,26 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Verify OTP</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div style="margin-top: 50px; text-align: center;">
+    <h3>Enter Verification Code</h3>
+    <p class="ion-text-muted">Sent to +91 {{ mobile }}</p>
+  </div>
+
+  <div style="margin-top: 30px;">
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-label position="floating">OTP Code</ion-label>
+      <ion-input type="tel" [(ngModel)]="otp" maxlength="4"></ion-input>
+    </ion-item>
+
+    <ion-button expand="block" (click)="onVerify()" [disabled]="!otp || otp.length < 4">
+      Verify & Login
+    </ion-button>
+  </div>
+</ion-content>

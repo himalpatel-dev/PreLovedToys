@@ -1,0 +1,88 @@
+.hero-image {
+    width: 100%;
+    height: 300px;
+    background: #f0f0f0;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+.thumbnails {
+    display: flex;
+    padding: 10px;
+    gap: 10px;
+    overflow-x: auto;
+    background: #fff;
+
+    .thumb-item {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        border: 2px solid transparent;
+        overflow: hidden;
+
+        &.active {
+            border-color: var(--ion-color-primary);
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+
+    .title {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+        width: 70%;
+    }
+
+    .price {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--ion-color-primary);
+        margin: 0;
+    }
+}
+
+.seller-box {
+    display: flex;
+    align-items: center;
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 15px 0;
+    gap: 10px;
+
+    ion-icon {
+        font-size: 24px;
+        color: #666;
+    }
+}
+
+.description {
+    margin-top: 20px;
+
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    p {
+        color: #555;
+        line-height: 1.5;
+        font-size: 14px;
+    }
+}

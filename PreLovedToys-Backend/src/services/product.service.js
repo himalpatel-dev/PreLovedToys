@@ -69,7 +69,40 @@ const getAllProducts = async () => {
     }
 };
 
+const getProductById = async (id) => {
+    try {
+        const product = await Product.findByPk(id, {
+            include: [
+                {
+                    model: ProductImage,
+                    as: 'images',
+                    attributes: ['imageUrl', 'isPrimary']
+                },
+                {
+                    model: Category,
+                    as: 'category',
+                    attributes: ['id', 'name']
+                },
+                {
+                    model: User,
+                    as: 'seller',
+                    attributes: ['id', 'name', 'mobile']
+                }
+            ]
+        });
+
+        if (!product) {
+            throw new Error('Product not found');
+        }
+
+        return product;
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = {
     createProduct,
-    getAllProducts
+    getAllProducts,
+    getProductById
 };

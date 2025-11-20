@@ -1,0 +1,17 @@
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div style="margin-top: 100px; text-align: center;">
+    <h1>Toy Market</h1>
+    <p>Buy & Sell Pre-loved Toys</p>
+  </div>
+
+  <div style="margin-top: 50px;">
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-label position="floating">Mobile Number</ion-label>
+      <ion-input type="tel" [(ngModel)]="mobile"></ion-input>
+    </ion-item>
+
+    <ion-button expand="block" (click)="onSendOtp()" [disabled]="!mobile">
+      Send OTP
+    </ion-button>
+  </div>
+</ion-content>

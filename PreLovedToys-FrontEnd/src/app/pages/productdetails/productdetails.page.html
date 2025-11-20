@@ -1,0 +1,50 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" *ngIf="product">
+
+  <div class="hero-image">
+    <img [src]="selectedImage || 'https://placehold.co/600x400'" />
+  </div>
+
+  <div class="thumbnails" *ngIf="product.images?.length > 0">
+    <div class="thumb-item" *ngFor="let img of product.images" [class.active]="img.imageUrl === selectedImage"
+      (click)="selectedImage = img.imageUrl">
+      <img [src]="img.imageUrl" />
+    </div>
+  </div>
+
+  <div class="ion-padding">
+    <div class="header-row">
+      <h1 class="title">{{ product.title }}</h1>
+      <h2 class="price">₹{{ product.price }}</h2>
+    </div>
+
+    <ion-badge color="secondary">{{ product.condition }}</ion-badge>
+    <ion-badge color="light" class="ion-margin-start">{{ product.ageGroup }}</ion-badge>
+
+    <div class="seller-box" *ngIf="product.seller">
+      <ion-icon name="person-circle-outline"></ion-icon>
+      <span>Sold by <strong>{{ product.seller.name || 'Verified Seller' }}</strong></span>
+    </div>
+
+    <div class="description">
+      <h3>Description</h3>
+      <p>{{ product.description }}</p>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-toolbar class="ion-padding">
+    <ion-button expand="block" size="large" (click)="addToCart()">
+      Add to Cart
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

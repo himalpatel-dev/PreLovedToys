@@ -9,4 +9,7 @@ router.post('/', verifyToken, productController.addProduct);
 // GET /api/products (Public: Anyone can see)
 router.get('/', productController.getProducts);
 
+// GET /api/products/:id (Public: Anyone can see)
+router.get('/:id', productController.getProductById);
+
 module.exports = router;

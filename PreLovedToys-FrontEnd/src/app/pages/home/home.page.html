@@ -1,0 +1,56 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Toy Market</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/cart"> <ion-icon name="cart-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="start">
+      <ion-button routerLink="/orders">
+        <ion-icon name="receipt-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-top">
+
+  <div class="ion-padding-horizontal">
+    <ion-searchbar placeholder="Search toys..."></ion-searchbar>
+  </div>
+
+  <div class="category-section">
+    <h3 class="section-title ion-padding-start">Categories</h3>
+
+    <div class="category-scroll">
+      <div class="category-item" *ngFor="let cat of categories">
+        <div class="cat-icon">
+          <img [src]="cat.image || 'https://placehold.co/50'" alt="">
+        </div>
+        <span class="cat-name">{{ cat.name }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="product-section">
+    <h3 class="section-title ion-padding-start">New Arrivals</h3>
+
+    <ion-grid>
+      <ion-row>
+        <ion-col size="6" *ngFor="let p of products" (click)="goToProduct(p)">
+          <ion-card class="product-card">
+            <div class="image-container">
+              <img [src]="getProductImage(p)" />
+            </div>
+            <ion-card-content>
+              <h6 class="product-title">{{ p.title }}</h6>
+              <p class="product-condition">{{ p.condition }}</p>
+              <h4 class="product-price">₹{{ p.price }}</h4>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+</ion-content>
