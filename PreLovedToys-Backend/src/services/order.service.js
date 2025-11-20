@@ -71,7 +71,21 @@ const getUserOrders = async (userId) => {
                 {
                     model: OrderItem,
                     as: 'items',
-                    include: [{ model: Product, as: 'product' }]
+                    include: [
+                        {
+                            model: Product,
+                            as: 'product',
+                            // 3. DEEP NESTING: Get the image for the product
+                            include: [
+                                {
+                                    model: ProductImage,
+                                    as: 'images',
+                                    attributes: ['imageUrl'],
+                                    limit: 1 // We only need one image for the thumbnail
+                                }
+                            ]
+                        }
+                    ]
                 }
             ],
             order: [['createdAt', 'DESC']]

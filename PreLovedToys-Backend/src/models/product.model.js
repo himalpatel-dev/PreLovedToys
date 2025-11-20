@@ -23,16 +23,12 @@ const Product = sequelize.define('Product', {
         type: DataTypes.ENUM('New', 'Like New', 'Good', 'Fair'),
         allowNull: false
     },
-    ageGroup: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    // REMOVED 'images' column from here
     status: {
         type: DataTypes.ENUM('pending', 'active', 'sold', 'rejected'),
         defaultValue: 'active'
     }
 }, {
+    tableName: 'tbl_products',
     timestamps: true
 });
 

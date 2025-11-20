@@ -70,12 +70,14 @@ export class SellPage implements OnInit {
     // Step 1: Upload Image
     this.productService.uploadImage(this.selectedFile).subscribe({
       next: (uploadRes: any) => {
-        const imageUrl = uploadRes.imageUrl;
 
-        // Step 2: Create Product with that Image URL
+        // CHANGE HERE: Read 'filename' instead of 'imageUrl'
+        const filename = uploadRes.filename;
+
+        // Step 2: Create Product with just the filename
         const productData = {
           ...this.product,
-          images: [imageUrl] // Backend expects an array
+          images: [filename] // We send just "image.jpg" to the database
         };
 
         this.productService.createProduct(productData).subscribe({

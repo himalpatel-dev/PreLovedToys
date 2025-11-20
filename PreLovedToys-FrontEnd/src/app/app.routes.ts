@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AdminGuard } from './core/guards/admin-guard';
 
 export const routes: Routes = [
   {
@@ -24,18 +25,28 @@ export const routes: Routes = [
   },
   {
     path: 'cart',
-    loadComponent: () => import('./pages/cart/cart.page').then( m => m.CartPage)
+    loadComponent: () => import('./pages/cart/cart.page').then(m => m.CartPage)
   },
   {
     path: 'checkout',
-    loadComponent: () => import('./pages/checkout/checkout.page').then( m => m.CheckoutPage)
+    loadComponent: () => import('./pages/checkout/checkout.page').then(m => m.CheckoutPage)
   },
   {
     path: 'orders',
-    loadComponent: () => import('./pages/orders/orders.page').then( m => m.OrdersPage)
+    loadComponent: () => import('./pages/orders/orders.page').then(m => m.OrdersPage)
   },
   {
     path: 'sell',
-    loadComponent: () => import('./pages/sell/sell.page').then( m => m.SellPage)
+    loadComponent: () => import('./pages/sell/sell.page').then(m => m.SellPage)
   },
+  {
+    path: 'admin-dashboard',
+    loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard.page').then(m => m.AdminDashboardPage),
+    canActivate: [AdminGuard]
+  },  {
+    path: 'profile',
+    loadComponent: () => import('./pages/profile/profile.page').then( m => m.ProfilePage)
+  },
+
+
 ];

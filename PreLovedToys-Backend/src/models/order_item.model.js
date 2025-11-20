@@ -17,6 +17,7 @@ const OrderItem = sequelize.define('OrderItem', {
     }
     // orderId and productId added automatically
 }, {
+    tableName: 'tbl_order_items',
     timestamps: false
 });
 

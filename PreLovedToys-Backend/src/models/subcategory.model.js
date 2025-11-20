@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db.config');
 
-const Category = sequelize.define('Category', {
+const SubCategory = sequelize.define('SubCategory', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -9,8 +9,7 @@ const Category = sequelize.define('Category', {
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
+        allowNull: false
     },
     image: {
         type: DataTypes.STRING, // URL of the category icon/image
@@ -19,10 +18,11 @@ const Category = sequelize.define('Category', {
     isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true
-    }
+    },
+    // categoryId will be added automatically by relationships
 }, {
-    tableName: 'tbl_Master_categories',
-    timestamps: false // We don't need createdAt/updatedAt for categories usually
+    tableName: 'tbl_Master_subcategories',
+    timestamps: false
 });
 
-module.exports = Category;
+module.exports = SubCategory;

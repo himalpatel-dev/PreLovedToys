@@ -28,4 +28,12 @@ export class ProductService {
   createProduct(data: any) {
     return this.api.post('products', data);
   }
+
+  getMyListings() {
+    return this.api.get('products/my-listings');
+  }
+
+  deleteProduct(id: number) {
+    return this.api.delete(`products/${id}`);
+  }
 }

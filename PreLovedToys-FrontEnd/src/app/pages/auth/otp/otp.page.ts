@@ -37,10 +37,18 @@ export class OtpPage implements OnInit {
     if (!this.otp) return;
 
     this.authService.verifyOtp(this.mobile, this.otp).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.showToast('Login Successful!');
-        // Navigate to the Main App (Home)
-        this.navCtrl.navigateRoot('/home');
+
+        // <--- NEW LOGIC STARTS HERE
+        const role = res.user.role; // Backend returns { user: { role: 'admin', ... } }
+
+        if (role === 'admin') {
+          this.navCtrl.navigateRoot('/admin-dashboard'); // Send Admin here
+        } else {
+          this.navCtrl.navigateRoot('/home'); // Send Users/Sellers here
+        }
+        // <--- NEW LOGIC ENDS HERE
       },
       error: (err) => {
         this.showToast(err.error?.message || 'Invalid OTP');

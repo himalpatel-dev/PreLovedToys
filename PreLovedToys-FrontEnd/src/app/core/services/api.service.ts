@@ -43,4 +43,8 @@ export class ApiService {
   delete(endpoint: string) {
     return this.http.delete(`${this.baseUrl}/${endpoint}`, { headers: this.getHeaders() });
   }
+
+  put(endpoint: string, data: any) {
+    return this.http.put(`${this.baseUrl}/${endpoint}`, data, { headers: this.getHeaders() });
+  }
 }

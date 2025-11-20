@@ -14,6 +14,7 @@ const CartItem = sequelize.define('CartItem', {
     }
     // userId and productId added automatically by relationships
 }, {
+    tableName: 'tbl_cart_items',
     timestamps: true
 });
 

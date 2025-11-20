@@ -8,6 +8,12 @@ const ProductImage = require('./product_image.model');
 const CartItem = require('./cart_item.model');
 const Order = require('./order.model');
 const OrderItem = require('./order_item.model');
+const SubCategory = require('./subcategory.model');
+const AgeGroup = require('./age_group.model');
+const Color = require('./color.model');
+const Gender = require('./gender.model');
+const Material = require('./material.model');
+
 const db = {};
 
 db.sequelize = sequelize;
@@ -18,22 +24,43 @@ db.ProductImage = ProductImage;
 db.CartItem = CartItem;
 db.Order = Order;
 db.OrderItem = OrderItem;
+db.SubCategory = SubCategory;
+db.AgeGroup = AgeGroup;
+db.Color = Color;
+db.Gender = Gender;
+db.Material = Material;
 
 // =========================================
 // DEFINE RELATIONSHIPS
 // =========================================
 
-// 1. Category <-> Product
-// A Category has many Products
-db.Category.hasMany(db.Product, {
-    foreignKey: 'categoryId',
-    as: 'products'
-});
-// A Product belongs to a Category
-db.Product.belongsTo(db.Category, {
-    foreignKey: 'categoryId',
-    as: 'category'
-});
+// 1. Category <-> SubCategory (One Category has many SubCategories)
+db.Category.hasMany(db.SubCategory, { foreignKey: 'categoryId', as: 'subcategories' });
+db.SubCategory.belongsTo(db.Category, { foreignKey: 'categoryId', as: 'category' });
+
+// 2. Category <-> Product
+db.Category.hasMany(db.Product, { foreignKey: 'categoryId', as: 'products' });
+db.Product.belongsTo(db.Category, { foreignKey: 'categoryId', as: 'category' });
+
+// 3. SubCategory <-> Product (One SubCategory has many Products)
+db.SubCategory.hasMany(db.Product, { foreignKey: 'subCategoryId', as: 'products' });
+db.Product.belongsTo(db.SubCategory, { foreignKey: 'subCategoryId', as: 'subcategory' });
+
+// Age Group
+db.AgeGroup.hasMany(db.Product, { foreignKey: 'ageGroupId' });
+db.Product.belongsTo(db.AgeGroup, { foreignKey: 'ageGroupId', as: 'ageGroup' });
+
+// Color
+db.Color.hasMany(db.Product, { foreignKey: 'colorId' });
+db.Product.belongsTo(db.Color, { foreignKey: 'colorId', as: 'color' });
+
+// Gender
+db.Gender.hasMany(db.Product, { foreignKey: 'genderId' });
+db.Product.belongsTo(db.Gender, { foreignKey: 'genderId', as: 'gender' });
+
+// Material
+db.Material.hasMany(db.Product, { foreignKey: 'materialId' });
+db.Product.belongsTo(db.Material, { foreignKey: 'materialId', as: 'material' });
 
 // 2. User (Seller) <-> Product
 // A User (Seller) creates many Products

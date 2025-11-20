@@ -14,7 +14,8 @@ const addProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
     try {
-        const products = await productService.getAllProducts();
+        const { status } = req.query; // Read ?status=pending from URL
+        const products = await productService.getAllProducts(status || 'active');
         res.status(200).json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -35,8 +36,43 @@ const getProductById = async (req, res) => {
     }
 };
 
+const updateStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body; // { "status": "active" }
+        await productService.updateProductStatus(id, status);
+        res.json({ message: "Status updated" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const getMyListings = async (req, res) => {
+    try {
+        const userId = req.user.id; // From Token
+        const products = await productService.getUserProducts(userId);
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const deleteListing = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id } = req.params;
+        await productService.deleteProduct(id, userId);
+        res.status(200).json({ message: "Product deleted successfully" });
+    } catch (error) {
+        res.status(403).json({ message: error.message });
+    }
+};
+
 module.exports = {
     addProduct,
     getProducts,
-    getProductById
+    getProductById,
+    updateStatus,
+    getMyListings,
+    deleteListing
 };

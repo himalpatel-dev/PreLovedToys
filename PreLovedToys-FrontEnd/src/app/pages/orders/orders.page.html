@@ -29,11 +29,12 @@
       <ion-list lines="none">
         <ion-item *ngFor="let item of order.items">
           <ion-thumbnail slot="start">
-            <img [src]="item.product?.images[0]?.imageUrl || 'https://placehold.co/50'" />
+            <img [src]="item.product?.images?.[0]?.imageUrl || 'https://placehold.co/50'" />
           </ion-thumbnail>
+
           <ion-label>
-            <h3>{{ item.product?.title }}</h3>
-            <p>Qty: {{ item.quantity }}</p>
+            <h3>{{ item.product?.title || 'Product Unavailable' }}</h3>
+            <p>Qty: {{ item.quantity }} | ₹{{ item.priceAtPurchase }}</p>
           </ion-label>
         </ion-item>
       </ion-list>

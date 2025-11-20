@@ -1,0 +1,53 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>My Profile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="danger" (click)="logout()">
+        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <div class="user-info" *ngIf="user">
+    <div class="avatar">
+      {{ user.name ? user.name.charAt(0) : 'U' }}
+    </div>
+    <h2>{{ user.name || 'Toy Seller' }}</h2>
+    <p>+91 {{ user.mobile }}</p>
+  </div>
+
+  <h3 class="section-title">My Listings</h3>
+
+  <div *ngIf="myProducts.length === 0" class="empty-state">
+    <p>You haven't listed any toys yet.</p>
+    <ion-button fill="outline" size="small" routerLink="/sell">Sell Now</ion-button>
+  </div>
+
+  <ion-list>
+    <ion-item *ngFor="let p of myProducts">
+      <ion-thumbnail slot="start">
+        <img [src]="p.images[0]?.imageUrl" />
+      </ion-thumbnail>
+      <ion-label>
+        <h2>{{ p.title }}</h2>
+        <p>₹{{ p.price }}</p>
+        <ion-badge [color]="p.status === 'active' ? 'success' : (p.status === 'pending' ? 'warning' : 'danger')">
+          {{ p.status | titlecase }}
+        </ion-badge>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button color="medium" (click)="confirmDelete(p.id)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+
+</ion-content>

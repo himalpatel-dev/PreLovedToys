@@ -1,0 +1,38 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Admin Dashboard</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()">Logout</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h3>Pending Approvals</h3>
+
+  <ion-list>
+    <ion-item *ngFor="let p of pendingProducts">
+      <ion-thumbnail slot="start">
+        <img [src]="p.images[0]?.imageUrl" />
+      </ion-thumbnail>
+      <ion-label>
+        <h2>{{ p.title }}</h2>
+        <p>Price: ₹{{ p.price }}</p>
+        <p>Seller: {{ p.seller.name || p.seller.mobile }}</p>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button color="danger" (click)="updateStatus(p.id, 'rejected')">
+          <ion-icon slot="icon-only" name="close-circle"></ion-icon>
+        </ion-button>
+        <ion-button color="success" (click)="updateStatus(p.id, 'active')">
+          <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="pendingProducts.length === 0" class="ion-text-center ion-padding">
+    <p>No pending products.</p>
+  </div>
+</ion-content>

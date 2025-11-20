@@ -1,6 +1,6 @@
 const db = require('../models');
 const Category = db.Category;
-
+const SubCategory = db.SubCategory;
 // 1. Create Category (Admin only)
 const createCategory = async (req, res) => {
     try {
@@ -25,7 +25,14 @@ const createCategory = async (req, res) => {
 const getAllCategories = async (req, res) => {
     try {
         const categories = await Category.findAll({
-            where: { isActive: true }
+            where: { isActive: true },
+            include: [
+                {
+                    model: SubCategory,
+                    as: 'subcategories', // Must match alias in index.js
+                    attributes: ['id', 'name']
+                }
+            ]
         });
         res.status(200).json(categories);
     } catch (error) {

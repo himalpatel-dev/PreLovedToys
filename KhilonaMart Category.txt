@@ -1,0 +1,994 @@
+{
+    "status_code": 200,
+    "message": "Filters Masters Data",
+    "data": {
+        "category": [
+            {
+                "id": 23,
+                "name": "Gun",
+                "subcategory": [
+                    {
+                        "id": 134,
+                        "name": "Bullet"
+                    },
+                    {
+                        "id": 135,
+                        "name": "Air Pressure"
+                    },
+                    {
+                        "id": 136,
+                        "name": "Musical"
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Puzzles",
+                "subcategory": [
+                    {
+                        "id": 137,
+                        "name": "Fruit & Vegetable"
+                    },
+                    {
+                        "id": 138,
+                        "name": "Transport"
+                    },
+                    {
+                        "id": 139,
+                        "name": "Animal & Bird"
+                    },
+                    {
+                        "id": 140,
+                        "name": "Educational"
+                    },
+                    {
+                        "id": 220,
+                        "name": "Magnetic"
+                    },
+                    {
+                        "id": 221,
+                        "name": "Story"
+                    },
+                    {
+                        "id": 244,
+                        "name": "Fun Puzzle Games"
+                    }
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Block Games",
+                "subcategory": [
+                    {
+                        "id": 141,
+                        "name": "Activity Blocks"
+                    },
+                    {
+                        "id": 142,
+                        "name": "Building Blocks"
+                    },
+                    {
+                        "id": 143,
+                        "name": "Magnetic Blocks"
+                    },
+                    {
+                        "id": 144,
+                        "name": "Stick Blocks"
+                    },
+                    {
+                        "id": 249,
+                        "name": "Bullet Blocks"
+                    }
+                ]
+            },
+            {
+                "id": 26,
+                "name": "Art & Craft",
+                "subcategory": [
+                    {
+                        "id": 145,
+                        "name": "Jewellery Making Games"
+                    },
+                    {
+                        "id": 146,
+                        "name": "Clay Toys"
+                    },
+                    {
+                        "id": 147,
+                        "name": "Scratching/ Colouring Games"
+                    },
+                    {
+                        "id": 223,
+                        "name": "Quilling Games"
+                    },
+                    {
+                        "id": 224,
+                        "name": "Others"
+                    }
+                ]
+            },
+            {
+                "id": 27,
+                "name": "Board Games",
+                "subcategory": [
+                    {
+                        "id": 148,
+                        "name": "Educational Board"
+                    },
+                    {
+                        "id": 149,
+                        "name": "Chess"
+                    },
+                    {
+                        "id": 150,
+                        "name": "Ludo & Snakes"
+                    },
+                    {
+                        "id": 151,
+                        "name": "Wooden Board Games"
+                    },
+                    {
+                        "id": 152,
+                        "name": "Carrom"
+                    },
+                    {
+                        "id": 153,
+                        "name": "Business"
+                    },
+                    {
+                        "id": 154,
+                        "name": "Monopoly"
+                    },
+                    {
+                        "id": 155,
+                        "name": "Sequence"
+                    },
+                    {
+                        "id": 156,
+                        "name": "Word Games"
+                    },
+                    {
+                        "id": 157,
+                        "name": "D-Dart"
+                    },
+                    {
+                        "id": 158,
+                        "name": "Housie"
+                    },
+                    {
+                        "id": 159,
+                        "name": "Chinese Checker"
+                    },
+                    {
+                        "id": 160,
+                        "name": "Tic Tac Toe"
+                    },
+                    {
+                        "id": 225,
+                        "name": "Adventure Games"
+                    },
+                    {
+                        "id": 226,
+                        "name": "Combos"
+                    }
+                ]
+            },
+            {
+                "id": 28,
+                "name": "Educational Toys & Games",
+                "subcategory": [
+                    {
+                        "id": 161,
+                        "name": "Mechanical Games"
+                    },
+                    {
+                        "id": 162,
+                        "name": "Magnetic Shapes & Colours"
+                    },
+                    {
+                        "id": 163,
+                        "name": "Globes"
+                    },
+                    {
+                        "id": 164,
+                        "name": "Brainvita"
+                    },
+                    {
+                        "id": 165,
+                        "name": "Flash Cards"
+                    },
+                    {
+                        "id": 166,
+                        "name": "Abacus"
+                    },
+                    {
+                        "id": 167,
+                        "name": "Educational Shapes"
+                    },
+                    {
+                        "id": 168,
+                        "name": "Preschool Toys"
+                    },
+                    {
+                        "id": 169,
+                        "name": "Memory Games"
+                    },
+                    {
+                        "id": 170,
+                        "name": "Educational Numbers & Alphabets"
+                    },
+                    {
+                        "id": 222,
+                        "name": "3D Books"
+                    },
+                    {
+                        "id": 227,
+                        "name": "Science Games"
+                    }
+                ]
+            },
+            {
+                "id": 29,
+                "name": "Sports",
+                "subcategory": [
+                    {
+                        "id": 171,
+                        "name": "Basket Ball"
+                    },
+                    {
+                        "id": 172,
+                        "name": "Cricket Sets"
+                    },
+                    {
+                        "id": 173,
+                        "name": "Bowling Games"
+                    },
+                    {
+                        "id": 174,
+                        "name": "Bow & Arrow"
+                    },
+                    {
+                        "id": 175,
+                        "name": "Golf Set"
+                    },
+                    {
+                        "id": 176,
+                        "name": "Table Tennis"
+                    },
+                    {
+                        "id": 177,
+                        "name": "Hockey"
+                    },
+                    {
+                        "id": 255,
+                        "name": "Challenge Sports"
+                    }
+                ]
+            },
+            {
+                "id": 30,
+                "name": "Activity Games & Toys",
+                "subcategory": [
+                    {
+                        "id": 178,
+                        "name": "Flying Disk"
+                    },
+                    {
+                        "id": 179,
+                        "name": "Bladders"
+                    },
+                    {
+                        "id": 180,
+                        "name": "Play Tent House"
+                    },
+                    {
+                        "id": 181,
+                        "name": "Ringtoss"
+                    },
+                    {
+                        "id": 182,
+                        "name": "Hoopla Ring"
+                    },
+                    {
+                        "id": 183,
+                        "name": "Play Gym"
+                    },
+                    {
+                        "id": 184,
+                        "name": "Spiral Fun"
+                    },
+                    {
+                        "id": 185,
+                        "name": "Hopscotch"
+                    },
+                    {
+                        "id": 186,
+                        "name": "Ball Pool"
+                    },
+                    {
+                        "id": 187,
+                        "name": "Spinner"
+                    },
+                    {
+                        "id": 188,
+                        "name": "Rolling Fun"
+                    },
+                    {
+                        "id": 189,
+                        "name": "Teddy Ring"
+                    },
+                    {
+                        "id": 228,
+                        "name": "Magic Game"
+                    },
+                    {
+                        "id": 233,
+                        "name": "Cycle"
+                    },
+                    {
+                        "id": 234,
+                        "name": "Other Activity Game"
+                    },
+                    {
+                        "id": 242,
+                        "name": "Target & Aim Games"
+                    },
+                    {
+                        "id": 243,
+                        "name": "Rings Toys"
+                    }
+                ]
+            },
+            {
+                "id": 31,
+                "name": "Musical Toys",
+                "subcategory": [
+                    {
+                        "id": 190,
+                        "name": "Rattles"
+                    },
+                    {
+                        "id": 191,
+                        "name": "Roly Poly"
+                    },
+                    {
+                        "id": 192,
+                        "name": "Musical Drum"
+                    },
+                    {
+                        "id": 193,
+                        "name": "Xylophone"
+                    },
+                    {
+                        "id": 194,
+                        "name": "Jhoomer"
+                    },
+                    {
+                        "id": 239,
+                        "name": "Musical Animals"
+                    },
+                    {
+                        "id": 240,
+                        "name": "Musical Vehicles"
+                    },
+                    {
+                        "id": 246,
+                        "name": "Musical Instrument Toys"
+                    },
+                    {
+                        "id": 248,
+                        "name": "Musical Teddy"
+                    }
+                ]
+            },
+            {
+                "id": 32,
+                "name": "Others",
+                "subcategory": [
+                    {
+                        "id": 195,
+                        "name": "Kitchen Set"
+                    },
+                    {
+                        "id": 196,
+                        "name": "Dolls"
+                    },
+                    {
+                        "id": 197,
+                        "name": "Piggy Bank"
+                    },
+                    {
+                        "id": 198,
+                        "name": "Cup Stackers"
+                    },
+                    {
+                        "id": 199,
+                        "name": "Cube"
+                    },
+                    {
+                        "id": 200,
+                        "name": "Almirah"
+                    },
+                    {
+                        "id": 201,
+                        "name": "Carry Cot"
+                    },
+                    {
+                        "id": 202,
+                        "name": "Doctor Set"
+                    },
+                    {
+                        "id": 203,
+                        "name": "Pen Stand"
+                    },
+                    {
+                        "id": 204,
+                        "name": "Beauty Set"
+                    },
+                    {
+                        "id": 229,
+                        "name": "Sofa"
+                    },
+                    {
+                        "id": 230,
+                        "name": "Activity Toys"
+                    },
+                    {
+                        "id": 241,
+                        "name": "Warrior Fighter Set"
+                    },
+                    {
+                        "id": 245,
+                        "name": "Teether"
+                    },
+                    {
+                        "id": 247,
+                        "name": "Baby Suitcase"
+                    }
+                ]
+            },
+            {
+                "id": 33,
+                "name": "Push & Pull Toys",
+                "subcategory": [
+                    {
+                        "id": 205,
+                        "name": "Cars"
+                    },
+                    {
+                        "id": 206,
+                        "name": "Trucks & Dumpers"
+                    },
+                    {
+                        "id": 207,
+                        "name": "Bike"
+                    },
+                    {
+                        "id": 208,
+                        "name": "Boats & Ships"
+                    },
+                    {
+                        "id": 209,
+                        "name": "Plane"
+                    },
+                    {
+                        "id": 210,
+                        "name": "Pull Along Toys"
+                    },
+                    {
+                        "id": 211,
+                        "name": "Push & Go Toys"
+                    },
+                    {
+                        "id": 212,
+                        "name": "Animals"
+                    },
+                    {
+                        "id": 213,
+                        "name": "Trains"
+                    },
+                    {
+                        "id": 214,
+                        "name": "Cranes"
+                    },
+                    {
+                        "id": 215,
+                        "name": "Bus"
+                    },
+                    {
+                        "id": 216,
+                        "name": "Friction Toys"
+                    },
+                    {
+                        "id": 217,
+                        "name": "Fire Brigade"
+                    },
+                    {
+                        "id": 232,
+                        "name": "Auto Rikshaw"
+                    },
+                    {
+                        "id": 235,
+                        "name": "Jeep"
+                    },
+                    {
+                        "id": 236,
+                        "name": "Ambulance"
+                    },
+                    {
+                        "id": 237,
+                        "name": "Helicopter"
+                    },
+                    {
+                        "id": 238,
+                        "name": "Tractor"
+                    }
+                ]
+            },
+            {
+                "id": 34,
+                "name": "Riders",
+                "subcategory": [
+                    {
+                        "id": 218,
+                        "name": "Ride On Cars"
+                    },
+                    {
+                        "id": 219,
+                        "name": "Tricycle"
+                    },
+                    {
+                        "id": 231,
+                        "name": "Rockers"
+                    }
+                ]
+            },
+            {
+                "id": 35,
+                "name": "Electronic Toys",
+                "subcategory": [
+                    {
+                        "id": 250,
+                        "name": "Electronic Gun"
+                    },
+                    {
+                        "id": 251,
+                        "name": "Electronic Educational Toys"
+                    },
+                    {
+                        "id": 252,
+                        "name": "Electronic Musical Toys"
+                    },
+                    {
+                        "id": 253,
+                        "name": "Electronic Activity Toys"
+                    },
+                    {
+                        "id": 254,
+                        "name": "Other Electronic Toys"
+                    }
+                ]
+            }
+        ],
+        "gender": [
+            {
+                "key": "boy",
+                "value": "Boys"
+            },
+            {
+                "key": "girl",
+                "value": "Girls"
+            },
+            {
+                "key": "unisex",
+                "value": "Unisex"
+            }
+        ],
+        "age": [
+            {
+                "key": "0_3",
+                "value": "0-3 Years"
+            },
+            {
+                "key": "3_7",
+                "value": "3-7 Years"
+            },
+            {
+                "key": "7_10",
+                "value": "7-10 Years"
+            },
+            {
+                "key": "10_12",
+                "value": "10-12 Years"
+            },
+            {
+                "key": 12,
+                "value": "12+ Years"
+            }
+        ],
+        "material": [
+            {
+                "id": 1,
+                "name": "Plastic"
+            },
+            {
+                "id": 2,
+                "name": "Cardboard"
+            },
+            {
+                "id": 4,
+                "name": "Paper"
+            },
+            {
+                "id": 5,
+                "name": "Rubber"
+            },
+            {
+                "id": 6,
+                "name": "Natural materials"
+            },
+            {
+                "id": 7,
+                "name": "Cotton"
+            },
+            {
+                "id": 8,
+                "name": "Acrylic"
+            },
+            {
+                "id": 9,
+                "name": "Magnet"
+            },
+            {
+                "id": 10,
+                "name": "Wooden"
+            },
+            {
+                "id": 11,
+                "name": "Fabric"
+            },
+            {
+                "id": 12,
+                "name": "Metal"
+            },
+            {
+                "id": 13,
+                "name": "Woolen"
+            },
+            {
+                "id": 14,
+                "name": "Other"
+            }
+        ],
+        "brand": [
+            {
+                "id": 79,
+                "name": "Lata Toys"
+            },
+            {
+                "id": 80,
+                "name": "Aiko"
+            },
+            {
+                "id": 81,
+                "name": "Laxmi Toys"
+            },
+            {
+                "id": 82,
+                "name": "Peacock"
+            },
+            {
+                "id": 83,
+                "name": "Mamma Mia"
+            },
+            {
+                "id": 84,
+                "name": "Sunny"
+            },
+            {
+                "id": 85,
+                "name": "CJ Enterprise"
+            },
+            {
+                "id": 86,
+                "name": "Shinsei"
+            },
+            {
+                "id": 87,
+                "name": "Toy Mate"
+            },
+            {
+                "id": 89,
+                "name": "Toyzee"
+            },
+            {
+                "id": 90,
+                "name": "Ratna's"
+            },
+            {
+                "id": 91,
+                "name": "Creative Kids"
+            },
+            {
+                "id": 92,
+                "name": "Play Panda"
+            },
+            {
+                "id": 93,
+                "name": "Rashmi Toys"
+            },
+            {
+                "id": 94,
+                "name": "I Toys"
+            },
+            {
+                "id": 95,
+                "name": "Shadilal & Sons"
+            },
+            {
+                "id": 96,
+                "name": "Innovi Toy"
+            },
+            {
+                "id": 97,
+                "name": "Zephyr"
+            },
+            {
+                "id": 98,
+                "name": "Brands"
+            },
+            {
+                "id": 99,
+                "name": "Blue Mount"
+            },
+            {
+                "id": 100,
+                "name": "Jewel Enterprises"
+            },
+            {
+                "id": 101,
+                "name": "Bafna Toys"
+            },
+            {
+                "id": 102,
+                "name": "United Agencies"
+            },
+            {
+                "id": 103,
+                "name": "Maru & Sons"
+            },
+            {
+                "id": 104,
+                "name": "Nuage"
+            },
+            {
+                "id": 105,
+                "name": "Seekho"
+            },
+            {
+                "id": 106,
+                "name": "Pop Toys"
+            },
+            {
+                "id": 110,
+                "name": "Kraftsman"
+            },
+            {
+                "id": 111,
+                "name": "LOVE SON"
+            },
+            {
+                "id": 112,
+                "name": "Pringle"
+            },
+            {
+                "id": 113,
+                "name": "Humming Bird"
+            },
+            {
+                "id": 114,
+                "name": "Unique"
+            },
+            {
+                "id": 115,
+                "name": "Lil Star"
+            },
+            {
+                "id": 116,
+                "name": "Prime"
+            },
+            {
+                "id": 117,
+                "name": "Toy Fun"
+            },
+            {
+                "id": 118,
+                "name": "Heku Toys"
+            },
+            {
+                "id": 119,
+                "name": "Holo Kitab"
+            },
+            {
+                "id": 120,
+                "name": "Yuka Champs"
+            },
+            {
+                "id": 121,
+                "name": "ekta"
+            },
+            {
+                "id": 122,
+                "name": "Paramount Toys"
+            },
+            {
+                "id": 123,
+                "name": "Funskool"
+            },
+            {
+                "id": 124,
+                "name": "Universal Sales"
+            },
+            {
+                "id": 125,
+                "name": "Hi Way Corporation"
+            }
+        ],
+        "color": [
+            {
+                "id": 1,
+                "name": "Black",
+                "color_code": "#29353E"
+            },
+            {
+                "id": 2,
+                "name": "Grey",
+                "color_code": "#8F989B"
+            },
+            {
+                "id": 3,
+                "name": "Blue",
+                "color_code": "#135FCC"
+            },
+            {
+                "id": 4,
+                "name": "White",
+                "color_code": "#FFFFFF"
+            },
+            {
+                "id": 5,
+                "name": "Olive",
+                "color_code": "#36885E"
+            },
+            {
+                "id": 7,
+                "name": "Green",
+                "color_code": "#52A451"
+            },
+            {
+                "id": 8,
+                "name": "Red",
+                "color_code": "#C43647"
+            },
+            {
+                "id": 9,
+                "name": "Maroon",
+                "color_code": "#9C1E4E"
+            },
+            {
+                "id": 10,
+                "name": "Teal",
+                "color_code": "#156E6C"
+            },
+            {
+                "id": 11,
+                "name": "Turquoise Blue",
+                "color_code": "#42DBC6"
+            },
+            {
+                "id": 12,
+                "name": "Pink",
+                "color_code": "#ff3fd7"
+            },
+            {
+                "id": 13,
+                "name": "Yellow",
+                "color_code": "#efef39"
+            },
+            {
+                "id": 14,
+                "name": "Purple",
+                "color_code": "#bf43e8"
+            },
+            {
+                "id": 16,
+                "name": "Mustard Yellow",
+                "color_code": "#FFDB58"
+            }
+        ],
+        "rating": [
+            {
+                "key": 1,
+                "value": "1+ Stars"
+            },
+            {
+                "key": 2,
+                "value": "2+ Stars"
+            },
+            {
+                "key": 3,
+                "value": "3+ Stars"
+            },
+            {
+                "key": 4,
+                "value": "4+ Stars"
+            },
+            {
+                "key": 5,
+                "value": "5+ Stars"
+            }
+        ],
+        "price": [
+            {
+                "key": "0-500",
+                "value": "₹0 - ₹500"
+            },
+            {
+                "key": "500-1000",
+                "value": "₹500 - ₹1,000"
+            },
+            {
+                "key": "1000-1500",
+                "value": "₹1,000 - ₹1,500"
+            },
+            {
+                "key": "1500-2000",
+                "value": "₹1,500 - ₹2,000"
+            },
+            {
+                "key": "2000-3000",
+                "value": "₹2,000 - ₹3,000"
+            },
+            {
+                "key": "3000-",
+                "value": "₹3000+"
+            }
+        ],
+        "certification": [
+            {
+                "key": "yes",
+                "value": "Yes"
+            },
+            {
+                "key": "no",
+                "value": "No"
+            }
+        ],
+        "sort_by": [
+            {
+                "key": "a-to-z",
+                "value": "Alphabetically (A-Z)"
+            },
+            {
+                "key": "z-to-a",
+                "value": "Alphabetically (Z-A)"
+            },
+            {
+                "key": "price-low-to-high",
+                "value": "Price - Low to High"
+            },
+            {
+                "key": "price-high-to-low",
+                "value": "Price - High to Low"
+            },
+            {
+                "key": "discount-high-to-low",
+                "value": "Discount - High to Low"
+            },
+            {
+                "key": "toprated",
+                "value": "Top Rated"
+            }
+        ]
+    }
+}

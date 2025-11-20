@@ -25,6 +25,7 @@ const Order = sequelize.define('Order', {
     }
     // userId will be added automatically
 }, {
+    tableName: 'tbl_orders',
     timestamps: true
 });
 

@@ -10,13 +10,10 @@ router.post('/', upload.single('image'), (req, res) => {
             return res.status(400).json({ message: "No file uploaded" });
         }
 
-        // Create the public URL
-        // Example: http://localhost:3000/uploads/12345-filename.jpg
-        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-
+        // CHANGE: Return only the filename, not the full URL
         res.status(200).json({
             message: "Upload successful",
-            imageUrl: imageUrl
+            filename: req.file.filename // <--- JUST THE FILENAME
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
