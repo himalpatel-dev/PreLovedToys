@@ -1,65 +1,61 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, AlertController, ToastController, NavController } from '@ionic/angular';
-import { ApiService } from 'src/app/core/services/api.service';
+import { IonicModule, NavController } from '@ionic/angular';
+import { AuthService } from 'src/app/core/services/auth.service';
 import { addIcons } from 'ionicons';
-import { checkmarkCircle, closeCircle } from 'ionicons/icons';
-import { AuthService } from 'src/app/core/services/auth.service'; // <--- Import Auth Service
+import { logOutOutline, gridOutline, listOutline, colorPaletteOutline, happy, happyOutline, peopleOutline, cubeOutline, receiptOutline, walletOutline } from 'ionicons/icons';
+import { RouterLink } from '@angular/router';
+import { AdminMasterService } from 'src/app/core/services/admin-master.service';
+
 @Component({
   selector: 'app-admin-dashboard',
   templateUrl: './admin-dashboard.page.html',
   styleUrls: ['./admin-dashboard.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule]
+  imports: [IonicModule, CommonModule, RouterLink]
 })
-export class AdminDashboardPage {
+export class AdminDashboardPage implements OnInit {
 
-  pendingProducts: any[] = [];
+  stats = {
+    totalUsers: 0,
+    totalOrders: 0,
+    activeProducts: 0,
+    totalRevenue: 0,
+    recentOrders: []
+  };
+  isLoading = true;
 
   constructor(
-    private api: ApiService,
-    private authService: AuthService, // <--- Inject Auth Service
-    private navCtrl: NavController,   // <--- Inject Nav Controller
-    private alertCtrl: AlertController,
-    private toastCtrl: ToastController
+    private authService: AuthService,
+    private adminService: AdminMasterService,
+    private navCtrl: NavController
   ) {
-    addIcons({ checkmarkCircle, closeCircle });
+    addIcons({ logOutOutline, gridOutline, listOutline, colorPaletteOutline, receiptOutline, peopleOutline, walletOutline, cubeOutline, happyOutline });
   }
 
+  ngOnInit() {
+    this.loadStats();
+  }
+
+  // Reload stats whenever the page becomes active
   ionViewWillEnter() {
-    this.loadPendingProducts();
+    this.loadStats();
   }
 
-  loadPendingProducts() {
-    this.api.get('products?status=pending').subscribe({
+  loadStats() {
+    this.adminService.getDashboardStats().subscribe({
       next: (res: any) => {
-        this.pendingProducts = res;
+        this.stats = res;
+        this.isLoading = false;
       },
-      error: (err) => console.error(err)
+      error: () => {
+        this.isLoading = false;
+      }
     });
   }
 
-  updateStatus(id: number, newStatus: string) {
-    this.api.put(`products/${id}/status`, { status: newStatus }).subscribe({
-      next: () => {
-        this.showToast(`Product marked as ${newStatus}`);
-        this.loadPendingProducts();
-      },
-      error: () => this.showToast('Error updating status')
-    });
-  }
-
-  // <--- ADD THIS FUNCTION
   logout() {
-    // 1. Clear local storage
     this.authService.logout();
-
-    // 2. Redirect to Login Page
     this.navCtrl.navigateRoot('/login');
-  }
-
-  async showToast(msg: string) {
-    const toast = await this.toastCtrl.create({ message: msg, duration: 2000 });
-    toast.present();
   }
 }

@@ -29,7 +29,7 @@
     <h3 class="section-title ion-padding-start">Categories</h3>
 
     <div class="category-scroll">
-      <div class="category-item" *ngFor="let cat of categories">
+      <div class="category-item" *ngFor="let cat of categories" (click)="onCategoryClick(cat)">
         <div class="cat-icon">
           <img [src]="cat.image || 'https://placehold.co/50'" alt="">
         </div>

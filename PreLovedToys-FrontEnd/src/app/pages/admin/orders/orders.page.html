@@ -1,0 +1,61 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>All Orders</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <ion-list *ngIf="!isLoading">
+    <ion-card *ngFor="let order of orders" class="order-card">
+      <ion-card-header>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <ion-card-subtitle>Order #{{ order.id }}</ion-card-subtitle>
+          <ion-badge [color]="getStatusColor(order.status)" (click)="openStatusActionSheet(order)">
+            {{ order.status | titlecase }}
+          </ion-badge>
+        </div>
+        <ion-card-title style="font-size: 18px;">₹{{ order.totalAmount }}</ion-card-title>
+        <p style="font-size: 12px; color: #888;">
+          {{ order.createdAt | date:'medium' }}
+        </p>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p><strong>Customer:</strong> {{ order.user?.name || order.user?.mobile }}</p>
+        <p><strong>Address:</strong> {{ order.shippingAddress }}</p>
+
+        <div class="divider"></div>
+
+        <!-- Order Items -->
+        <ion-list lines="none">
+          <ion-item *ngFor="let item of order.items" style="--padding-start: 0;">
+            <ion-thumbnail slot="start" style="--size: 40px;">
+              <img [src]="item.product?.images?.[0]?.imageUrl || 'https://placehold.co/50'" />
+            </ion-thumbnail>
+            <ion-label>
+              <h3>{{ item.product?.title || 'Unknown Product' }}</h3>
+              <p>Qty: {{ item.quantity }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+
+        <ion-button expand="block" fill="outline" size="small" (click)="openStatusActionSheet(order)">
+          Update Status
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
+  <div *ngIf="!isLoading && orders.length === 0" class="ion-text-center ion-padding">
+    <p>No orders found.</p>
+  </div>
+
+</ion-content>

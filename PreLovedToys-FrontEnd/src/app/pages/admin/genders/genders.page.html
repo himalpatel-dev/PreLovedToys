@@ -1,0 +1,24 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start"><ion-back-button defaultHref="/admin-dashboard"></ion-back-button></ion-buttons>
+    <ion-title>Genders</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openModal()"><ion-icon slot="icon-only" name="add"></ion-icon></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div *ngIf="isLoading" class="ion-text-center ion-padding"><ion-spinner></ion-spinner></div>
+  <ion-list lines="full" *ngIf="!isLoading">
+    <ion-item *ngFor="let item of items">
+      <ion-label>{{ item.name }}</ion-label>
+      <ion-buttons slot="end">
+        <ion-button color="primary" (click)="openModal(item)"><ion-icon slot="icon-only"
+            name="create-outline"></ion-icon></ion-button>
+        <ion-button color="danger" (click)="deleteItem(item.id)"><ion-icon slot="icon-only"
+            name="trash-outline"></ion-icon></ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+</ion-content>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule, NavController } from '@ionic/angular'; // Import NavController
-import { CategoryService } from 'src/app/core/services/category.service';
+import { MasterService } from 'src/app/core/services/master.service';
 import { ProductService } from 'src/app/core/services/product.service';
 import { addIcons } from 'ionicons';
 import { cartOutline, receiptOutline, add, personCircleOutline } from 'ionicons/icons';
@@ -19,7 +19,7 @@ export class HomePage implements OnInit {
   products: any[] = [];
 
   constructor(
-    private categoryService: CategoryService,
+    private masterService: MasterService,
     private productService: ProductService,
     private navCtrl: NavController
   ) {
@@ -33,7 +33,7 @@ export class HomePage implements OnInit {
   handleRefresh(event: any) {
     // 1. Re-fetch Categories
     // Add ': any' here vvv
-    this.categoryService.getAllCategories().subscribe((res: any) => {
+    this.masterService.getAllCategories().subscribe((res: any) => {
       this.categories = res;
     });
 
@@ -48,11 +48,12 @@ export class HomePage implements OnInit {
 
   loadData() {
     // 1. Fetch Categories
-    this.categoryService.getAllCategories().subscribe({
+    this.masterService.getAllCategories().subscribe({
       next: (res: any) => {
+        console.log('Categories loaded:', res); // Debug log
         this.categories = res;
       },
-      error: (err) => console.error('Error fetching categories', err)
+      error: (err: any) => console.error('Error fetching categories', err)
     });
 
     // 2. Fetch Products
@@ -61,7 +62,7 @@ export class HomePage implements OnInit {
         console.log('Products:', res); // Check console to see if images array exists
         this.products = res;
       },
-      error: (err) => console.error('Error fetching products', err)
+      error: (err: any) => console.error('Error fetching products', err)
     });
   }
 
@@ -78,5 +79,10 @@ export class HomePage implements OnInit {
   goToProduct(product: any) {
     // Navigate to details page with the product ID
     this.navCtrl.navigateForward(['/productdetails', product.id]);
+  }
+
+  onCategoryClick(category: any) {
+    // Navigate to SubCategory Page with ID
+    this.navCtrl.navigateForward(['/sub-categories', category.id]);
   }
 }

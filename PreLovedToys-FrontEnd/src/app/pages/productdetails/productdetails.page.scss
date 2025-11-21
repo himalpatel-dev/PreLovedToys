@@ -1,88 +1,202 @@
-.hero-image {
-    width: 100%;
-    height: 300px;
-    background: #f0f0f0;
+// 1. Image Gallery
+.image-gallery {
+    background: #f4f4f4;
+    padding-bottom: 15px;
 
-    img {
+    .main-image {
         width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-}
-
-.thumbnails {
-    display: flex;
-    padding: 10px;
-    gap: 10px;
-    overflow-x: auto;
-    background: #fff;
-
-    .thumb-item {
-        width: 60px;
-        height: 60px;
-        border-radius: 8px;
-        border: 2px solid transparent;
-        overflow: hidden;
-
-        &.active {
-            border-color: var(--ion-color-primary);
-        }
+        height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; // Ensures image isn't cropped
+        }
+    }
+
+    .thumbnails {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+
+        .thumb-item {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            overflow: hidden;
+            background: white;
+
+            &.active {
+                border-color: var(--ion-color-primary);
+            }
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
         }
     }
 }
 
-.header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
+// 2. Content Container
+.details-container {
+    background: white;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    margin-top: -20px; // Overlap effect
+    padding: 20px;
+    position: relative;
+    min-height: 500px;
+}
 
-    .title {
-        font-size: 22px;
-        font-weight: 700;
-        margin: 0;
-        width: 70%;
-    }
+// 3. Typography
+.breadcrumb {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
 
-    .price {
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--ion-color-primary);
-        margin: 0;
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #222;
+    margin: 5px 0;
+    line-height: 1.3;
+}
+
+.price {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--ion-color-primary);
+    margin: 5px 0 15px 0;
+}
+
+// 4. Divider Line
+.divider {
+    height: 1px;
+    background: #eee;
+    margin: 20px 0;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+// 5. Specs Grid (The new layout)
+.specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; // Two columns
+    gap: 15px;
+
+    .spec-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: #f9f9f9;
+        padding: 10px;
+        border-radius: 8px;
+
+        ion-icon {
+            font-size: 20px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        p {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
     }
 }
 
-.seller-box {
+// Color Dot
+.color-display {
     display: flex;
     align-items: center;
-    background: #f9f9f9;
-    padding: 10px;
-    border-radius: 8px;
-    margin: 15px 0;
-    gap: 10px;
+    gap: 6px;
 
-    ion-icon {
-        font-size: 24px;
-        color: #666;
+    .color-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.1);
     }
 }
 
-.description {
-    margin-top: 20px;
+// 6. Seller Card
+.seller-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #eee;
 
-    h3 {
-        font-size: 16px;
-        font-weight: 600;
+    .seller-avatar {
+        width: 40px;
+        height: 40px;
+        background: #333;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
     }
 
-    p {
-        color: #555;
-        line-height: 1.5;
-        font-size: 14px;
+    .seller-info {
+        flex: 1;
+
+        h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        p {
+            margin: 2px 0 0 0;
+            font-size: 11px;
+            color: #888;
+        }
+    }
+}
+
+.description-text {
+    color: #555;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+// 7. Footer Button
+.footer-toolbar {
+    padding: 0 10px 10px 10px;
+    --background: transparent;
+
+    .add-btn {
+        --border-radius: 12px;
+        font-weight: 600;
+        height: 50px;
     }
 }

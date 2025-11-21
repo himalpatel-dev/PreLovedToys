@@ -1,0 +1,44 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>User Management</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <ion-list *ngIf="!isLoading">
+    <ion-item *ngFor="let user of users">
+      <ion-avatar slot="start">
+        <div class="user-avatar-placeholder">
+          {{ user.name ? user.name.charAt(0) : 'U' }}
+        </div>
+      </ion-avatar>
+
+      <ion-label>
+        <h2>{{ user.name || 'Unknown User' }}</h2>
+        <p>+91 {{ user.mobile }}</p>
+        <p style="font-size: 10px; color: #888;">Joined: {{ user.createdAt | date }}</p>
+      </ion-label>
+
+      <ion-badge slot="end" [color]="user.isActive ? 'success' : 'danger'" style="margin-right: 10px;">
+        {{ user.isActive ? 'Active' : 'Banned' }}
+      </ion-badge>
+
+      <ion-button fill="clear" [color]="user.isActive ? 'danger' : 'success'" (click)="confirmStatusChange(user)">
+        <ion-icon slot="icon-only" [name]="user.isActive ? 'ban-outline' : 'checkmark-circle-outline'"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!isLoading && users.length === 0" class="ion-text-center ion-padding">
+    <p>No users found.</p>
+  </div>
+
+</ion-content>

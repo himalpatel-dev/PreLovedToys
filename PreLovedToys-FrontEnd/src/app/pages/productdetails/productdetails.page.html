@@ -1,50 +1,118 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home"></ion-back-button>
+      <ion-back-button defaultHref="/home" color="dark"></ion-back-button>
     </ion-buttons>
-    <ion-title>Details</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/cart">
+        <ion-icon name="cart-outline" color="dark"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" *ngIf="product">
+<ion-content [fullscreen]="true" *ngIf="product" class="product-content">
 
-  <div class="hero-image">
-    <img [src]="selectedImage || 'https://placehold.co/600x400'" />
-  </div>
+  <div class="image-gallery">
+    <div class="main-image">
+      <img [src]="selectedImage || 'https://placehold.co/600x600'" />
+    </div>
 
-  <div class="thumbnails" *ngIf="product.images?.length > 0">
-    <div class="thumb-item" *ngFor="let img of product.images" [class.active]="img.imageUrl === selectedImage"
-      (click)="selectedImage = img.imageUrl">
-      <img [src]="img.imageUrl" />
+    <div class="thumbnails" *ngIf="product.images?.length > 1">
+      <div class="thumb-item" *ngFor="let img of product.images" [class.active]="img.imageUrl === selectedImage"
+        (click)="selectedImage = img.imageUrl">
+        <img [src]="img.imageUrl" />
+      </div>
     </div>
   </div>
 
-  <div class="ion-padding">
-    <div class="header-row">
-      <h1 class="title">{{ product.title }}</h1>
-      <h2 class="price">₹{{ product.price }}</h2>
+  <div class="details-container">
+
+    <p class="breadcrumb">
+      {{ product.category?.name }}
+      <span *ngIf="product.subcategory"> > {{ product.subcategory.name }}</span>
+    </p>
+
+    <h1 class="title">{{ product.title }}</h1>
+    <h2 class="price">₹{{ product.price }}</h2>
+
+    <div class="badges">
+      <ion-badge [color]="product.condition === 'New' ? 'success' : 'warning'">
+        Condition: {{ product.condition }}
+      </ion-badge>
     </div>
 
-    <ion-badge color="secondary">{{ product.condition }}</ion-badge>
-    <ion-badge color="light" class="ion-margin-start">{{ product.ageGroup }}</ion-badge>
+    <div class="divider"></div>
 
-    <div class="seller-box" *ngIf="product.seller">
-      <ion-icon name="person-circle-outline"></ion-icon>
-      <span>Sold by <strong>{{ product.seller.name || 'Verified Seller' }}</strong></span>
+    <h3 class="section-title">Specifications</h3>
+
+    <div class="specs-grid">
+      <div class="spec-item">
+        <ion-icon name="happy-outline"></ion-icon>
+        <div>
+          <label>Age Group</label>
+          <p>{{ product.ageGroup?.name }}</p>
+        </div>
+      </div>
+
+      <div class="spec-item">
+        <ion-icon name="people-outline"></ion-icon>
+        <div>
+          <label>Ideal For</label>
+          <p>{{ product.gender?.name }}</p>
+        </div>
+      </div>
+
+      <div class="spec-item">
+        <ion-icon name="cube-outline"></ion-icon>
+        <div>
+          <label>Material</label>
+          <p>{{ product.material?.name || 'N/A' }}</p>
+        </div>
+      </div>
+
+      <div class="spec-item">
+        <ion-icon name="color-palette-outline"></ion-icon>
+        <div>
+          <label>Color</label>
+          <div class="color-display">
+            <span class="color-dot" *ngIf="product.color?.hexCode" [style.background]="product.color.hexCode">
+            </span>
+            <p>{{ product.color?.name }}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="description">
-      <h3>Description</h3>
-      <p>{{ product.description }}</p>
+    <div class="divider"></div>
+
+    <h3 class="section-title">Description</h3>
+    <p class="description-text">{{ product.description }}</p>
+
+    <div class="divider"></div>
+
+    <div class="seller-card">
+      <div class="seller-avatar">
+        {{ product.seller?.name?.charAt(0) || 'S' }}
+      </div>
+      <div class="seller-info">
+        <h4>{{ product.seller?.name || 'Verified Seller' }}</h4>
+        <p>Member since {{ product.seller?.createdAt | date:'yyyy' }}</p>
+      </div>
+      <ion-button fill="outline" size="small" disabled>Contact</ion-button>
     </div>
+
   </div>
+
+  <div style="height: 80px;"></div>
+
 </ion-content>
 
 <ion-footer class="ion-no-border">
-  <ion-toolbar class="ion-padding">
-    <ion-button expand="block" size="large" (click)="addToCart()">
+  <ion-toolbar class="footer-toolbar">
+    <ion-button expand="block" class="add-btn" (click)="addToCart()">
       Add to Cart
+      <ion-icon slot="end" name="bag-add-outline"></ion-icon>
     </ion-button>
   </ion-toolbar>
 </ion-footer>

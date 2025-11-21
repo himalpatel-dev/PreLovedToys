@@ -7,7 +7,14 @@ import { ProductService } from 'src/app/core/services/product.service';
 import { CartService } from 'src/app/core/services/cart.service';
 import { environment } from 'src/environments/environment';
 import { addIcons } from 'ionicons';
-import { personCircleOutline } from 'ionicons/icons';
+import {
+  cartOutline,
+  bagAddOutline,
+  happyOutline,
+  peopleOutline,
+  cubeOutline,
+  colorPaletteOutline
+} from 'ionicons/icons';
 @Component({
   selector: 'app-productdetails',
   templateUrl: './productdetails.page.html',
@@ -27,7 +34,14 @@ export class ProductdetailsPage implements OnInit {
     private navCtrl: NavController,
     private toastCtrl: ToastController
   ) {
-    addIcons({ personCircleOutline });
+    addIcons({
+      cartOutline,
+      bagAddOutline,
+      happyOutline,
+      peopleOutline,
+      cubeOutline,
+      colorPaletteOutline
+    });
   }
 
   ngOnInit() {

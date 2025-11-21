@@ -1,0 +1,27 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ category?.name }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <ion-list lines="full">
+    <ion-item button *ngFor="let sub of subCategories" (click)="goToProducts(sub.id, sub.name)">
+
+      <ion-label>
+        <h2>{{ sub.name }} ({{ sub.products.length }})</h2>
+        <p *ngIf="!sub.products?.length" style="color: #ccc; font-size: 12px;">No items yet</p>
+      </ion-label>
+
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="subCategories.length === 0" class="ion-padding ion-text-center">
+    <p>No subcategories found.</p>
+  </div>
+
+</ion-content>

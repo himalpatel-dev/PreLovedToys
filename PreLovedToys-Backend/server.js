@@ -12,18 +12,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 1. IMPORT ROUTES
 const authRoutes = require('./src/routes/auth.routes');
-const categoryRoutes = require('./src/routes/category.routes');
+const masterRoutes = require('./src/routes/master.routes');
 const productRoutes = require('./src/routes/product.routes');
 const cartRoutes = require('./src/routes/cart.routes');
 const orderRoutes = require('./src/routes/order.routes');
+const userRoutes = require('./src/routes/user.routes');
+const statsRoutes = require('./src/routes/stats.routes');
 
 // 2. USE ROUTES
 app.use('/api/auth', authRoutes);
-app.use('/api/categories', categoryRoutes);
+app.use('/api/master', masterRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

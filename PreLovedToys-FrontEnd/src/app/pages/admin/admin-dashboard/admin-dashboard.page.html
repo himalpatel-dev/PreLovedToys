@@ -1,38 +1,144 @@
 <ion-header>
   <ion-toolbar color="dark">
-    <ion-title>Admin Dashboard</ion-title>
+    <ion-title>Admin Panel</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="logout()">Logout</ion-button>
+      <ion-button (click)="logout()">
+        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <h3>Pending Approvals</h3>
 
-  <ion-list>
-    <ion-item *ngFor="let p of pendingProducts">
-      <ion-thumbnail slot="start">
-        <img [src]="p.images[0]?.imageUrl" />
-      </ion-thumbnail>
-      <ion-label>
-        <h2>{{ p.title }}</h2>
-        <p>Price: ₹{{ p.price }}</p>
-        <p>Seller: {{ p.seller.name || p.seller.mobile }}</p>
-      </ion-label>
+  <!-- STATS SECTION -->
+  <div class="stats-container">
 
-      <ion-buttons slot="end">
-        <ion-button color="danger" (click)="updateStatus(p.id, 'rejected')">
-          <ion-icon slot="icon-only" name="close-circle"></ion-icon>
-        </ion-button>
-        <ion-button color="success" (click)="updateStatus(p.id, 'active')">
-          <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-    </ion-item>
-  </ion-list>
+    <!-- Revenue Card -->
+    <ion-card class="stat-card revenue">
+      <ion-card-content>
+        <div class="icon-box">
+          <ion-icon name="wallet-outline"></ion-icon>
+        </div>
+        <div>
+          <h2>₹{{ stats.totalRevenue | number }}</h2>
+          <p>Total Revenue</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
 
-  <div *ngIf="pendingProducts.length === 0" class="ion-text-center ion-padding">
-    <p>No pending products.</p>
+    <!-- Counts Grid -->
+    <ion-grid class="ion-no-padding">
+      <ion-row>
+        <ion-col size="4">
+          <div class="mini-stat">
+            <h3>{{ stats.totalOrders }}</h3>
+            <small>Orders</small>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="mini-stat">
+            <h3>{{ stats.activeProducts }}</h3>
+            <small>Products</small>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="mini-stat">
+            <h3>{{ stats.totalUsers }}</h3>
+            <small>Users</small>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
   </div>
+
+  <h2 class="section-title">Management</h2>
+
+  <!-- MENU GRID -->
+  <ion-grid>
+    <ion-row>
+      <!-- 1. Categories -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/categories" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="grid-outline" color="primary"></ion-icon>
+            <ion-card-title>Categories</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- 2. Sub Categories -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/sub-categories" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="list-outline" color="secondary"></ion-icon>
+            <ion-card-title>Sub Categories</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- 3. Age Groups -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/age-groups" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="happy-outline" color="warning"></ion-icon>
+            <ion-card-title>Age Groups</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- 4. Colors -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/colors" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="color-palette-outline" color="danger"></ion-icon>
+            <ion-card-title>Colors</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- 5. Genders -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/genders" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="people-outline" color="tertiary"></ion-icon>
+            <ion-card-title>Genders</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- 6. Materials -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/materials" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="cube-outline" color="success"></ion-icon>
+            <ion-card-title>Materials</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- 7. Users -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/users" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="people-outline" color="medium"></ion-icon>
+            <ion-card-title>Users</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- 8. Orders -->
+      <ion-col size="6">
+        <ion-card button routerLink="/admin/orders" class="menu-card">
+          <ion-card-content>
+            <ion-icon name="receipt-outline" color="dark"></ion-icon>
+            <ion-card-title>Orders</ion-card-title>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+    </ion-row>
+  </ion-grid>
+
 </ion-content>

@@ -1,101 +1,144 @@
+// services/order.service.js
 const db = require('../models');
-const Order = db.Order;
-const OrderItem = db.OrderItem;
-const CartItem = db.CartItem;
-const Product = db.Product;
+const { Order, OrderItem, CartItem, Product, ProductImage, User, sequelize } = db;
 
-// 1. Checkout (Place Order)
+/**
+ * Create an order for a user from their cart.
+ * - Uses a transaction
+ * - Moves cart items to order items
+ * - Empties the cart
+ */
 const createOrder = async (userId, address) => {
-    // Start a transaction
-    const t = await db.sequelize.transaction();
-
+    const t = await sequelize.transaction();
     try {
-        // A. Get all items from user's cart
+        // A. Get cart items with product details
         const cartItems = await CartItem.findAll({
             where: { userId },
-            include: [{ model: Product, as: 'product' }]
+            include: [{ model: Product, as: 'product', required: true }],
+            transaction: t,
+            lock: t.LOCK.UPDATE, // optional: lock rows in transaction to avoid concurrency issues
         });
 
-        if (cartItems.length === 0) {
-            throw new Error("Cart is empty!");
+        if (!cartItems || cartItems.length === 0) {
+            await t.rollback();
+            throw new Error('Cart is empty!');
         }
 
-        // B. Calculate Total Amount
+        // B. Calculate total
         let totalAmount = 0;
-        cartItems.forEach(item => {
-            totalAmount += item.quantity * parseFloat(item.product.price);
-        });
+        for (const item of cartItems) {
+            const price = Number(item.product && item.product.price) || 0;
+            totalAmount += item.quantity * price;
+        }
 
-        // C. Create the Order
+        // C. Create order
         const order = await Order.create({
             userId,
             totalAmount,
             shippingAddress: address,
-            status: 'placed'
-        }, { transaction: t }); // Pass transaction object
+            status: 'placed',
+        }, { transaction: t });
 
-        // D. Move Cart Items to Order Items
+        // D. Create order items
         const orderItemsData = cartItems.map(item => ({
             orderId: order.id,
             productId: item.productId,
             quantity: item.quantity,
-            priceAtPurchase: item.product.price
+            priceAtPurchase: Number(item.product && item.product.price) || 0,
         }));
 
         await OrderItem.bulkCreate(orderItemsData, { transaction: t });
 
-        // E. Empty the Cart
-        await CartItem.destroy({
-            where: { userId },
-            transaction: t
-        });
+        // E. Empty cart
+        await CartItem.destroy({ where: { userId }, transaction: t });
 
-        // F. Commit (Save everything)
         await t.commit();
-
         return order;
-
-    } catch (error) {
-        // If anything fails, Rollback (Undo everything)
-        await t.rollback();
-        throw error;
+    } catch (err) {
+        try { await t.rollback(); } catch (rollbackErr) { console.error('rollback error', rollbackErr); }
+        throw err;
     }
 };
 
-// 2. Get User Orders
+/**
+ * Get orders for a specific user with items and one image per product
+ */
 const getUserOrders = async (userId) => {
-    try {
-        return await Order.findAll({
-            where: { userId },
-            include: [
-                {
-                    model: OrderItem,
-                    as: 'items',
-                    include: [
-                        {
-                            model: Product,
-                            as: 'product',
-                            // 3. DEEP NESTING: Get the image for the product
-                            include: [
-                                {
-                                    model: ProductImage,
-                                    as: 'images',
-                                    attributes: ['imageUrl'],
-                                    limit: 1 // We only need one image for the thumbnail
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ],
-            order: [['createdAt', 'DESC']]
-        });
-    } catch (error) {
-        throw error;
-    }
+    return Order.findAll({
+        where: { userId },
+        include: [
+            {
+                model: OrderItem,
+                as: 'items',
+                include: [
+                    {
+                        model: Product,
+                        as: 'product',
+                        include: [
+                            {
+                                model: ProductImage,
+                                as: 'images',
+                                attributes: ['imageUrl'],
+                                limit: 1,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+        order: [['createdAt', 'DESC']],
+    });
+};
+
+/**
+ * Admin: get all orders with user info and items
+ */
+const getAllOrdersAdmin = async () => {
+    return Order.findAll({
+        include: [
+            {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'name', 'mobile', 'email'],
+            },
+            {
+                model: OrderItem,
+                as: 'items',
+                include: [
+                    {
+                        model: Product,
+                        as: 'product',
+                        include: [
+                            {
+                                model: ProductImage,
+                                as: 'images',
+                                attributes: ['imageUrl'],
+                                limit: 1,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+        order: [['createdAt', 'DESC']],
+    });
+};
+
+/**
+ * Update status of an order
+ * returns updated order or null if not found
+ */
+const updateOrderStatus = async (orderId, status) => {
+    const order = await Order.findByPk(orderId);
+    if (!order) return null;
+    order.status = status;
+    await order.save();
+    return order;
 };
 
 module.exports = {
     createOrder,
-    getUserOrders
+    getUserOrders,
+    getAllOrdersAdmin,
+    updateOrderStatus,
 };

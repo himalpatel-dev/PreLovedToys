@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Categories</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openModal()">
+        <ion-icon slot="icon-only" name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <ion-list lines="full" *ngIf="!isLoading">
+    <ion-item *ngFor="let cat of categories">
+      <ion-thumbnail slot="start">
+        <!-- USE BASE URL HERE -->
+        <img
+          [src]="cat.image ? (cat.image.startsWith('http') ? cat.image : baseUrl + '/uploads/' + cat.image) : 'https://placehold.co/50'"
+          onError="this.src='https://placehold.co/50'" />
+      </ion-thumbnail>
+
+      <ion-label>
+        <h2>{{ cat.name }}</h2>
+        <p>{{ cat.subcategories?.length || 0 }} Subcategories</p>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button color="primary" (click)="openModal(cat)">
+          <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+        </ion-button>
+        <ion-button color="danger" (click)="confirmDelete(cat.id)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!isLoading && categories.length === 0" class="ion-text-center ion-padding">
+    <p>No categories found.</p>
+    <ion-button (click)="openModal()">Add First Category</ion-button>
+  </div>
+
+  <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ isEditMode ? 'Edit' : 'Add' }} Category</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeModal()">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+
+        <div class="image-upload-box" (click)="fileInput.click()">
+          <!-- USE BASE URL HERE -->
+          <img *ngIf="previewImage"
+            [src]="previewImage && (previewImage.startsWith('http') || previewImage.startsWith('data:')) ? previewImage : baseUrl + '/uploads/' + previewImage" />
+
+          <div *ngIf="!previewImage" class="placeholder">
+            <ion-icon name="camera-outline"></ion-icon>
+            <p>Tap to add photo</p>
+          </div>
+        </div>
+        <input type="file" accept="image/*" #fileInput (change)="onFileSelected($event)" style="display: none;" />
+
+        <ion-item fill="outline" class="ion-margin-top">
+          <ion-label position="floating">Category Name</ion-label>
+          <ion-input [(ngModel)]="formData.name"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" class="ion-margin-top" (click)="saveCategory()">
+          Save
+        </ion-button>
+
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

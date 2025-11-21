@@ -16,7 +16,6 @@
       <p>Tap to add photo</p>
     </div>
   </div>
-
   <input type="file" accept="image/*" #fileInput (change)="onFileSelected($event)" style="display: none;" />
 
   <form (ngSubmit)="onSubmit()">
@@ -37,13 +36,20 @@
     </ion-item>
 
     <ion-item fill="outline" class="ion-margin-bottom">
-      <ion-select label="Category" placeholder="Select" [(ngModel)]="product.categoryId" name="cat">
+      <ion-select label="Category" [(ngModel)]="product.categoryId" name="cat" (ionChange)="onCategoryChange()"
+        required>
         <ion-select-option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</ion-select-option>
       </ion-select>
     </ion-item>
 
     <ion-item fill="outline" class="ion-margin-bottom">
-      <ion-select label="Condition" placeholder="Select" [(ngModel)]="product.condition" name="cond">
+      <ion-select label="Sub Category" [(ngModel)]="product.subCategoryId" name="sub" [disabled]="!product.categoryId">
+        <ion-select-option *ngFor="let s of subCategories" [value]="s.id">{{ s.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-select label="Condition" [(ngModel)]="product.condition" name="cond">
         <ion-select-option value="New">New</ion-select-option>
         <ion-select-option value="Like New">Like New</ion-select-option>
         <ion-select-option value="Good">Good</ion-select-option>
@@ -51,7 +57,33 @@
       </ion-select>
     </ion-item>
 
-    <ion-button expand="block" type="submit" [disabled]="isSubmitting || !previewImage">
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-select label="Age Group" [(ngModel)]="product.ageGroupId" name="age" required>
+        <ion-select-option *ngFor="let a of ageGroups" [value]="a.id">{{ a.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-select label="Ideal For" [(ngModel)]="product.genderId" name="gen" required>
+        <ion-select-option *ngFor="let g of genders" [value]="g.id">{{ g.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-select label="Color" [(ngModel)]="product.colorId" name="col" required>
+        <ion-select-option *ngFor="let c of colors" [value]="c.id">
+          {{ c.name }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-select label="Material (Optional)" [(ngModel)]="product.materialId" name="mat">
+        <ion-select-option *ngFor="let m of materials" [value]="m.id">{{ m.name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-button expand="block" type="submit" class="ion-margin-top" [disabled]="isSubmitting || !previewImage">
       {{ isSubmitting ? 'Publishing...' : 'List Item' }}
     </ion-button>
 

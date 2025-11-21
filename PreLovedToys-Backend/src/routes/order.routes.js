@@ -11,4 +11,7 @@ router.post('/', orderController.placeOrder);
 // GET /api/orders (History)
 router.get('/', orderController.getMyOrders);
 
+router.get('/admin/all', orderController.getAllOrdersAdmin);
+router.put('/admin/:id/status', orderController.updateOrderStatus);
+
 module.exports = router;

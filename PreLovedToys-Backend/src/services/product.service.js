@@ -45,20 +45,27 @@ const createProduct = async (data, userId) => {
 };
 
 // 2. Get All Products (Updated to Include Master Data names)
-const getAllProducts = async (status = 'active') => {
+// Update the arguments to accept an object of filters
+const getAllProducts = async (filters = {}) => {
     try {
+        // Build the "Where" clause dynamically
+        const whereClause = { status: 'active' };
+
+        if (filters.categoryId) {
+            whereClause.categoryId = filters.categoryId;
+        }
+        if (filters.subCategoryId) {
+            whereClause.subCategoryId = filters.subCategoryId;
+        }
+
         const products = await Product.findAll({
-            where: { status: status },
+            where: whereClause, // <--- USE DYNAMIC WHERE CLAUSE
             include: [
                 { model: ProductImage, as: 'images', attributes: ['imageUrl', 'isPrimary'] },
                 { model: Category, as: 'category', attributes: ['name'] },
                 { model: SubCategory, as: 'subcategory', attributes: ['name'] },
                 { model: User, as: 'seller', attributes: ['name'] },
-                // INCLUDE NEW MASTERS
-                { model: AgeGroup, as: 'ageGroup', attributes: ['name'] },
-                { model: Color, as: 'color', attributes: ['name', 'hexCode'] },
-                { model: Gender, as: 'gender', attributes: ['name'] },
-                { model: Material, as: 'material', attributes: ['name'] }
+                // ... (keep your other includes: AgeGroup, Color, etc.) ...
             ],
             order: [['createdAt', 'DESC']]
         });

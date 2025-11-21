@@ -14,8 +14,12 @@ const addProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
     try {
-        const { status } = req.query; // Read ?status=pending from URL
-        const products = await productService.getAllProducts(status || 'active');
+        // Extract query params
+        const { categoryId, subCategoryId } = req.query;
+
+        // Pass them to the service
+        const products = await productService.getAllProducts({ categoryId, subCategoryId });
+
         res.status(200).json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });
