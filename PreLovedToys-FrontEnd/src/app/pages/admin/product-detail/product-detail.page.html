@@ -1,0 +1,117 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/products"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Product Details</ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="danger" (click)="confirmDelete()">
+        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && product" class="product-container">
+    
+    <!-- 1. Main Image -->
+    <div class="image-gallery">
+      <img [src]="selectedImage" class="main-img" />
+      
+      <!-- Thumbnails -->
+      <div class="thumbnails" *ngIf="product.images?.length > 1">
+        <div 
+          class="thumb-item" 
+          *ngFor="let img of product.images"
+          (click)="selectedImage = getImageUrl(img.imageUrl)">
+          <img [src]="getImageUrl(img.imageUrl)" />
+        </div>
+      </div>
+    </div>
+
+    <div class="ion-padding">
+      
+      <!-- 2. Header Info -->
+      <ion-badge [color]="product.status === 'active' ? 'success' : 'medium'" class="status-badge">
+        {{ product.status | titlecase }}
+      </ion-badge>
+      
+      <h1 class="title">{{ product.title }}</h1>
+      <h2 class="price">₹{{ product.price }}</h2>
+      
+      <p class="breadcrumb">
+        {{ product.category?.name }} 
+        <span *ngIf="product.subcategory"> > {{ product.subcategory.name }}</span>
+      </p>
+
+      <div class="divider"></div>
+
+      <!-- 3. Specifications Grid -->
+      <h3 class="section-title">Specifications</h3>
+      <ion-grid class="specs-grid">
+        <ion-row>
+          <ion-col size="6">
+            <div class="spec-box">
+              <label>Condition</label>
+              <p>{{ product.condition }}</p>
+            </div>
+          </ion-col>
+          <ion-col size="6">
+            <div class="spec-box">
+              <label>Age Group</label>
+              <p>{{ product.ageGroup?.name }}</p>
+            </div>
+          </ion-col>
+          <ion-col size="6">
+            <div class="spec-box">
+              <label>Gender</label>
+              <p>{{ product.gender?.name || product.gender?.value }}</p>
+            </div>
+          </ion-col>
+          <ion-col size="6">
+            <div class="spec-box">
+              <label>Color</label>
+              <div style="display:flex; align-items:center; gap:5px;">
+                <span *ngIf="product.color?.hexCode" [style.background]="product.color.hexCode" class="color-dot"></span>
+                <p>{{ product.color?.name }}</p>
+              </div>
+            </div>
+          </ion-col>
+          <ion-col size="6">
+            <div class="spec-box">
+              <label>Material</label>
+              <p>{{ product.material?.name || 'N/A' }}</p>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <div class="divider"></div>
+
+      <!-- 4. Description -->
+      <h3 class="section-title">Description</h3>
+      <p class="desc-text">{{ product.description }}</p>
+
+      <div class="divider"></div>
+
+      <!-- 5. Seller Info -->
+      <h3 class="section-title">Seller Details</h3>
+      <ion-item lines="none" class="seller-card">
+        <ion-icon name="person-circle-outline" slot="start" size="large"></ion-icon>
+        <ion-label>
+          <h2>{{ product.seller?.name || 'Unknown' }}</h2>
+          <p>+91 {{ product.seller?.mobile }}</p>
+          <p style="font-size: 11px; color:#888;">Listed: {{ product.createdAt | date:'medium' }}</p>
+        </ion-label>
+      </ion-item>
+
+    </div>
+  </div>
+
+</ion-content>

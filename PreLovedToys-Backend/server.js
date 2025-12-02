@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'PreLovedToys API is running!' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 db.sequelize.sync({ alter: true })
     .then(() => {

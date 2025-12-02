@@ -21,28 +21,23 @@ export const routes: Routes = [
   },
   {
     path: 'productdetails/:id',
-    loadComponent: () => import('./pages/productdetails/productdetails.page').then(m => m.ProductdetailsPage),
-    canActivate: [AdminGuard]
+    loadComponent: () => import('./pages/productdetails/productdetails.page').then(m => m.ProductdetailsPage), 
   },
   {
     path: 'cart',
-    loadComponent: () => import('./pages/cart/cart.page').then(m => m.CartPage),
-    canActivate: [AdminGuard]
+    loadComponent: () => import('./pages/cart/cart.page').then(m => m.CartPage), 
   },
   {
     path: 'checkout',
-    loadComponent: () => import('./pages/checkout/checkout.page').then(m => m.CheckoutPage),
-    canActivate: [AdminGuard]
+    loadComponent: () => import('./pages/checkout/checkout.page').then(m => m.CheckoutPage), 
   },
   {
     path: 'orders',
-    loadComponent: () => import('./pages/orders/orders.page').then(m => m.OrdersPage),
-    canActivate: [AdminGuard]
+    loadComponent: () => import('./pages/orders/orders.page').then(m => m.OrdersPage), 
   },
   {
     path: 'sell',
-    loadComponent: () => import('./pages/sell/sell.page').then(m => m.SellPage),
-    canActivate: [AdminGuard]
+    loadComponent: () => import('./pages/sell/sell.page').then(m => m.SellPage), 
   },
   {
     path: 'admin-dashboard',
@@ -51,8 +46,7 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage),
-    canActivate: [AdminGuard]
+    loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage), 
   },
   {
     path: 'sub-categories/:categoryId',
@@ -104,9 +98,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/orders/orders.page').then(m => m.OrdersPage),
     canActivate: [AdminGuard]
   },
-
-
-
-
+  {
+    path: 'products',
+    loadComponent: () => import('./pages/admin/products/products.page').then( m => m.ProductsPage),
+    canActivate: [AdminGuard]
+  },
+  {
+    path: 'product-detail/:id',
+    loadComponent: () => import('./pages/admin/product-detail/product-detail.page').then( m => m.ProductDetailPage),
+    canActivate: [AdminGuard]
+  },
 
 ];

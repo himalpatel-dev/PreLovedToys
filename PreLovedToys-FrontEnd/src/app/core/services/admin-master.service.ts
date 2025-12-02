@@ -139,4 +139,17 @@ export class AdminMasterService {
   getDashboardStats() {
     return this.api.get('stats');
   }
+
+  // === PRODUCT INVENTORY ===
+  getInventory() {
+    return this.api.get('products/admin/all');
+  }
+
+  getProductDetails(id: number) {
+    return this.api.get(`products/${id}`);
+  }
+
+  deleteProduct(id: number) { 
+    return this.api.delete(`products/${id}`);
+  }
 }

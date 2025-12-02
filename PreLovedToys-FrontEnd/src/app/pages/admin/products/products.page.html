@@ -1,0 +1,46 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin-dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Product Inventory</ion-title>
+  </ion-toolbar>
+  <ion-toolbar color="light">
+    <ion-searchbar placeholder="Search by Product or Seller..." (ionInput)="handleSearch($event)"></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <ion-list *ngIf="!isLoading">
+    <!-- ADD CLICK EVENT HERE -->
+    <ion-item *ngFor="let p of filteredProducts" button (click)="goToDetail(p)">
+      <ion-thumbnail slot="start">
+        <img [src]="p.images[0]?.imageUrl ? (p.images[0].imageUrl.startsWith('http') ? p.images[0].imageUrl : baseUrl + '/uploads/' + p.images[0].imageUrl) : 'https://placehold.co/50'" />
+      </ion-thumbnail>
+      
+      <ion-label>
+        <h2>{{ p.title }}</h2>
+        <p>
+          <ion-icon name="pricetag-outline" style="vertical-align: middle;"></ion-icon> 
+          ₹{{ p.price }} 
+          <ion-badge [color]="p.status === 'active' ? 'success' : 'medium'" style="margin-left: 5px;">{{ p.status }}</ion-badge>
+        </p>
+        <p style="font-size: 11px; color: #666;">
+          <ion-icon name="person-outline" style="vertical-align: middle;"></ion-icon> 
+          Seller: {{ p.seller?.name || 'Unknown' }}
+        </p>
+      </ion-label>
+  
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="!isLoading && filteredProducts.length === 0" class="ion-text-center ion-padding">
+    <p>No products found.</p>
+  </div>
+
+</ion-content>

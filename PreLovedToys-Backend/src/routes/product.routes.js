@@ -20,4 +20,7 @@ router.delete('/:id', verifyToken, productController.deleteListing);
 // PUT /api/products/:id/status
 router.put('/:id/status', verifyToken, productController.updateStatus);
 
+// ADMIN ROUTES
+router.get('/admin/all', verifyToken, productController.getAllProductsAdmin);
+
 module.exports = router;

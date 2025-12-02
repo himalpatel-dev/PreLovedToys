@@ -126,11 +126,30 @@ const deleteProduct = async (productId, userId) => {
     return await product.destroy();
 };
 
+const getAdminProducts = async () => {
+    try {
+        const products = await Product.findAll({
+            include: [
+                { model: ProductImage, as: 'images', attributes: ['imageUrl', 'isPrimary'] },
+                { model: Category, as: 'category', attributes: ['name'] },
+                { model: SubCategory, as: 'subcategory', attributes: ['name'] },
+                { model: User, as: 'seller', attributes: ['id', 'name', 'mobile'] }, // Vital for Admin
+                // Include Masters if needed, but for list view usually not critical
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+        return products;
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
     getProductById,
     updateProductStatus,
     getUserProducts,
-    deleteProduct
+    deleteProduct,
+    getAdminProducts
 };

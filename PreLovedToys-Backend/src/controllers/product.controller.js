@@ -72,11 +72,21 @@ const deleteListing = async (req, res) => {
     }
 };
 
+const getAllProductsAdmin = async (req, res) => {
+    try {
+        const products = await productService.getAdminProducts();
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     addProduct,
     getProducts,
     getProductById,
     updateStatus,
     getMyListings,
-    deleteListing
+    deleteListing,
+    getAllProductsAdmin
 };

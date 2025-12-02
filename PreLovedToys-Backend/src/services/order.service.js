@@ -9,54 +9,80 @@ const { Order, OrderItem, CartItem, Product, ProductImage, User, sequelize } = d
  * - Empties the cart
  */
 const createOrder = async (userId, address) => {
-    const t = await sequelize.transaction();
+    // Start a transaction
+    const t = await db.sequelize.transaction();
+
     try {
-        // A. Get cart items with product details
+        // A. Get all items from user's cart
         const cartItems = await CartItem.findAll({
             where: { userId },
-            include: [{ model: Product, as: 'product', required: true }],
-            transaction: t,
-            lock: t.LOCK.UPDATE, // optional: lock rows in transaction to avoid concurrency issues
+            include: [{ model: Product, as: 'product' }]
         });
 
-        if (!cartItems || cartItems.length === 0) {
-            await t.rollback();
-            throw new Error('Cart is empty!');
+        if (cartItems.length === 0) {
+            throw new Error("Cart is empty!");
         }
 
-        // B. Calculate total
-        let totalAmount = 0;
+        // B. VALIDATION: Check if any product is ALREADY sold
+        // This prevents 2 people buying the same unique item at the same time
         for (const item of cartItems) {
-            const price = Number(item.product && item.product.price) || 0;
-            totalAmount += item.quantity * price;
+            if (item.product.status !== 'active') {
+                throw new Error(`Sorry, "${item.product.title}" has just been sold to someone else!`);
+            }
         }
 
-        // C. Create order
+        // C. Calculate Total Amount
+        let totalAmount = 0;
+        cartItems.forEach(item => {
+            totalAmount += item.quantity * parseFloat(item.product.price);
+        });
+
+        // D. Create the Order
         const order = await Order.create({
             userId,
             totalAmount,
             shippingAddress: address,
-            status: 'placed',
+            status: 'placed'
         }, { transaction: t });
 
-        // D. Create order items
+        // E. Move Cart Items to Order Items
         const orderItemsData = cartItems.map(item => ({
             orderId: order.id,
             productId: item.productId,
             quantity: item.quantity,
-            priceAtPurchase: Number(item.product && item.product.price) || 0,
+            priceAtPurchase: item.product.price
         }));
 
         await OrderItem.bulkCreate(orderItemsData, { transaction: t });
 
-        // E. Empty cart
-        await CartItem.destroy({ where: { userId }, transaction: t });
+        // F. *** CRITICAL UPDATE: MARK PRODUCTS AS SOLD ***
+        // Collect all Product IDs
+        const productIds = cartItems.map(item => item.productId);
+        
+        // Update their status to 'sold'
+        await Product.update(
+            { status: 'sold' },
+            { 
+                where: { id: productIds },
+                transaction: t 
+            }
+        );
 
+        // G. Empty the Cart
+        await CartItem.destroy({
+            where: { userId },
+            transaction: t
+        });
+
+        // H. Commit (Save everything)
         await t.commit();
+        
         return order;
-    } catch (err) {
-        try { await t.rollback(); } catch (rollbackErr) { console.error('rollback error', rollbackErr); }
-        throw err;
+
+    } catch (error) {
+        // If anything fails, Rollback (Undo everything)
+        await t.rollback();
+        throw error;
     }
 };
 
