@@ -12,10 +12,27 @@ const SubCategory = db.SubCategory;
 // 1. Create Product with Images
 const createProduct = async (data, userId) => {
     try {
+        // Count user's completed sales using points
+        const completedPointsSales = await Product.count({
+            where: {
+                userId: userId,
+                status: 'sold',
+                isPoints: true
+            }
+        });
+
+        // Validate isPoints flag
+        let isPoints = data.isPoints !== undefined ? data.isPoints : true;
+        
+        if (!isPoints && completedPointsSales < 3) {
+            throw new Error(`You must complete at least 3 point-based sales before unlocking real money listings. Current: ${completedPointsSales}/3`);
+        }
+
         const newProduct = await Product.create({
             title: data.title,
             description: data.description,
             price: data.price,
+            isPoints: isPoints,  // Add isPoints field
             condition: data.condition,
 
             // NEW FIELDS
@@ -144,6 +161,21 @@ const getAdminProducts = async () => {
     }
 };
 
+const getCompletedPointsSalesCount = async (userId) => {
+    try {
+        const count = await Product.count({
+            where: {
+                userId: userId,
+                status: 'sold',
+                isPoints: true
+            }
+        });
+        return count;
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
@@ -151,5 +183,6 @@ module.exports = {
     updateProductStatus,
     getUserProducts,
     deleteProduct,
-    getAdminProducts
+    getAdminProducts,
+    getCompletedPointsSalesCount
 };

@@ -61,6 +61,21 @@ const getMyListings = async (req, res) => {
     }
 };
 
+const getPointsSalesCount = async (req, res) => {
+    try {
+        const userId = req.user.id; // From Token
+        const count = await productService.getCompletedPointsSalesCount(userId);
+        const canSellRealMoney = count >= 3;
+        res.status(200).json({
+            completedPointsSales: count,
+            canSellRealMoney: canSellRealMoney,
+            message: `You have ${count}/3 completed point-based sales. ${canSellRealMoney ? 'You can now sell for real money!' : `Complete ${3 - count} more sale(s) to unlock real money selling.`}`
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const deleteListing = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -87,6 +102,7 @@ module.exports = {
     getProductById,
     updateStatus,
     getMyListings,
+    getPointsSalesCount,
     deleteListing,
     getAllProductsAdmin
 };

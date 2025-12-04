@@ -13,6 +13,8 @@ const AgeGroup = require('./age_group.model');
 const Color = require('./color.model');
 const Gender = require('./gender.model');
 const Material = require('./material.model');
+const Wallet = require('./wallet.model');
+const WalletTransaction = require('./wallet_transaction.model');
 
 const db = {};
 
@@ -29,6 +31,8 @@ db.AgeGroup = AgeGroup;
 db.Color = Color;
 db.Gender = Gender;
 db.Material = Material;
+db.Wallet = Wallet;
+db.WalletTransaction = WalletTransaction;
 
 // =========================================
 // DEFINE RELATIONSHIPS
@@ -103,5 +107,14 @@ db.OrderItem.belongsTo(db.Order, { foreignKey: 'orderId', as: 'order' });
 // Product <-> OrderItem (So we know which product was bought)
 db.Product.hasMany(db.OrderItem, { foreignKey: 'productId' });
 db.OrderItem.belongsTo(db.Product, { foreignKey: 'productId', as: 'product' });
+
+// Wallet relationships
+// Each User has one Wallet
+db.User.hasOne(db.Wallet, { foreignKey: 'userId', as: 'wallet' });
+db.Wallet.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
+
+// Wallet -> Transactions
+db.Wallet.hasMany(db.WalletTransaction, { foreignKey: 'walletId', as: 'transactions' });
+db.WalletTransaction.belongsTo(db.Wallet, { foreignKey: 'walletId', as: 'wallet' });
 
 module.exports = db;

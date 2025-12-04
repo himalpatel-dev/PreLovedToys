@@ -33,6 +33,10 @@ export class ProductService {
     return this.api.get('products/my-listings');
   }
 
+  getPointsSalesCount() {
+    return this.api.get('products/sales-count/points');
+  }
+
   deleteProduct(id: number) {
     return this.api.delete(`products/${id}`);
   }

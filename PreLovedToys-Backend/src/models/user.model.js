@@ -20,6 +20,32 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true // Will be updated later in Profile
     },
+    // Profile fields
+    gender: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    occupation: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    collegeOrUniversity: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    aboutMe: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    purpose: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    // Store interested subcategory IDs as JSON array for flexibility
+    interestedIn: {
+        type: DataTypes.JSON,
+        allowNull: true
+    },
     role: {
         type: DataTypes.ENUM('admin', 'user', 'seller'),
         defaultValue: 'user'

@@ -1,6 +1,7 @@
 const db = require('../models');
 const User = db.User;
 const jwt = require('jsonwebtoken');
+const walletService = require('./wallet.service');
 
 // Helper: Generate 4 digit random number
 const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
@@ -21,6 +22,17 @@ const sendOtp = async (mobile) => {
         user.otp = otp;
         user.otpExpires = otpExpires;
         await user.save();
+
+        // If user was just created, credit welcome bonus (300 coins)
+        if (created) {
+            try {
+                await walletService.credit(user.id, 300, 'Welcome bonus for new registration');
+                console.log(`Credited 300 coins to new user ${user.id}`);
+            } catch (err) {
+                console.error('Failed to credit welcome bonus:', err.message || err);
+                // Do not fail OTP sending if wallet credit fails
+            }
+        }
 
         // TODO: In a real production app, use an SMS API (Twilio/Fast2SMS) here.
         // For now, we return it so you can see it in the response/console.

@@ -18,6 +18,7 @@ const cartRoutes = require('./src/routes/cart.routes');
 const orderRoutes = require('./src/routes/order.routes');
 const userRoutes = require('./src/routes/user.routes');
 const statsRoutes = require('./src/routes/stats.routes');
+const walletRoutes = require('./src/routes/wallet.routes');
 
 // 2. USE ROUTES
 app.use('/api/auth', authRoutes);
@@ -28,6 +29,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

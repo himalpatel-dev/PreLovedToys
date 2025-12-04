@@ -27,6 +27,11 @@ export class SellPage implements OnInit {
   selectedFile: File | null = null;
   isSubmitting = false;
 
+  // Points/Money System
+  completedPointsSales: number = 0;
+  canSellRealMoney: boolean = false;
+  Math = Math; // Expose Math to template
+
   product = {
     title: '',
     price: null,
@@ -37,7 +42,8 @@ export class SellPage implements OnInit {
     ageGroupId: null,
     genderId: null,
     colorId: null,
-    materialId: null
+    materialId: null,
+    isPoints: true  // NEW: true = points, false = real money
   };
 
   constructor(
@@ -51,6 +57,22 @@ export class SellPage implements OnInit {
 
   ngOnInit() {
     this.loadAllData();
+    this.loadPointsSalesCount();
+  }
+
+  loadPointsSalesCount() {
+    // Load user's completed points-based sales count
+    this.productService.getPointsSalesCount().subscribe({
+      next: (res: any) => {
+        this.completedPointsSales = res.completedPointsSales || 0;
+        this.canSellRealMoney = res.canSellRealMoney || false;
+      },
+      error: (err: any) => {
+        console.error('Failed to load sales count', err);
+        this.completedPointsSales = 0;
+        this.canSellRealMoney = false;
+      }
+    });
   }
 
   loadAllData() {
@@ -98,6 +120,13 @@ export class SellPage implements OnInit {
 
   async onSubmit() {
     if (!this.selectedFile) return;
+    
+    // Validate: if not points, user must have 3 completed sales
+    if (!this.product.isPoints && this.completedPointsSales < 3) {
+      await this.showToast('You must complete 3 point-based sales before selling for real money');
+      return;
+    }
+
     this.isSubmitting = true;
 
     this.productService.uploadImage(this.selectedFile).subscribe({
@@ -115,7 +144,7 @@ export class SellPage implements OnInit {
           },
           error: (err) => {
             this.isSubmitting = false;
-            this.showToast('Failed to list product');
+            this.showToast(err.error?.message || 'Failed to list product');
           }
         });
       },

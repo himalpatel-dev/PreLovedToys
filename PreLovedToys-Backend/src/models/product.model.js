@@ -19,6 +19,11 @@ const Product = sequelize.define('Product', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
+    isPoints: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,  // true = points/coins, false = real money
+        comment: 'If true, price is in points/coins. If false, price is in real money (₹).'
+    },
     condition: {
         type: DataTypes.ENUM('New', 'Like New', 'Good', 'Fair'),
         allowNull: false

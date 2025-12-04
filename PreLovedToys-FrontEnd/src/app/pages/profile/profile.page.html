@@ -12,42 +12,222 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" class="profile-content">
 
-  <div class="user-info" *ngIf="user">
-    <div class="avatar">
-      {{ user.name ? user.name.charAt(0) : 'U' }}
+  <div class="profile-header" *ngIf="user">
+    <div class="header-bg">
+      <div class="header-gradient"></div>
     </div>
-    <h2>{{ user.name || 'Toy Seller' }}</h2>
-    <p>+91 {{ user.mobile }}</p>
+    
+    <div class="header-content">
+      <div class="avatar-section">
+        <div class="avatar-container">
+          <div class="avatar">{{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}</div>
+          <ion-button fill="solid" class="edit-avatar-btn" size="small" (click)="toggleEdit()" title="Edit Profile">
+            <ion-icon name="pencil" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+        
+        <div class="user-info">
+          <h1 class="user-name">{{ user.name || 'Toy Seller' }}</h1>
+          <p class="user-mobile">
+            <ion-icon name="call-outline"></ion-icon>
+            +91 {{ user.mobile }}
+          </p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <ion-icon name="wallet-outline" class="stat-icon"></ion-icon>
+          <div class="stat-info">
+            <div class="stat-value">{{ wallet.balance || 0 }}</div>
+            <div class="stat-label">Coins</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <ion-icon name="pricetags-outline" class="stat-icon"></ion-icon>
+          <div class="stat-info">
+            <div class="stat-value">{{ myProducts.length }}</div>
+            <div class="stat-label">Listings</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <ion-icon name="swap-horizontal-outline" class="stat-icon"></ion-icon>
+          <div class="stat-info">
+            <div class="stat-value">{{ transactions.length }}</div>
+            <div class="stat-label">Transactions</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <h3 class="section-title">My Listings</h3>
+  <div class="content-section" *ngIf="user">
+    
+    <!-- About Card -->
+    <ion-card class="info-card">
+      <ion-card-header>
+        <div class="card-header-row">
+          <ion-icon name="information-circle-outline" class="header-icon"></ion-icon>
+          <ion-card-title>About</ion-card-title>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="about-text">{{ user.aboutMe || 'Tell others about yourself — your experience with toys, what you sell or what you collect.' }}</p>
+      </ion-card-content>
+    </ion-card>
 
-  <div *ngIf="myProducts.length === 0" class="empty-state">
-    <p>You haven't listed any toys yet.</p>
-    <ion-button fill="outline" size="small" routerLink="/sell">Sell Now</ion-button>
-  </div>
+    <!-- Interests Card -->
+    <ion-card class="info-card">
+      <ion-card-header>
+        <div class="card-header-row">
+          <ion-icon name="heart-outline" class="header-icon"></ion-icon>
+          <ion-card-title>Interests</ion-card-title>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <div *ngIf="categories.length; else noCat">
+          <div class="interests-wrapper category-chips">
+            <ion-chip *ngFor="let c of categories" (click)="editMode && toggleInterest(c.id)" [class.chip-selected]="isInterestSelected(c.id)" [class.chip-disabled]="!editMode">
+              <ion-label>{{ c.name }}</ion-label>
+              <ion-icon *ngIf="isInterestSelected(c.id)" name="checkmark-circle"></ion-icon>
+            </ion-chip>
+          </div>
+        </div>
+        <ng-template #noCat>
+          <div class="empty-message">
+            <ion-icon name="file-tray-outline"></ion-icon>
+            <p>No categories available</p>
+          </div>
+        </ng-template>
+      </ion-card-content>
+    </ion-card>
 
-  <ion-list>
-    <ion-item *ngFor="let p of myProducts">
-      <ion-thumbnail slot="start">
-        <img [src]="p.images[0]?.imageUrl" />
-      </ion-thumbnail>
-      <ion-label>
-        <h2>{{ p.title }}</h2>
-        <p>₹{{ p.price }}</p>
-        <ion-badge [color]="p.status === 'active' ? 'success' : (p.status === 'pending' ? 'warning' : 'danger')">
-          {{ p.status | titlecase }}
-        </ion-badge>
-      </ion-label>
+    <!-- Profile Details Card -->
+    <ion-card class="info-card">
+      <ion-card-header>
+        <div class="card-header-row">
+          <ion-icon name="person-outline" class="header-icon"></ion-icon>
+          <ion-card-title>Profile Details</ion-card-title>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="form-section">
+          <ion-item lines="none" class="form-item">
+            <ion-label position="stacked">Name</ion-label>
+            <ion-input [(ngModel)]="user.name" [readonly]="!editMode" placeholder="Enter your name"></ion-input>
+          </ion-item>
 
-      <ion-buttons slot="end">
-        <ion-button color="medium" (click)="confirmDelete(p.id)">
-          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          <ion-item lines="none" class="form-item">
+            <ion-label position="stacked">Email</ion-label>
+            <ion-input [(ngModel)]="user.email" type="email" [readonly]="!editMode" placeholder="your@email.com"></ion-input>
+          </ion-item>
+
+          <div class="form-item gender-section">
+            <ion-label class="section-label">Gender</ion-label>
+            <ion-radio-group [(ngModel)]="user.gender" class="radio-group">
+              <ion-item *ngFor="let g of genderOptions" lines="none" class="radio-item">
+                <ion-label>{{ g }}</ion-label>
+                <ion-radio slot="end" [value]="g" [disabled]="!editMode"></ion-radio>
+              </ion-item>
+            </ion-radio-group>
+          </div>
+
+          <div class="form-item">
+            <ion-label class="section-label">Occupation</ion-label>
+            <div class="chips-container">
+              <ion-chip 
+                *ngFor="let o of occupationSamples" 
+                (click)="editMode && pickOccupation(o)" 
+                [class.chip-selected]="user.occupation===o"
+                [class.chip-disabled]="!editMode">
+                <ion-label>{{ o }}</ion-label>
+              </ion-chip>
+            </div>
+          </div>
+
+          <ion-item lines="none" class="form-item">
+            <ion-label position="stacked">College / University</ion-label>
+            <ion-input [(ngModel)]="user.collegeOrUniversity" [readonly]="!editMode" placeholder="Your institution"></ion-input>
+          </ion-item>
+
+          <div class="form-item">
+            <ion-label class="section-label">Purpose on this platform</ion-label>
+            <div class="chips-container">
+              <ion-chip 
+                *ngFor="let p of purposeSamples" 
+                (click)="editMode && pickPurpose(p)" 
+                [class.chip-selected]="user.purpose===p"
+                [class.chip-disabled]="!editMode">
+                <ion-label>{{ p }}</ion-label>
+              </ion-chip>
+            </div>
+          </div>
+
+          <ion-item lines="none" class="form-item">
+            <ion-label position="stacked">About Me</ion-label>
+            <ion-textarea rows="4" [(ngModel)]="user.aboutMe" [readonly]="!editMode" placeholder="Tell us about yourself..."></ion-textarea>
+          </ion-item>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- My Listings Section -->
+    <div class="listings-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <ion-icon name="grid-outline"></ion-icon>
+          My Listings
+        </h2>
+      </div>
+
+      <div *ngIf="myProducts.length === 0" class="empty-listings">
+        <ion-icon name="cube-outline" class="empty-icon"></ion-icon>
+        <h3>No Listings Yet</h3>
+        <p>Start selling your toys today and reach thousands of buyers!</p>
+        <ion-button fill="solid" routerLink="/sell">
+          <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+          Create Listing
         </ion-button>
-      </ion-buttons>
-    </ion-item>
-  </ion-list>
+      </div>
+
+      <div class="products-grid" *ngIf="myProducts.length > 0">
+        <ion-card *ngFor="let p of myProducts" class="product-card">
+          <div class="product-image">
+            <img [src]="p.images[0]?.imageUrl" alt="{{ p.title }}" />
+            <ion-badge class="status-badge" [color]="p.status === 'active' ? 'success' : (p.status === 'pending' ? 'warning' : 'danger')">
+              {{ p.status | titlecase }}
+            </ion-badge>
+          </div>
+          <ion-card-content>
+            <h3 class="product-title">{{ p.title }}</h3>
+            <div class="product-footer">
+              <p class="product-price">₹{{ p.price }}</p>
+              <ion-button fill="clear" color="danger" size="small" (click)="confirmDelete(p.id)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+
+  </div>
 
 </ion-content>
+
+<ion-footer *ngIf="editMode" class="edit-footer">
+  <ion-toolbar>
+    <div class="footer-actions">
+      <ion-button fill="outline" color="medium" (click)="toggleEdit()">
+        <ion-icon slot="start" name="close-outline"></ion-icon>
+        Cancel
+      </ion-button>
+      <ion-button fill="solid" color="primary" (click)="saveProfile()">
+        <ion-icon slot="start" name="checkmark-outline"></ion-icon>
+        Save Changes
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

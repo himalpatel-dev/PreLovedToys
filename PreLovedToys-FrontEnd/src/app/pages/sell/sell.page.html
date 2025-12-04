@@ -20,14 +20,38 @@
 
   <form (ngSubmit)="onSubmit()">
 
+    <!-- Points/Money System Info -->
+    <div class="sales-info-box ion-margin-bottom">
+      <h3>💎 Sales Progress</h3>
+      <p>{{ completedPointsSales }}/3 completed point-based sales</p>
+      <ion-progress-bar [value]="Math.min(completedPointsSales / 3, 1)"></ion-progress-bar>
+      <p class="help-text">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        {{ canSellRealMoney ? '✅ You can now sell for real money!' : 'Complete ' + (3 - completedPointsSales) + ' more sale(s) to unlock real money selling.' }}
+      </p>
+    </div>
+
+    <!-- Price Type Toggle -->
     <ion-item fill="outline" class="ion-margin-bottom">
-      <ion-label position="floating">Title</ion-label>
-      <ion-input [(ngModel)]="product.title" name="title" required></ion-input>
+      <ion-label>Price Type</ion-label>
+      <ion-segment [(ngModel)]="product.isPoints" name="priceType">
+        <ion-segment-button [value]="true">
+          <ion-label>💰 Points</ion-label>
+        </ion-segment-button>
+        <ion-segment-button [value]="false" [disabled]="!canSellRealMoney">
+          <ion-label>💵 Real Money</ion-label>
+        </ion-segment-button>
+      </ion-segment>
     </ion-item>
 
     <ion-item fill="outline" class="ion-margin-bottom">
-      <ion-label position="floating">Price (₹)</ion-label>
+      <ion-label position="floating">{{ product.isPoints ? 'Points' : 'Price (₹)' }}</ion-label>
       <ion-input type="number" [(ngModel)]="product.price" name="price" required></ion-input>
+    </ion-item>
+
+    <ion-item fill="outline" class="ion-margin-bottom">
+      <ion-label position="floating">Title</ion-label>
+      <ion-input [(ngModel)]="product.title" name="title" required></ion-input>
     </ion-item>
 
     <ion-item fill="outline" class="ion-margin-bottom">

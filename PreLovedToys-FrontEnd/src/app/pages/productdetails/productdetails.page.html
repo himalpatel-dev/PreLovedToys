@@ -34,11 +34,18 @@
     </p>
 
     <h1 class="title">{{ product.title }}</h1>
-    <h2 class="price">₹{{ product.price }}</h2>
+    <h2 class="price">
+      <span *ngIf="product.isPoints">💰</span>
+      <span *ngIf="!product.isPoints">₹</span>
+      {{ product.price }}
+    </h2>
 
     <div class="badges">
       <ion-badge [color]="product.condition === 'New' ? 'success' : 'warning'">
         Condition: {{ product.condition }}
+      </ion-badge>
+      <ion-badge [color]="product.isPoints ? 'primary' : 'secondary'">
+        {{ product.isPoints ? '💎 Points' : '💵 Cash' }}
       </ion-badge>
     </div>
 

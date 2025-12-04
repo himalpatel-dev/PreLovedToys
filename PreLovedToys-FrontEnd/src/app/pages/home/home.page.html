@@ -47,11 +47,18 @@
           <ion-card class="product-card">
             <div class="image-container">
               <img [src]="getProductImage(p)" />
+              <ion-badge class="payment-badge" [color]="p.isPoints ? 'primary' : 'secondary'">
+                {{ p.isPoints ? '💎' : '💵' }}
+              </ion-badge>
             </div>
             <ion-card-content>
               <h6 class="product-title">{{ p.title }}</h6>
               <p class="product-condition">{{ p.condition }}</p>
-              <h4 class="product-price">₹{{ p.price }}</h4>
+              <h4 class="product-price">
+                <span *ngIf="p.isPoints">💰</span>
+                <span *ngIf="!p.isPoints">₹</span>
+                {{ p.price }}
+              </h4>
             </ion-card-content>
           </ion-card>
         </ion-col>

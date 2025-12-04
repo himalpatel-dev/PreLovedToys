@@ -12,6 +12,10 @@ export class MasterService {
     return this.api.get('master/categories');
   }
 
+  getAllSubCategories() {
+    return this.api.get('master/subcategories');
+  }
+
   getAgeGroups() {
     return this.api.get('master/age-groups');
   }

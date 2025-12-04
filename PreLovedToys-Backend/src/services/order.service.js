@@ -1,11 +1,13 @@
 // services/order.service.js
 const db = require('../models');
 const { Order, OrderItem, CartItem, Product, ProductImage, User, sequelize } = db;
+const walletService = require('./wallet.service');
 
 /**
  * Create an order for a user from their cart.
  * - Uses a transaction
  * - Moves cart items to order items
+ * - For points-based products: deducts from buyer wallet, credits to seller wallet
  * - Empties the cart
  */
 const createOrder = async (userId, address) => {
@@ -31,21 +33,68 @@ const createOrder = async (userId, address) => {
             }
         }
 
-        // C. Calculate Total Amount
+        // C. Calculate Total Amount and Separate Points vs Real Money
         let totalAmount = 0;
+        let pointsToDeduct = 0;
+        const sellerCredits = {}; // { sellerId: pointsAmount }
+        
         cartItems.forEach(item => {
-            totalAmount += item.quantity * parseFloat(item.product.price);
+            const price = parseFloat(item.product.price);
+            const quantity = item.quantity;
+            const totalPrice = price * quantity;
+            
+            if (item.product.isPoints) {
+                // Points-based purchase
+                pointsToDeduct += totalPrice;
+                if (!sellerCredits[item.product.userId]) {
+                    sellerCredits[item.product.userId] = 0;
+                }
+                sellerCredits[item.product.userId] += totalPrice;
+            } else {
+                // Real money purchase
+                totalAmount += totalPrice;
+            }
         });
 
-        // D. Create the Order
+        // D. For Points purchases: Deduct from buyer's wallet FIRST
+        if (pointsToDeduct > 0) {
+            const buyerWallet = await db.Wallet.findOne({ where: { userId } });
+            if (!buyerWallet) {
+                throw new Error("Wallet not found for buyer");
+            }
+            const currentBalance = BigInt(buyerWallet.balance);
+            const pointsToDeductBigInt = BigInt(pointsToDeduct);
+            
+            if (currentBalance < pointsToDeductBigInt) {
+                throw new Error(`Insufficient points. You have ${currentBalance} points but need ${pointsToDeduct}`);
+            }
+            
+            const newBalance = currentBalance - pointsToDeductBigInt;
+            await db.Wallet.update(
+                { balance: newBalance.toString() },
+                { where: { userId }, transaction: t }
+            );
+            
+            // Record buyer's debit transaction
+            await db.WalletTransaction.create({
+                walletId: buyerWallet.id,
+                type: 'debit',
+                amount: pointsToDeduct,
+                balanceAfter: newBalance.toString(),
+                description: `Purchase of items - ${cartItems.map(i => i.product.title).join(', ')}`
+            }, { transaction: t });
+        }
+
+        // E. Create the Order
         const order = await Order.create({
             userId,
-            totalAmount,
+            totalAmount: totalAmount || 0,
             shippingAddress: address,
-            status: 'placed'
+            status: 'placed',
+            paymentStatus: pointsToDeduct > 0 && totalAmount === 0 ? 'paid' : 'pending' // Mark as paid if only points
         }, { transaction: t });
 
-        // E. Move Cart Items to Order Items
+        // F. Move Cart Items to Order Items
         const orderItemsData = cartItems.map(item => ({
             orderId: order.id,
             productId: item.productId,
@@ -55,7 +104,7 @@ const createOrder = async (userId, address) => {
 
         await OrderItem.bulkCreate(orderItemsData, { transaction: t });
 
-        // F. *** CRITICAL UPDATE: MARK PRODUCTS AS SOLD ***
+        // G. *** CRITICAL UPDATE: MARK PRODUCTS AS SOLD ***
         // Collect all Product IDs
         const productIds = cartItems.map(item => item.productId);
         
@@ -68,13 +117,27 @@ const createOrder = async (userId, address) => {
             }
         );
 
-        // G. Empty the Cart
+        // H. Empty the Cart
         await CartItem.destroy({
             where: { userId },
             transaction: t
         });
 
-        // H. Commit (Save everything)
+        // I. Credit seller wallets for points-based products (OUTSIDE transaction for wallet service)
+        // Note: These are outside the DB transaction to avoid nested transactions
+        const sellerIds = Object.keys(sellerCredits);
+        for (const sellerId of sellerIds) {
+            const points = sellerCredits[sellerId];
+            const desc = `Sale of items to user ${userId}`;
+            try {
+                await walletService.credit(parseInt(sellerId), points, desc);
+            } catch (err) {
+                console.error(`Failed to credit seller ${sellerId}:`, err.message);
+                // Continue — don't fail the order if seller credit fails
+            }
+        }
+
+        // J. Commit (Save everything)
         await t.commit();
         
         return order;

@@ -7,7 +7,7 @@ const rawProducts = [
     {
         title: "High Speed RC Racing Car",
         description: "Red remote control car with rechargeable battery. Runs very fast on flat surfaces.",
-        price: 1200,
+        price: 100,
         condition: "Like New",
         category: "Vehicles",
         subCategory: "Remote Control Cars",
@@ -20,7 +20,7 @@ const rawProducts = [
     {
         title: "Barbie Fashion Doll Set",
         description: "Includes doll with 3 extra dresses and shoes. Box is slightly damaged but doll is new.",
-        price: 850,
+        price: 80,
         condition: "Good",
         category: "Dolls & Accessories",
         subCategory: "Fashion Dolls",
@@ -33,7 +33,7 @@ const rawProducts = [
     {
         title: "Wooden Chess Board",
         description: "Classic wooden chess set. Magnetic pieces. Great for brain development.",
-        price: 1500,
+        price: 40,
         condition: "Like New",
         category: "Board Games",
         subCategory: "Chess",
@@ -46,7 +46,7 @@ const rawProducts = [
     {
         title: "Giant Soft Teddy Bear",
         description: "3 feet tall teddy bear. Very soft fabric. washable.",
-        price: 2000,
+        price: 110,
         condition: "New",
         category: "Soft Toys",
         subCategory: "Teddy Bears",
@@ -59,7 +59,7 @@ const rawProducts = [
     {
         title: "Cricket Kit (Size 5)",
         description: "Plastic cricket bat with ball and wickets. Safe for indoor and outdoor play.",
-        price: 600,
+        price: 70,
         condition: "Fair",
         category: "Sports",
         subCategory: "Cricket Sets",
@@ -72,7 +72,7 @@ const rawProducts = [
     {
         title: "Building Blocks Bucket",
         description: "50 pieces of colorful building blocks. Helps in creativity.",
-        price: 450,
+        price: 40,
         condition: "Good",
         category: "Block Games",
         subCategory: "Building Blocks",
@@ -85,7 +85,7 @@ const rawProducts = [
     {
         title: "Musical Drum Set",
         description: "Small drum for toddlers with sticks. Makes pleasant sounds.",
-        price: 300,
+        price: 50,
         condition: "Like New",
         category: "Musical Toys",
         subCategory: "Musical Drum",
@@ -98,7 +98,7 @@ const rawProducts = [
     {
         title: "Toy Gun with Foam Bullets",
         description: "Safe toy gun with soft foam bullets. Comes with 10 bullets.",
-        price: 550,
+        price: 60,
         condition: "Good",
         category: "Gun",
         subCategory: "Bullet",
@@ -111,7 +111,7 @@ const rawProducts = [
     {
         title: "Kids Tricycle",
         description: "Sturdy tricycle with back support. Good for learning to ride.",
-        price: 1800,
+        price: 80,
         condition: "Good",
         category: "Riders",
         subCategory: "Tricycle",
@@ -124,7 +124,7 @@ const rawProducts = [
     {
         title: "Clay Modelling Kit",
         description: "12 colors of non-toxic clay with moulds.",
-        price: 200,
+        price: 100,
         condition: "New",
         category: "Art & Craft",
         subCategory: "Clay Toys",
@@ -143,15 +143,67 @@ async function seedProducts() {
     try {
         console.log('🌱 Seeding Products based on new Master Data...');
 
-        // 1. Ensure we have a seller (User ID 1)
-        let seller = await db.User.findOne();
-        if (!seller) {
-            console.log('Creating demo seller...');
-            seller = await db.User.create({
+        // 1️⃣ Ensure we have a demo ADMIN seller
+        let adminSeller = await db.User.findOne({
+            where: { role: 'admin' }
+        });
+    
+        if (!adminSeller) {
+            console.log('Creating demo ADMIN seller...');
+            adminSeller = await db.User.create({
                 mobile: '9999999999',
-                name: 'Demo Seller',
+                name: 'Demo Admin',
+                role: 'admin'
+            });
+            
+            // Create wallet for admin seller
+            await db.Wallet.create({
+                userId: adminSeller.id,
+                balance: '300' // Initial welcome bonus
+            });
+            
+            // Create initial transaction record
+            await db.WalletTransaction.create({
+                walletId: adminSeller.id,
+                type: 'credit',
+                amount: '300',
+                balanceAfter: '300',
+                description: 'Welcome bonus - Account creation',
+                refUserId: null
+            });
+            
+            console.log('✅ Wallet created for Admin seller with 300 points');
+        }
+    
+        // 2️⃣ Ensure we have a demo USER seller
+        let userSeller = await db.User.findOne({
+            where: { mobile: '9727376727' }
+        });
+    
+        if (!userSeller) {
+            console.log('Creating demo USER seller...');
+            userSeller = await db.User.create({
+                mobile: '9727376727',  
                 role: 'user'
             });
+            
+            // Create wallet for user seller
+            await db.Wallet.create({
+                userId: userSeller.id,
+                balance: '300' // Initial welcome bonus
+            });
+            
+            // Create initial transaction record
+            await db.WalletTransaction.create({
+                walletId: userSeller.id,
+                type: 'credit',
+                amount: '300',
+                balanceAfter: '300',
+                description: 'Welcome bonus - Account creation',
+                refUserId: null
+            });
+            
+            console.log('✅ Wallet created for User seller with 300 points');
         }
 
         for (const p of rawProducts) {
@@ -173,7 +225,7 @@ async function seedProducts() {
                     price: p.price,
                     condition: p.condition,
                     status: 'active',
-                    userId: seller.id,
+                    userId: userSeller.id,
 
                     // Foreign Keys
                     categoryId: cat.id,

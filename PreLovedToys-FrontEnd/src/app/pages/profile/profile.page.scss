@@ -1,42 +1,622 @@
-.user-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 30px;
+// ==================== Variables ====================
+$primary-color: #3880ff;
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$card-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+$card-shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.12);
+$border-radius: 12px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
 
-    .avatar {
+// ==================== Profile Content ====================
+.profile-content {
+  --background: #f5f7fa;
+}
+
+// ==================== Header Section ====================
+.profile-header {
+  position: relative;
+  margin-bottom: $spacing-lg;
+  
+  .header-bg {
+    position: relative;
+    height: 160px;
+    background: $primary-gradient;
+    overflow: hidden;
+    
+    .header-gradient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(180deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0) 100%);
+    }
+  }
+  
+  .header-content {
+    position: relative;
+    background: white;
+    border-radius: $border-radius $border-radius 0 0;
+    margin-top: -40px;
+    padding: $spacing-lg $spacing-md $spacing-md;
+    box-shadow: $card-shadow;
+  }
+  
+  .avatar-section {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    margin-bottom: $spacing-lg;
+    padding-bottom: $spacing-lg;
+    border-bottom: 1px solid #e9ecef;
+    
+    .avatar-container {
+      position: relative;
+      
+      .avatar {
         width: 80px;
         height: 80px;
-        background: var(--ion-color-primary);
+        border-radius: 50%;
+        background: $primary-gradient;
         color: white;
-        font-size: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
-        margin-bottom: 10px;
-    }
-
-    h2 {
-        margin: 0;
+        font-size: 32px;
         font-weight: 700;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        border: 4px solid white;
+      }
+      
+      .edit-avatar-btn {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        width: 32px;
+        height: 32px;
+        --border-radius: 50%;
+        --padding-start: 0;
+        --padding-end: 0;
+        --background: white;
+        --color: #{$primary-color};
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        
+        ion-icon {
+          font-size: 16px;
+        }
+      }
     }
-
-    p {
-        color: #666;
-        margin: 5px 0;
+    
+    .user-info {
+      flex: 1;
+      
+      .user-name {
+        margin: 0 0 $spacing-sm 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a202c;
+      }
+      
+      .user-mobile {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: #718096;
+        
+        ion-icon {
+          font-size: 16px;
+        }
+      }
     }
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-md;
+    
+    .stat-card {
+      background: linear-gradient(135deg, #f6f8fb 0%, #ffffff 100%);
+      border-radius: $border-radius;
+      padding: $spacing-md;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: $spacing-sm;
+      border: 1px solid #e9ecef;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $card-shadow;
+      }
+      
+      .stat-icon {
+        font-size: 28px;
+        color: $primary-color;
+        opacity: 0.8;
+      }
+      
+      .stat-info {
+        text-align: center;
+        
+        .stat-value {
+          font-size: 24px;
+          font-weight: 700;
+          color: #1a202c;
+          margin-bottom: 2px;
+        }
+        
+        .stat-label {
+          font-size: 12px;
+          color: #718096;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
 }
 
-.section-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 15px;
-    padding-left: 5px;
+// ==================== Content Section ====================
+.content-section {
+  padding: 0 $spacing-md $spacing-lg;
 }
 
-.empty-state {
+.info-card {
+  margin-bottom: $spacing-md;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  overflow: hidden;
+  
+  ion-card-header {
+    padding: $spacing-md;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid #e9ecef;
+    
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      
+      .header-icon {
+        font-size: 24px;
+        color: $primary-color;
+      }
+      
+      ion-card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a202c;
+      }
+    }
+  }
+  
+  ion-card-content {
+    padding: $spacing-md;
+    
+    .about-text {
+      margin: 0;
+      line-height: 1.6;
+      color: #4a5568;
+      font-size: 14px;
+    }
+  }
+}
+
+// ==================== Interests Section ====================
+.category-section {
+  margin-bottom: $spacing-lg;
+  
+  &.last-category {
+    margin-bottom: 0;
+  }
+  
+  .category-label {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin: 0 0 $spacing-md 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2d3748;
+    
+    ion-icon {
+      font-size: 18px;
+      color: $primary-color;
+    }
+  }
+  
+  .interests-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
+    
+    ion-chip {
+      --background: #f7fafc;
+      --color: #4a5568;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      
+      &.chip-selected {
+        --background: #{$primary-color};
+        --color: white;
+        border-color: $primary-color;
+        box-shadow: 0 2px 8px rgba(56, 128, 255, 0.3);
+        
+        ion-icon {
+          margin-left: 4px;
+          font-size: 16px;
+        }
+      }
+      
+      &.chip-disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      
+      &:not(.chip-disabled):not(.chip-selected):hover {
+        --background: #edf2f7;
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+.empty-message {
+  text-align: center;
+  padding: $spacing-lg 0;
+  color: #a0aec0;
+  
+  ion-icon {
+    font-size: 48px;
+    margin-bottom: $spacing-sm;
+    opacity: 0.5;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// ==================== Form Section ====================
+.form-section {
+  .form-item {
+    margin-bottom: $spacing-lg;
+    --background: transparent;
+    --padding-start: 0;
+    --padding-end: 0;
+    --inner-padding-end: 0;
+    
+    ion-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: $spacing-sm;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    ion-input,
+    ion-textarea {
+      --background: #f7fafc;
+      --padding-start: 12px;
+      --padding-end: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-top: $spacing-sm;
+      
+      &:focus {
+        --background: white;
+        border-color: $primary-color;
+      }
+    }
+    
+    ion-textarea {
+      --padding-top: 12px;
+      --padding-bottom: 12px;
+    }
+  }
+  
+  .section-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: $spacing-md;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .gender-section,
+  .form-item > div {
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-sm;
+      
+      .radio-item {
+        --background: #f7fafc;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --inner-padding-end: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: $spacing-sm;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        ion-label {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 500;
+          text-transform: none;
+          letter-spacing: 0;
+        }
+        
+        ion-radio {
+          --color-checked: #{$primary-color};
+        }
+      }
+    }
+  }
+  
+  .chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
+    
+    ion-chip {
+      --background: #f7fafc;
+      --color: #4a5568;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      
+      &.chip-selected {
+        --background: #{$primary-color};
+        --color: white;
+        border-color: $primary-color;
+        box-shadow: 0 2px 8px rgba(56, 128, 255, 0.3);
+      }
+      
+      &.chip-disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      
+      &:not(.chip-disabled):not(.chip-selected):hover {
+        --background: #edf2f7;
+        transform: translateY(-1px);
+      }
+    }
+  }
+  
+  .form-item-input {
+    margin-top: $spacing-sm;
+  }
+}
+
+// ==================== Listings Section ====================
+.listings-section {
+  margin-top: $spacing-lg;
+  
+  .section-header {
+    padding: 0 $spacing-md $spacing-md;
+    
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a202c;
+      
+      ion-icon {
+        font-size: 24px;
+        color: $primary-color;
+      }
+    }
+  }
+  
+  .empty-listings {
     text-align: center;
-    color: #888;
-    margin-top: 20px;
+    padding: $spacing-lg * 2 $spacing-md;
+    background: white;
+    border-radius: $border-radius;
+    margin: 0 $spacing-md;
+    box-shadow: $card-shadow;
+    
+    .empty-icon {
+      font-size: 80px;
+      color: #cbd5e0;
+      margin-bottom: $spacing-md;
+    }
+    
+    h3 {
+      margin: 0 0 $spacing-sm 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+    
+    p {
+      margin: 0 0 $spacing-lg 0;
+      color: #718096;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    ion-button {
+      --padding-start: 24px;
+      --padding-end: 24px;
+    }
+  }
+  
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: $spacing-md;
+    padding: 0 $spacing-md;
+    
+    .product-card {
+      margin: 0;
+      border-radius: $border-radius;
+      overflow: hidden;
+      box-shadow: $card-shadow;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: $card-shadow-hover;
+      }
+      
+      .product-image {
+        position: relative;
+        height: 160px;
+        overflow: hidden;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .status-badge {
+          position: absolute;
+          top: $spacing-sm;
+          right: $spacing-sm;
+          font-size: 11px;
+          font-weight: 600;
+          padding: 4px 8px;
+          border-radius: 12px;
+        }
+      }
+      
+      ion-card-content {
+        padding: $spacing-md;
+        
+        .product-title {
+          margin: 0 0 $spacing-sm 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #2d3748;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+        
+        .product-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          
+          .product-price {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: $primary-color;
+          }
+          
+          ion-button {
+            --padding-start: 8px;
+            --padding-end: 8px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== Footer ====================
+.edit-footer {
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+  
+  ion-toolbar {
+    --padding-start: #{$spacing-md};
+    --padding-end: #{$spacing-md};
+    --background: white;
+    
+    .footer-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: $spacing-md;
+      padding: $spacing-sm 0;
+      
+      ion-button {
+        flex: 1;
+        --padding-start: 20px;
+        --padding-end: 20px;
+        font-weight: 600;
+        
+        ion-icon {
+          font-size: 18px;
+        }
+      }
+    }
+  }
+}
+
+// ==================== Responsive Design ====================
+@media (min-width: 768px) {
+  .profile-header .stats-grid {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .content-section {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .listings-section .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .profile-header {
+    .avatar-section .avatar-container .avatar {
+      width: 70px;
+      height: 70px;
+      font-size: 28px;
+    }
+    
+    .stats-grid .stat-card {
+      padding: $spacing-sm;
+      
+      .stat-icon {
+        font-size: 24px;
+      }
+      
+      .stat-info .stat-value {
+        font-size: 20px;
+      }
+    }
+  }
+  
+  .listings-section .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

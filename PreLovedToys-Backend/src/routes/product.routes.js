@@ -6,6 +6,7 @@ const verifyToken = require('../middlewares/auth.middleware');
 // 1. Specific Routes MUST be at the top
 router.post('/', verifyToken, productController.addProduct);
 router.get('/my-listings', verifyToken, productController.getMyListings); // <--- MOVE THIS HERE
+router.get('/sales-count/points', verifyToken, productController.getPointsSalesCount); // Get completed points-based sales count
 
 // 2. General "Get All" route
 router.get('/', productController.getProducts);
