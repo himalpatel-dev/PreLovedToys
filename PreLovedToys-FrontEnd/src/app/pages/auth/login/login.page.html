@@ -1,17 +1,123 @@
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div style="margin-top: 100px; text-align: center;">
-    <h1>Toy Market</h1>
-    <p>Buy & Sell Pre-loved Toys</p>
+<ion-content [fullscreen]="true" class="login-container">
+  <!-- Animated Background Gradient -->
+  <div class="background-gradient"></div>
+
+  <!-- Header Section -->
+  <div class="header-section" [class.hidden]="showOtpStep">
+    <div class="logo-wrapper">
+      <div class="logo-icon">🎮</div>
+    </div>
+    <h1 class="brand-title">KhilonaMart</h1>
+    <p class="brand-subtitle">Buy & Sell Pre-loved Toys</p>
   </div>
 
-  <div style="margin-top: 50px;">
-    <ion-item fill="outline" class="ion-margin-bottom">
-      <ion-label position="floating">Mobile Number</ion-label>
-      <ion-input type="tel" [(ngModel)]="mobile"></ion-input>
-    </ion-item>
+  <!-- Decorative Elements -->
+  <div class="decorative-toys" [class.hidden]="showOtpStep">
+    <span class="toy-icon toy-1">🧸</span>
+    <span class="toy-icon toy-2">🎯</span>
+    <span class="toy-icon toy-3">🪀</span>
+  </div>
 
-    <ion-button expand="block" (click)="onSendOtp()" [disabled]="!mobile">
-      Send OTP
-    </ion-button>
+  <!-- Form Container with Multi-Step (No Card Background) -->
+  <div class="form-container" [class.otp-mode]="showOtpStep">
+
+    <!-- Step 1: Mobile Number -->
+    <div class="form-content" [class.slide-out]="showOtpStep" *ngIf="!showOtpStep">
+
+      <div class="welcome-section">
+        <h2 class="form-title">Welcome Back!</h2>
+        <p class="form-description">Sign in to your account</p>
+      </div>
+
+      <!-- Mobile Input with Enhanced Design -->
+      <div class="mobile-input-section">
+        <div class="input-field enhanced">
+          <input type="tel" [(ngModel)]="mobile" placeholder="Enter 10-digit number" maxlength="10" inputmode="numeric"
+            class="phone-number-input">
+        </div>
+        <p class="input-helper">We'll send you a verification code</p>
+      </div>
+
+      <!-- Send OTP Button -->
+      <ion-button expand="block" (click)="onSendOtp()" [disabled]="!mobile || isLoading" class="send-otp-btn">
+        <ion-icon name="arrow-forward" slot="start" *ngIf="!isLoading"></ion-icon>
+        <span *ngIf="!isLoading" class="btn-text">Send OTP</span>
+        <span *ngIf="isLoading" class="btn-text">
+          <ion-spinner name="dots"></ion-spinner>
+        </span>
+      </ion-button>
+
+      <!-- Divider -->
+      <div class="divider">
+        <span>or</span>
+      </div>
+
+      <!-- Terms and Conditions -->
+      <p class="terms-text">
+        By signing up, you agree to our
+        <a href="#terms" class="link">Terms of Service</a> and
+        <a href="#privacy" class="link">Privacy Policy</a>
+      </p>
+    </div>
+
+    <!-- Step 2: OTP Verification -->
+    <div class="form-content otp-content" [class.slide-in]="showOtpStep" *ngIf="showOtpStep">
+
+      <div class="back-button-container">
+        <ion-button fill="clear" (click)="backToMobile()" class="back-btn">
+          <ion-icon name="chevron-back" slot="start"></ion-icon>
+          Back
+        </ion-button>
+      </div>
+
+      <div class="verify-section">
+        <h2 class="form-title">Verify OTP</h2>
+        <p class="form-description">Enter the code sent to</p>
+        <p class="mobile-display">+91 {{ mobile }}</p>
+      </div>
+
+      <!-- OTP Input -->
+      <div class="otp-input-section">
+        <input type="tel" [(ngModel)]="otp" placeholder="0000" maxlength="4" inputmode="numeric" class="otp-input">
+        <div class="lock-icon">🔐</div>
+      </div>
+
+      <!-- Timer Display -->
+      <div class="timer-display" *ngIf="otpTimer > 0">
+        <p>Resend OTP in <span class="timer-text">{{ otpTimer }}s</span></p>
+      </div>
+
+      <!-- Resend OTP Link -->
+      <div class="resend-container" *ngIf="otpTimer === 0">
+        <p class="resend-text">
+          Didn't receive the code?
+          <a href="javascript:void(0)" (click)="onResendOtp()" class="resend-link">Resend OTP</a>
+        </p>
+      </div>
+
+      <!-- Verify Button -->
+      <ion-button expand="block" (click)="onVerify()" [disabled]="!otp || otp.length < 4 || isLoading"
+        class="send-otp-btn">
+        <span *ngIf="!isLoading" class="btn-text">Verify & Login</span>
+        <span *ngIf="isLoading" class="btn-text">
+          <ion-spinner name="dots"></ion-spinner>
+        </span>
+      </ion-button>
+
+      <!-- Alternative Actions -->
+      <div class="divider">
+        <span>need help?</span>
+      </div>
+
+      <p class="terms-text">
+        <a href="#support" class="link">Contact Support</a>
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Bottom Illustration -->
+  <div class="bottom-decoration">
+    <div class="wave-shape"></div>
   </div>
 </ion-content>
