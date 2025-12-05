@@ -143,6 +143,8 @@ export class OtpPage implements OnInit, OnDestroy {
       next: (res: any) => {
       }
     });
+    this.isLoading = false;
+    this.navCtrl.navigateRoot('/home');
   }
 
   onResendOtp() {
