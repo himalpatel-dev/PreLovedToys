@@ -1,62 +1,35 @@
-<ion-content [fullscreen]="true" class="login-container">
-  <!-- Animated Background Gradient -->
-  <div class="background-gradient"></div>
+<ion-content [fullscreen]="true" class="login-content">
+  <!-- Abstract Background Shapes -->
+  <div class="shape-top-left"></div>
+  <div class="shape-top-right"></div>
+  <div class="shape-middle-right"></div>
+  <div class="shape-bottom-right"></div>
 
-  <!-- Header Section -->
-  <div class="header-section">
-    <div class="logo-wrapper">
-      <div class="logo-icon">🎮</div>
+  <div class="login-container">
+    <div class="header-text">
+      <h1>PreLoved Toys</h1>
+      <p>Memories Never Go Out of Play</p>
     </div>
-    <h1 class="brand-title">PreLoved Toys</h1>
-    <p class="brand-subtitle">Memories Never Go Out of Play</p>
-  </div>
 
-  <!-- Decorative Elements -->
-  <div class="decorative-toys">
-    <span class="toy-icon toy-1">🧸</span>
-    <span class="toy-icon toy-2">🎯</span>
-    <span class="toy-icon toy-3">🪀</span>
-  </div>
-
-  <!-- Form Container -->
-  <div class="form-container">
-    <div class="form-content">
-
-      <div class="welcome-section">
-        <h2 class="form-title">Welcome Back!</h2>
-        <p class="form-description">Sign in to your account</p>
+    <div class="form-section">
+      <div class="input-wrapper">
+        <ion-input type="tel" [(ngModel)]="mobile" onlyNumbers placeholder="Mobile Number" maxlength="10"
+          inputmode="numeric">
+        </ion-input>
       </div>
 
-      <!-- Mobile Input with Enhanced Design -->
-      <div class="mobile-input-section">
-        <div class="input-field enhanced">
-          <input type="tel" [(ngModel)]="mobile" placeholder="Enter 10-digit number" maxlength="10" inputmode="numeric"
-            class="phone-number-input">
-        </div>
-        <p class="input-helper">We'll send you a verification code</p>
-      </div>
-
-      <!-- Send OTP Button -->
-      <ion-button expand="block" (click)="onSendOtp()" [disabled]="!mobile || isLoading" class="send-otp-btn">
-        <ion-icon name="arrow-forward" slot="start" *ngIf="!isLoading"></ion-icon>
-        <span *ngIf="!isLoading" class="btn-text">Send OTP</span>
-        <span *ngIf="isLoading" class="btn-text">
+      <ion-button expand="block" (click)="onSendOtp()" [disabled]="!mobile || isLoading" class="action-btn">
+        <span *ngIf="!isLoading">Send OTP</span>
+        <span *ngIf="isLoading">
           <ion-spinner name="dots"></ion-spinner>
-          Sending...
         </span>
       </ion-button>
 
-      <!-- Terms and Conditions -->
       <p class="terms-text">
         By signing up, you agree to our
         <a (click)="showTerms()" class="link">Terms & Conditions</a> and
         <a (click)="showPrivacy()" class="link">Privacy Policy</a>
       </p>
     </div>
-  </div>
-
-  <!-- Bottom Illustration -->
-  <div class="bottom-decoration">
-    <div class="wave-shape"></div>
   </div>
 </ion-content>

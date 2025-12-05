@@ -6,29 +6,29 @@
 // ============================================
 
 :root {
-    // Primary Color - Soft Azure Blue
-    --ion-color-primary: #4DA1FF;
-    --ion-color-primary-rgb: 77, 161, 255;
+    // Primary Color - Dark Teal (#2F4B4E)
+    --ion-color-primary: #2F4B4E;
+    --ion-color-primary-rgb: 47, 75, 78;
     --ion-color-primary-contrast: #ffffff;
     --ion-color-primary-contrast-rgb: 255, 255, 255;
-    --ion-color-primary-shade: #4490e0;
-    --ion-color-primary-tint: #5faaff;
+    --ion-color-primary-shade: #294245;
+    --ion-color-primary-tint: #445d60;
 
-    // Accent Color - Tangerine Orange
-    --ion-color-secondary: #FF9F43;
-    --ion-color-secondary-rgb: 255, 159, 67;
-    --ion-color-secondary-contrast: #ffffff;
-    --ion-color-secondary-contrast-rgb: 255, 255, 255;
-    --ion-color-secondary-shade: #e08c3b;
-    --ion-color-secondary-tint: #ffa956;
+    // Secondary Color - Medium Gray Green (#A5B3B4)
+    --ion-color-secondary: #A5B3B4;
+    --ion-color-secondary-rgb: 165, 179, 180;
+    --ion-color-secondary-contrast: #000000;
+    --ion-color-secondary-contrast-rgb: 0, 0, 0;
+    --ion-color-secondary-shade: #919e9e;
+    --ion-color-secondary-tint: #aebbb;
 
-    // Tertiary Color - Light Azure
-    --ion-color-tertiary: #7EC8FF;
-    --ion-color-tertiary-rgb: 126, 200, 255;
+    // Tertiary Color - Light Gray Green (#BFC7C8)
+    --ion-color-tertiary: #BFC7C8;
+    --ion-color-tertiary-rgb: 191, 199, 200;
     --ion-color-tertiary-contrast: #000000;
     --ion-color-tertiary-contrast-rgb: 0, 0, 0;
-    --ion-color-tertiary-shade: #6fb0e0;
-    --ion-color-tertiary-tint: #8bceff;
+    --ion-color-tertiary-shade: #a8afb0;
+    --ion-color-tertiary-tint: #c5cdce;
 
     // Success Color
     --ion-color-success: #2dd36f;
@@ -54,13 +54,13 @@
     --ion-color-danger-shade: #cf3c4f;
     --ion-color-danger-tint: #ed576b;
 
-    // Dark Color
-    --ion-color-dark: #222428;
-    --ion-color-dark-rgb: 34, 36, 40;
+    // Dark Color (#152223)
+    --ion-color-dark: #152223;
+    --ion-color-dark-rgb: 21, 34, 35;
     --ion-color-dark-contrast: #ffffff;
     --ion-color-dark-contrast-rgb: 255, 255, 255;
-    --ion-color-dark-shade: #1e2023;
-    --ion-color-dark-tint: #383a3e;
+    --ion-color-dark-shade: #121e1f;
+    --ion-color-dark-tint: #2c3839;
 
     // Medium Color
     --ion-color-medium: #92949c;
@@ -70,44 +70,27 @@
     --ion-color-medium-shade: #808289;
     --ion-color-medium-tint: #9d9fa6;
 
-    // Light Color
-    --ion-color-light: #f4f5f8;
-    --ion-color-light-rgb: 244, 245, 248;
+    // Light Color (#F0F2F2)
+    --ion-color-light: #F0F2F2;
+    --ion-color-light-rgb: 240, 242, 242;
     --ion-color-light-contrast: #000000;
     --ion-color-light-contrast-rgb: 0, 0, 0;
-    --ion-color-light-shade: #d7d8da;
-    --ion-color-light-tint: #f5f6f9;
+    --ion-color-light-shade: #d3d5d5;
+    --ion-color-light-tint: #f2f3f3;
 
     // ============================================
     // Custom Theme Variables
     // ============================================
 
+    // Custom Palette
+    --color-dark-teal: #2F4B4E;
+    --color-light-gray-green: #BFC7C8;
+    --color-medium-gray-green: #A5B3B4;
+    --color-dark-text: #152223;
+    --color-input-bg: #F0F2F2;
+
     // Primary Gradients
-    --theme-gradient-primary: linear-gradient(135deg, #4DA1FF 0%, #2E7FD8 100%);
-    --theme-gradient-primary-soft: linear-gradient(135deg, #7EC8FF 0%, #4DA1FF 100%);
-    --theme-gradient-accent: linear-gradient(135deg, #FF9F43 0%, #FF8A1F 100%);
-
-    // Background Gradients
-    --theme-bg-gradient: linear-gradient(135deg, #4DA1FF 0%, #2E7FD8 50%, #7EC8FF 100%);
-    --theme-bg-gradient-light: linear-gradient(135deg, #E3F2FF 0%, #B8DCFF 100%);
-
-    // Text Colors
-    --theme-text-primary: #2d3436;
-    --theme-text-secondary: #636e72;
-    --theme-text-light: #b2bec3;
-    --theme-text-on-primary: #ffffff;
-    --theme-text-on-accent: #ffffff;
-
-    // Background Colors
-    --theme-bg-primary: #ffffff;
-    --theme-bg-secondary: #f8f9fa;
-    --theme-bg-card: #ffffff;
-
-    // Shadow Colors
-    --theme-shadow-sm: rgba(77, 161, 255, 0.1);
-    --theme-shadow-md: rgba(77, 161, 255, 0.15);
-    --theme-shadow-lg: rgba(77, 161, 255, 0.2);
-    --theme-shadow-accent: rgba(255, 159, 67, 0.3);
+    --theme-gradient-primary: linear-gradient(90deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
 }
 
 // ============================================

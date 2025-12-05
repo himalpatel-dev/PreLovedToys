@@ -1,0 +1,45 @@
+<div class="otp-container">
+    <!-- Decorative Shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+
+    <div class="content-wrapper">
+        <div class="header-section">
+            <div class="logo-container">
+                <span class="logo-icon">🔒</span>
+            </div>
+            <h1>Verify OTP</h1>
+            <p>We've sent a code to +91 {{ mobile }}</p>
+            <a (click)="changeMobile()" class="change-number">Change Number</a>
+        </div>
+
+        <div class="form-section">
+            <div class="otp-inputs">
+                <input #otp1 type="tel" [(ngModel)]="otpDigits[0]" (input)="onOtpInput($event, 0)"
+                    (keydown)="onOtpKeydown($event, 0)" maxlength="1" class="otp-box">
+                <input #otp2 type="tel" [(ngModel)]="otpDigits[1]" (input)="onOtpInput($event, 1)"
+                    (keydown)="onOtpKeydown($event, 1)" maxlength="1" class="otp-box">
+                <input #otp3 type="tel" [(ngModel)]="otpDigits[2]" (input)="onOtpInput($event, 2)"
+                    (keydown)="onOtpKeydown($event, 2)" maxlength="1" class="otp-box">
+                <input #otp4 type="tel" [(ngModel)]="otpDigits[3]" (input)="onOtpInput($event, 3)"
+                    (keydown)="onOtpKeydown($event, 3)" maxlength="1" class="otp-box">
+            </div>
+
+            <div class="timer-section">
+                <p *ngIf="otpTimer > 0" class="timer-text">
+                    Resend code in <span>{{ otpTimer }}s</span>
+                </p>
+                <p *ngIf="otpTimer === 0" class="resend-text">
+                    Didn't receive code?
+                    <a (click)="onResendOtp()">Resend</a>
+                </p>
+            </div>
+
+            <button class="submit-btn" (click)="onVerify()" [disabled]="isLoading || otp.length < 4">
+                <span *ngIf="!isLoading">Verify & Proceed</span>
+                <span *ngIf="isLoading" class="loader"></span>
+            </button>
+        </div>
+    </div>
+</div>

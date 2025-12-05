@@ -1,0 +1,37 @@
+<div class="login-container">
+    <!-- Decorative Shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+
+    <div class="content-wrapper">
+        <div class="header-section">
+            <div class="logo-container">
+                <span class="logo-icon">🧸</span>
+            </div>
+            <h1>PreLoved Toys</h1>
+            <p>Memories Never Go Out of Play</p>
+        </div>
+
+        <div class="form-section">
+            <div class="input-group">
+                <label for="mobile">Mobile Number</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📱</span>
+                    <input type="tel" id="mobile" [(ngModel)]="mobile" placeholder="Enter 10-digit number"
+                        maxlength="10" class="custom-input">
+                </div>
+            </div>
+
+            <button class="submit-btn" (click)="onSendOtp()" [disabled]="isLoading || !mobile">
+                <span *ngIf="!isLoading">Send OTP</span>
+                <span *ngIf="isLoading" class="loader"></span>
+            </button>
+
+            <p class="terms-text">
+                By continuing, you agree to our
+                <a (click)="showTerms()">Terms & Conditions</a>
+            </p>
+        </div>
+    </div>
+</div>

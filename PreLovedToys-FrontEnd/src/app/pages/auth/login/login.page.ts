@@ -4,16 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule, ToastController, NavController, ModalController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { addIcons } from 'ionicons';
-import { arrowForward } from 'ionicons/icons';
+import { arrowForward, callOutline } from 'ionicons/icons';
 import { TermsModalComponent } from 'src/app/shared/modals/terms/terms-modal.component';
 import { PrivacyModalComponent } from 'src/app/shared/modals/privacy/privacy-modal.component';
+import { OnlyNumbersDirective } from 'src/app/shared/directive/only-numbers';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  imports: [IonicModule, CommonModule, FormsModule, OnlyNumbersDirective]
 })
 export class LoginPage implements OnInit {
 
@@ -27,7 +28,7 @@ export class LoginPage implements OnInit {
     private modalCtrl: ModalController
   ) {
     addIcons({
-      arrowForward
+      arrowForward, callOutline
     });
   }
 
