@@ -3,8 +3,32 @@ import { AdminGuard } from './core/guards/admin-guard';
 
 export const routes: Routes = [
   {
+    path: 'tabs',
+    loadComponent: () => import('./pages/tabs/tabs.page').then((m) => m.TabsPage),
+    children: [
+      {
+        path: 'home',
+        loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
+      },
+      {
+        path: 'sell',
+        loadComponent: () => import('./pages/sell/sell.page').then(m => m.SellPage),
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage),
+      },
+      {
+        path: '',
+        redirectTo: 'home',
+        pathMatch: 'full',
+      },
+    ],
+  },
+  {
     path: 'home',
-    loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
+    redirectTo: 'tabs/home',
+    pathMatch: 'full',
   },
   {
     path: '',
@@ -21,32 +45,19 @@ export const routes: Routes = [
   },
   {
     path: 'productdetails/:id',
-    loadComponent: () => import('./pages/productdetails/productdetails.page').then(m => m.ProductdetailsPage), 
+    loadComponent: () => import('./pages/productdetails/productdetails.page').then(m => m.ProductdetailsPage),
   },
   {
     path: 'cart',
-    loadComponent: () => import('./pages/cart/cart.page').then(m => m.CartPage), 
+    loadComponent: () => import('./pages/cart/cart.page').then(m => m.CartPage),
   },
   {
     path: 'checkout',
-    loadComponent: () => import('./pages/checkout/checkout.page').then(m => m.CheckoutPage), 
+    loadComponent: () => import('./pages/checkout/checkout.page').then(m => m.CheckoutPage),
   },
   {
     path: 'orders',
-    loadComponent: () => import('./pages/orders/orders.page').then(m => m.OrdersPage), 
-  },
-  {
-    path: 'sell',
-    loadComponent: () => import('./pages/sell/sell.page').then(m => m.SellPage), 
-  },
-  {
-    path: 'admin-dashboard',
-    loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard.page').then(m => m.AdminDashboardPage),
-    canActivate: [AdminGuard]
-  },
-  {
-    path: 'profile',
-    loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage), 
+    loadComponent: () => import('./pages/orders/orders.page').then(m => m.OrdersPage),
   },
   {
     path: 'sub-categories/:categoryId',
@@ -56,6 +67,11 @@ export const routes: Routes = [
   {
     path: 'product-list',
     loadComponent: () => import('./pages/product-list/product-list.page').then(m => m.ProductListPage),
+    canActivate: [AdminGuard]
+  },
+  {
+    path: 'admin-dashboard',
+    loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard.page').then(m => m.AdminDashboardPage),
     canActivate: [AdminGuard]
   },
   {
@@ -100,12 +116,12 @@ export const routes: Routes = [
   },
   {
     path: 'products',
-    loadComponent: () => import('./pages/admin/products/products.page').then( m => m.ProductsPage),
+    loadComponent: () => import('./pages/admin/products/products.page').then(m => m.ProductsPage),
     canActivate: [AdminGuard]
   },
   {
     path: 'product-detail/:id',
-    loadComponent: () => import('./pages/admin/product-detail/product-detail.page').then( m => m.ProductDetailPage),
+    loadComponent: () => import('./pages/admin/product-detail/product-detail.page').then(m => m.ProductDetailPage),
     canActivate: [AdminGuard]
   },
 

@@ -141,20 +141,6 @@ export class OtpPage implements OnInit, OnDestroy {
 
     this.authService.verifyOtp(this.mobile, this.otp).subscribe({
       next: (res: any) => {
-        this.isLoading = false;
-        this.showToast('Login Successful!');
-
-        const role = res.user.role;
-
-        if (role === 'admin') {
-          this.navCtrl.navigateRoot('/admin-dashboard');
-        } else {
-          this.navCtrl.navigateRoot('/home');
-        }
-      },
-      error: (err: any) => {
-        this.isLoading = false;
-        this.showToast(err.error?.message || 'Invalid OTP');
       }
     });
   }
