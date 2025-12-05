@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, NavController } from '@ionic/angular';
+import { IonicModule, ToastController, NavController, ModalController } from '@ionic/angular';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { addIcons } from 'ionicons';
-import { arrowForward, chevronBack } from 'ionicons/icons';
+import { arrowForward } from 'ionicons/icons';
+import { TermsModalComponent } from 'src/app/shared/modals/terms/terms-modal.component';
+import { PrivacyModalComponent } from 'src/app/shared/modals/privacy/privacy-modal.component';
 
 @Component({
   selector: 'app-login',
@@ -13,37 +15,24 @@ import { arrowForward, chevronBack } from 'ionicons/icons';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class LoginPage implements OnInit, OnDestroy {
+export class LoginPage implements OnInit {
 
   mobile: string = '9727376727';
-  otp: string = '';
-
-  // Multi-step form state
-  showOtpStep: boolean = false;
   isLoading: boolean = false;
-  otpTimer: number = 0;
-  private timerInterval: any;
 
   constructor(
     private authService: AuthService,
     private toastCtrl: ToastController,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private modalCtrl: ModalController
   ) {
     addIcons({
-      arrowForward,
-      chevronBack
+      arrowForward
     });
   }
 
   ngOnInit() {
     // Initialize component
-  }
-
-  ngOnDestroy() {
-    // Clear timer when component is destroyed
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
   }
 
   async onSendOtp() {
@@ -58,14 +47,12 @@ export class LoginPage implements OnInit, OnDestroy {
       next: async (res: any) => {
         console.log('Response:', res);
         await this.showToast(`${res.message}`);
-
-        // Transition to OTP verification step
-        this.showOtpStep = true;
-        this.otp = '';
-
-        // Start OTP timer (60 seconds)
-        this.startOtpTimer();
         this.isLoading = false;
+
+        // Navigate to OTP page with mobile number
+        this.navCtrl.navigateForward('/otp', {
+          queryParams: { mobile: this.mobile }
+        });
       },
       error: async (err) => {
         console.error(err);
@@ -75,79 +62,20 @@ export class LoginPage implements OnInit, OnDestroy {
     });
   }
 
-  async onVerify() {
-    if (!this.otp || this.otp.length < 4) {
-      this.showToast('Please enter a valid OTP');
-      return;
-    }
-
-    this.isLoading = true;
-
-    this.authService.verifyOtp(this.mobile, this.otp).subscribe({
-      next: async (res: any) => {
-        this.isLoading = false;
-        await this.showToast('Login Successful!');
-
-        // Get the role from response
-        const role = res.user?.role;
-
-        if (role === 'admin') {
-          this.navCtrl.navigateRoot('/admin-dashboard');
-        } else {
-          this.navCtrl.navigateRoot('/home');
-        }
-      },
-      error: async (err) => {
-        this.isLoading = false;
-        console.error(err);
-        await this.showToast(err.error?.message || 'Invalid OTP');
-      }
+  async showTerms() {
+    const modal = await this.modalCtrl.create({
+      component: TermsModalComponent,
+      cssClass: 'terms-modal'
     });
+    return await modal.present();
   }
 
-  async onResendOtp() {
-    this.isLoading = true;
-
-    this.authService.sendOtp(this.mobile).subscribe({
-      next: async (res: any) => {
-        this.isLoading = false;
-        await this.showToast('OTP sent successfully');
-        this.otp = '';
-        this.startOtpTimer();
-      },
-      error: async (err) => {
-        this.isLoading = false;
-        await this.showToast(err.error?.message || 'Failed to resend OTP');
-      }
+  async showPrivacy() {
+    const modal = await this.modalCtrl.create({
+      component: PrivacyModalComponent,
+      cssClass: 'terms-modal'
     });
-  }
-
-  backToMobile() {
-    // Clear OTP timer
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
-
-    this.showOtpStep = false;
-    this.otp = '';
-    this.otpTimer = 0;
-  }
-
-  private startOtpTimer() {
-    this.otpTimer = 60;
-
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
-
-    this.timerInterval = setInterval(() => {
-      this.otpTimer--;
-
-      if (this.otpTimer <= 0) {
-        clearInterval(this.timerInterval);
-        this.otpTimer = 0;
-      }
-    }, 1000);
+    return await modal.present();
   }
 
   async showToast(msg: string) {

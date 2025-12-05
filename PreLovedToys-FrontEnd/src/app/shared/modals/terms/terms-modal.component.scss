@@ -1,0 +1,79 @@
+ion-modal.terms-modal {
+    --width: 90%;
+    --height: 90%;
+    --border-radius: 16px;
+    --backdrop-opacity: 0.5;
+}
+
+ion-modal.terms-modal::part(backdrop) {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+ion-modal.terms-modal ion-content {
+    --background: white;
+}
+
+// Scrollbar styling for better appearance
+ion-content {
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #4DA1FF;
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: #2E7FD8;
+    }
+}
+
+// Content styling
+h1 {
+    color: #2d3436;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+h3 {
+    color: #4DA1FF;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 12px;
+}
+
+p {
+    color: #636e72;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+ul {
+    margin-left: 20px;
+    margin-bottom: 16px;
+
+    li {
+        color: #636e72;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 8px;
+    }
+}
+
+a {
+    color: #FF9F43;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}

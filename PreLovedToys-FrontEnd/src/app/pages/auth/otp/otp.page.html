@@ -1,26 +1,82 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/login"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Verify OTP</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="otp-container">
+  <!-- Animated Background Gradient -->
+  <div class="background-gradient"></div>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div style="margin-top: 50px; text-align: center;">
-    <h3>Enter Verification Code</h3>
-    <p class="ion-text-muted">Sent to +91 {{ mobile }}</p>
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="logo-wrapper">
+      <div class="logo-icon">🎮</div>
+    </div>
+    <h1 class="brand-title">PreLoved Toys</h1>
+    <p class="brand-subtitle">Memories Never Go Out of Play</p>
   </div>
 
-  <div style="margin-top: 30px;">
-    <ion-item fill="outline" class="ion-margin-bottom">
-      <ion-label position="floating">OTP Code</ion-label>
-      <ion-input type="tel" [(ngModel)]="otp" maxlength="4"></ion-input>
-    </ion-item>
+  <!-- Form Container -->
+  <div class="form-container">
+    <div class="form-content">
 
-    <ion-button expand="block" (click)="onVerify()" [disabled]="!otp || otp.length < 4">
-      Verify & Login
-    </ion-button>
+      <!-- Lock Icon -->
+      <div class="otp-lock-icon">
+        <div class="lock-circle">
+          <ion-icon name="lock-closed"></ion-icon>
+        </div>
+      </div>
+
+      <!-- Verify Section -->
+      <div class="verify-section">
+        <h2 class="form-title">Verify Your Number</h2>
+        <p class="form-description">We've sent a 4-digit code to</p>
+        <p class="mobile-display">+91 {{ mobile }}</p>
+        <a routerLink="/login" class="change-mobile-link">
+          <ion-icon name="create-outline"></ion-icon>
+          Change Mobile Number
+        </a>
+      </div>
+
+      <!-- OTP Input - Individual Boxes -->
+      <div class="otp-input-section">
+        <div class="otp-boxes-container">
+          <input #otp1 type="tel" [(ngModel)]="otpDigits[0]" (input)="onOtpInput($event, 0)"
+            (keydown)="onOtpKeydown($event, 0)" maxlength="1" inputmode="numeric" class="otp-box" autocomplete="off"
+            placeholder="·">
+          <input #otp2 type="tel" [(ngModel)]="otpDigits[1]" (input)="onOtpInput($event, 1)"
+            (keydown)="onOtpKeydown($event, 1)" maxlength="1" inputmode="numeric" class="otp-box" autocomplete="off"
+            placeholder="·">
+          <input #otp3 type="tel" [(ngModel)]="otpDigits[2]" (input)="onOtpInput($event, 2)"
+            (keydown)="onOtpKeydown($event, 2)" maxlength="1" inputmode="numeric" class="otp-box" autocomplete="off"
+            placeholder="·">
+          <input #otp4 type="tel" [(ngModel)]="otpDigits[3]" (input)="onOtpInput($event, 3)"
+            (keydown)="onOtpKeydown($event, 3)" maxlength="1" inputmode="numeric" class="otp-box" autocomplete="off"
+            placeholder="·">
+        </div>
+      </div>
+
+      <!-- Timer and Resend Section -->
+      <div class="timer-resend-section">
+        <!-- Timer Display -->
+        <div class="timer-display" *ngIf="otpTimer > 0">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>Code expires in <strong>{{ otpTimer }}s</strong></span>
+        </div>
+
+        <!-- Resend OTP Link -->
+        <div class="resend-container" *ngIf="otpTimer === 0">
+          <p class="resend-text">
+            Didn't receive the code?
+            <a (click)="onResendOtp()" class="resend-link">
+              <ion-icon name="refresh-outline"></ion-icon>
+              Resend Code
+            </a>
+          </p>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- Bottom Illustration -->
+  <div class="bottom-decoration">
+    <div class="wave-shape"></div>
   </div>
 </ion-content>
