@@ -2,30 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Needed for SystemChrome
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/product_provider.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_screen.dart';
 import 'utils/app_colors.dart';
+import 'providers/category_provider.dart';
 
 void main() {
-  // 1. Ensure Flutter is ready
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Make Status Bar & Nav Bar Transparent
+  // FIX: Make Top Bar Transparent, but Bottom Bar BLACK (Dark)
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent, // Top Bar is clear
-      statusBarIconBrightness:
-          Brightness.dark, // Icons are dark (so you can see them)
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
 
-      systemNavigationBarColor:
-          Colors.transparent, // Bottom Bar is clear (Android)
-      systemNavigationBarIconBrightness: Brightness.dark, // Bottom icons dark
+      // --- BOTTOM BAR SETTINGS ---
+      systemNavigationBarColor: Colors.black, // Makes the bottom area BLACK
+      systemNavigationBarIconBrightness:
+          Brightness.light, // White icons on black
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
 
-  // 3. Force Full Screen (Edge-to-Edge) on Android
+  // Keep Edge-to-Edge enabled so content flows correctly
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
   runApp(const MyApp());
 }
 
@@ -35,7 +36,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+      ],
       child: MaterialApp(
         title: 'PreLoved Toys',
         debugShowCheckedModeBanner: false,
@@ -82,6 +87,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: const LoginScreen(),
+        routes: {'/home': (ctx) => const MainScreen()},
       ),
     );
   }
