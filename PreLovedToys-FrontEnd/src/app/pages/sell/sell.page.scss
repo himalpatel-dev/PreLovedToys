@@ -60,3 +60,58 @@
         margin: 8px 0;
     }
 }
+
+// Keyboard handling styles
+ion-content.sell-content {
+    --keyboard-offset: 0px;
+    --offset-bottom: auto !important;
+
+    // Ensure proper scrolling
+    &::part(scroll) {
+        padding-bottom: 100px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+// Fix for ion-item when keyboard is open
+ion-item {
+    --min-height: 56px;
+    margin-bottom: 16px;
+
+    &.item-has-focus {
+        --highlight-background: transparent;
+    }
+}
+
+// Ensure form scrolls properly
+form {
+    padding-bottom: 80px;
+
+    ion-item {
+        --background: transparent;
+        --border-color: rgba(0, 0, 0, 0.13);
+
+        ion-input,
+        ion-textarea,
+        ion-select {
+            --padding-start: 16px;
+            --padding-end: 16px;
+        }
+    }
+}
+
+// Prevent content jump on keyboard open
+:host {
+    ion-content {
+        --keyboard-offset: 0;
+    }
+}
+
+// Fix for input focus
+ion-input,
+ion-textarea {
+    &.has-focus {
+        --highlight-background: transparent;
+    }
+}

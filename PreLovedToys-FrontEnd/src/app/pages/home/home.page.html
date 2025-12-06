@@ -1,72 +1,106 @@
-<ion-header [translucent]="true" class="ion-no-border">
-  <ion-toolbar color="primary">
-    <ion-title>Toy Market</ion-title>
-    <ion-buttons slot="end">
-      <ion-button routerLink="/cart"> <ion-icon name="cart-outline" slot="icon-only"></ion-icon>
+<ion-header [translucent]="true" class="ion-no-border modern-header">
+  <ion-toolbar class="gradient-toolbar">
+    <ion-title class="header-title">
+      <div class="title-wrapper">
+        <span class="toy-icon">🧸</span>
+        <span class="title-text">PreLoved Toys</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end" class="header-actions">
+      <ion-button routerLink="/cart" class="icon-btn">
+        <ion-icon name="cart-outline" slot="icon-only"></ion-icon>
       </ion-button>
-      <ion-button routerLink="/profile">
+      <ion-button routerLink="/profile" class="icon-btn">
         <ion-icon name="person-circle-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="start">
-      <ion-button routerLink="/orders">
+      <ion-button routerLink="/orders" class="icon-btn">
         <ion-icon name="receipt-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
-
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding-top">
+<ion-content [fullscreen]="true" class="modern-content">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <div class="ion-padding-horizontal">
-    <ion-searchbar placeholder="Search toys..."></ion-searchbar>
-  </div>
 
-  <div class="category-section">
-    <h3 class="section-title ion-padding-start">Categories</h3>
-
-    <div class="category-scroll">
-      <div class="category-item" *ngFor="let cat of categories" (click)="onCategoryClick(cat)">
-        <div class="cat-icon">
-          <img [src]="cat.image || 'https://placehold.co/50'" alt="">
-        </div>
-        <span class="cat-name">{{ cat.name }}</span>
+  <!-- Hero Search Section -->
+  <div class="hero-section">
+    <div class="search-wrapper">
+      <div class="search-container">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <ion-searchbar placeholder="Search for toys, games, and more..." class="modern-searchbar" animated="true">
+        </ion-searchbar>
       </div>
     </div>
   </div>
 
-  <div class="product-section">
-    <h3 class="section-title ion-padding-start">New Arrivals</h3>
+  <!-- Categories Section -->
+  <div class="category-section">
+    <div class="section-header">
+      <h2 class="section-title">Shop by Category</h2>
+      <span class="view-all">View All</span>
+    </div>
 
-    <ion-grid>
+    <div class="category-scroll">
+      <div class="category-card" *ngFor="let cat of categories" (click)="onCategoryClick(cat)">
+        <div class="category-image-wrapper">
+          <img [src]="cat.image || 'https://placehold.co/80'" alt="{{ cat.name }}">
+          <div class="category-overlay"></div>
+        </div>
+        <span class="category-name">{{ cat.name }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products Section -->
+  <div class="product-section">
+    <div class="section-header">
+      <h2 class="section-title">New Arrivals</h2>
+      <span class="product-count">{{ products.length }} items</span>
+    </div>
+
+    <ion-grid class="products-grid">
       <ion-row>
-        <ion-col size="6" *ngFor="let p of products" (click)="goToProduct(p)">
-          <ion-card class="product-card">
-            <div class="image-container">
-              <img [src]="getProductImage(p)" />
-              <ion-badge class="payment-badge" [color]="p.isPoints ? 'primary' : 'secondary'">
-                {{ p.isPoints ? '💎' : '💵' }}
-              </ion-badge>
+        <ion-col size="6" *ngFor="let p of products">
+          <div class="product-card" (click)="goToProduct(p)">
+            <div class="product-image-wrapper">
+              <img [src]="getProductImage(p)" alt="{{ p.title }}" />
+              <div class="product-badges">
+                <ion-badge class="payment-badge" [class.points]="p.isPoints" [class.cash]="!p.isPoints">
+                  {{ p.isPoints ? '💎 Points' : '💵 Cash' }}
+                </ion-badge>
+              </div>
+              <div class="product-overlay">
+                <ion-icon name="eye-outline" class="view-icon"></ion-icon>
+              </div>
             </div>
-            <ion-card-content>
-              <h6 class="product-title">{{ p.title }}</h6>
-              <p class="product-condition">{{ p.condition }}</p>
-              <h4 class="product-price">
-                <span *ngIf="p.isPoints">💰</span>
-                <span *ngIf="!p.isPoints">₹</span>
-                {{ p.price }}
-              </h4>
-            </ion-card-content>
-          </ion-card>
+            <div class="product-info">
+              <h3 class="product-title">{{ p.title }}</h3>
+              <p class="product-condition">
+                <ion-icon name="checkmark-circle" class="condition-icon"></ion-icon>
+                {{ p.condition }}
+              </p>
+              <div class="product-footer">
+                <h4 class="product-price">
+                  <span class="currency">{{ p.isPoints ? '💰' : '₹' }}</span>
+                  <span class="amount">{{ p.price }}</span>
+                </h4>
+                <ion-icon name="heart-outline" class="favorite-icon"></ion-icon>
+              </div>
+            </div>
+          </div>
         </ion-col>
       </ion-row>
     </ion-grid>
   </div>
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button routerLink="/sell">
+
+  <!-- Floating Action Button -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="modern-fab">
+    <ion-fab-button routerLink="/sell" class="sell-fab">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>

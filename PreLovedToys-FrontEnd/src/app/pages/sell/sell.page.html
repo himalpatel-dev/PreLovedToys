@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" [scrollEvents]="true" class="ion-padding sell-content">
 
   <div class="image-upload-box" (click)="fileInput.click()">
     <img *ngIf="previewImage" [src]="previewImage" />
