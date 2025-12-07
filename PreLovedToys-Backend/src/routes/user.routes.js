@@ -12,4 +12,7 @@ router.put('/profile', verifyToken, userController.updateProfile);
 // Get authenticated user's profile
 router.get('/profile', verifyToken, userController.getProfile);
 
+// Get authenticated user's stats (orders, sales, wallet)
+router.get('/stats', verifyToken, userController.getUserStats);
+
 module.exports = router;

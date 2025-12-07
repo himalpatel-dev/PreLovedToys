@@ -2,7 +2,7 @@ const walletService = require('../services/wallet.service');
 
 async function getWallet(req, res) {
     try {
-        const userId = req.user?.id || req.params.userId || null;
+        const userId = req.user && req.user.id;
         if (!userId) return res.status(400).json({ message: 'User id required' });
         const result = await walletService.getHistory(userId, { limit: 100 });
         return res.json({ balance: result.wallet.balance, transactions: result.transactions });

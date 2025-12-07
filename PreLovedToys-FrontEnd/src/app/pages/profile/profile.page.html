@@ -18,7 +18,7 @@
     <div class="header-bg">
       <div class="header-gradient"></div>
     </div>
-    
+
     <div class="header-content">
       <div class="avatar-section">
         <div class="avatar-container">
@@ -27,7 +27,7 @@
             <ion-icon name="pencil" slot="icon-only"></ion-icon>
           </ion-button>
         </div>
-        
+
         <div class="user-info">
           <h1 class="user-name">{{ user.name || 'Toy Seller' }}</h1>
           <p class="user-mobile">
@@ -64,7 +64,7 @@
   </div>
 
   <div class="content-section" *ngIf="user">
-    
+
     <!-- About Card -->
     <ion-card class="info-card">
       <ion-card-header>
@@ -74,7 +74,8 @@
         </div>
       </ion-card-header>
       <ion-card-content>
-        <p class="about-text">{{ user.aboutMe || 'Tell others about yourself — your experience with toys, what you sell or what you collect.' }}</p>
+        <p class="about-text">{{ user.aboutMe || 'Tell others about yourself — your experience with toys, what you sell
+          or what you collect.' }}</p>
       </ion-card-content>
     </ion-card>
 
@@ -89,7 +90,8 @@
       <ion-card-content>
         <div *ngIf="categories.length; else noCat">
           <div class="interests-wrapper category-chips">
-            <ion-chip *ngFor="let c of categories" (click)="editMode && toggleInterest(c.id)" [class.chip-selected]="isInterestSelected(c.id)" [class.chip-disabled]="!editMode">
+            <ion-chip *ngFor="let c of categories" (click)="editMode && toggleInterest(c.id)"
+              [class.chip-selected]="isInterestSelected(c.id)" [class.chip-disabled]="!editMode">
               <ion-label>{{ c.name }}</ion-label>
               <ion-icon *ngIf="isInterestSelected(c.id)" name="checkmark-circle"></ion-icon>
             </ion-chip>
@@ -121,7 +123,8 @@
 
           <ion-item lines="none" class="form-item">
             <ion-label position="stacked">Email</ion-label>
-            <ion-input [(ngModel)]="user.email" type="email" [readonly]="!editMode" placeholder="your@email.com"></ion-input>
+            <ion-input [(ngModel)]="user.email" type="email" [readonly]="!editMode"
+              placeholder="your@email.com"></ion-input>
           </ion-item>
 
           <div class="form-item gender-section">
@@ -137,11 +140,8 @@
           <div class="form-item">
             <ion-label class="section-label">Occupation</ion-label>
             <div class="chips-container">
-              <ion-chip 
-                *ngFor="let o of occupationSamples" 
-                (click)="editMode && pickOccupation(o)" 
-                [class.chip-selected]="user.occupation===o"
-                [class.chip-disabled]="!editMode">
+              <ion-chip *ngFor="let o of occupationSamples" (click)="editMode && pickOccupation(o)"
+                [class.chip-selected]="user.occupation===o" [class.chip-disabled]="!editMode">
                 <ion-label>{{ o }}</ion-label>
               </ion-chip>
             </div>
@@ -149,17 +149,15 @@
 
           <ion-item lines="none" class="form-item">
             <ion-label position="stacked">College / University</ion-label>
-            <ion-input [(ngModel)]="user.collegeOrUniversity" [readonly]="!editMode" placeholder="Your institution"></ion-input>
+            <ion-input [(ngModel)]="user.collegeOrUniversity" [readonly]="!editMode"
+              placeholder="Your institution"></ion-input>
           </ion-item>
 
           <div class="form-item">
             <ion-label class="section-label">Purpose on this platform</ion-label>
             <div class="chips-container">
-              <ion-chip 
-                *ngFor="let p of purposeSamples" 
-                (click)="editMode && pickPurpose(p)" 
-                [class.chip-selected]="user.purpose===p"
-                [class.chip-disabled]="!editMode">
+              <ion-chip *ngFor="let p of purposeSamples" (click)="editMode && pickPurpose(p)"
+                [class.chip-selected]="user.purpose===p" [class.chip-disabled]="!editMode">
                 <ion-label>{{ p }}</ion-label>
               </ion-chip>
             </div>
@@ -167,7 +165,8 @@
 
           <ion-item lines="none" class="form-item">
             <ion-label position="stacked">About Me</ion-label>
-            <ion-textarea rows="4" [(ngModel)]="user.aboutMe" [readonly]="!editMode" placeholder="Tell us about yourself..."></ion-textarea>
+            <ion-textarea rows="4" [(ngModel)]="user.aboutMe" [readonly]="!editMode"
+              placeholder="Tell us about yourself..."></ion-textarea>
           </ion-item>
         </div>
       </ion-card-content>
@@ -196,7 +195,8 @@
         <ion-card *ngFor="let p of myProducts" class="product-card">
           <div class="product-image">
             <img [src]="p.images[0]?.imageUrl" alt="{{ p.title }}" />
-            <ion-badge class="status-badge" [color]="p.status === 'active' ? 'success' : (p.status === 'pending' ? 'warning' : 'danger')">
+            <ion-badge class="status-badge"
+              [color]="p.status === 'active' ? 'success' : (p.status === 'pending' ? 'warning' : 'danger')">
               {{ p.status | titlecase }}
             </ion-badge>
           </div>

@@ -9,7 +9,8 @@ const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
 // 1. Send OTP (Login/Register)
 const sendOtp = async (mobile) => {
     try {
-        const otp = generateOtp();
+        // const otp = generateOtp();
+        const otp = 1111;
         const otpExpires = new Date(new Date().getTime() + 10 * 60000); // Expires in 10 mins
 
         // Find user or Create if not exists (Implicit Registration)

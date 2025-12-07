@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/category_provider.dart';
 import '../widgets/product_item.dart';
 import '../utils/app_colors.dart';
-import 'package:flutter/rendering.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(bool isVisible) onScrollCallback;
@@ -64,9 +64,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
-                // --- 1. HEADER ---
+                // --- HEADER ---
                 SizedBox(
                   height: 60,
                   child: Stack(
@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           opacity: _isSearchActive ? 0.0 : 1.0,
                           duration: const Duration(milliseconds: 200),
                           child: const Text(
-                            "Discover the Best",
+                            "Preloved Toys",
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -101,10 +101,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(30),
-                            // NO BORDER HERE
+                            // NO BORDER defined here, only Shadow
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.15),
+                                color: Colors.grey.withAlpha(150),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -145,27 +145,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                   // Input
                                   Expanded(
                                     child: _isSearchActive
-                                        ? TextField(
-                                            controller: _searchController,
-                                            focusNode: _searchFocusNode,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                            ),
-                                            decoration: const InputDecoration(
-                                              hintText: "Search for toys...",
-                                              hintStyle: TextStyle(
-                                                color: Colors.grey,
-                                              ),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 10,
+                                        ? Theme(
+                                            // NUCLEAR OPTION: Override ALL Input Decorations for this widget only
+                                            data: Theme.of(context).copyWith(
+                                              inputDecorationTheme:
+                                                  const InputDecorationTheme(
+                                                    border: InputBorder.none,
+                                                    enabledBorder:
+                                                        InputBorder.none,
+                                                    focusedBorder:
+                                                        InputBorder.none,
                                                   ),
-                                              // FORCE REMOVE ALL BORDERS
-                                              border: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              errorBorder: InputBorder.none,
-                                              disabledBorder: InputBorder.none,
+                                            ),
+                                            child: TextField(
+                                              controller: _searchController,
+                                              focusNode: _searchFocusNode,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                              ),
+                                              decoration: const InputDecoration(
+                                                hintText: "Search for toys...",
+                                                hintStyle: TextStyle(
+                                                  color: Colors.grey,
+                                                ),
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                      vertical: 10,
+                                                    ),
+                                              ),
                                             ),
                                           )
                                         : const SizedBox(),
@@ -200,9 +207,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 5),
 
-                // --- 2. CATEGORIES ---
+                // --- CATEGORIES ---
                 const Text(
                   "Categories",
                   style: TextStyle(
@@ -211,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.textDark,
                   ),
                 ),
-
                 const SizedBox(height: 15),
 
                 if (categoryData.isLoading)
@@ -245,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               border: isSelected
                                   ? null
                                   : Border.all(
-                                      color: Colors.grey.withOpacity(0.1),
+                                      color: Colors.grey.withAlpha(100),
                                     ),
                             ),
                             child: Text(
@@ -266,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 20),
 
-                // --- 3. PRODUCT GRID ---
+                // --- PRODUCT GRID ---
                 Expanded(
                   child: productData.isLoading
                       ? const Center(child: CircularProgressIndicator())

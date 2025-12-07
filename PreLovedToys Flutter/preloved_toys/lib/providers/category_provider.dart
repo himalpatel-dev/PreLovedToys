@@ -29,7 +29,7 @@ class CategoryProvider with ChangeNotifier {
       }
       _categories = dataList.map((item) => Category.fromJson(item)).toList();
     } catch (e) {
-      print("Error fetching categories: $e");
+      SnackBar(content: Text(e.toString()));
     } finally {
       _isLoading = false;
       notifyListeners();

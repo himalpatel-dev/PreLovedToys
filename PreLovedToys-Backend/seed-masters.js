@@ -49,27 +49,31 @@ const subCategoryData = [
 // ---------------------------
 const ageGroups = [
     { name: "0-12 Months" },
-    { name: "1-2 Years" },
-    { name: "3-5 Years" },
-    { name: "6-9 Years" },
+    { name: "0-3 Years" },
+    { name: "3-7 Years" },
+    { name: "7-10 Years" },
     { name: "10-12 Years" },
     { name: "12+ Years" }
 ];
 
 const colors = [
-    { name: "Red", hexCode: "#FF0000" },
-    { name: "Blue", hexCode: "#0000FF" },
-    { name: "Green", hexCode: "#008000" },
-    { name: "Yellow", hexCode: "#FFFF00" },
-    { name: "Black", hexCode: "#000000" },
+    { name: "Black", hexCode: "#29353E" },
+    { name: "Grey", hexCode: "#8F989B" },
+    { name: "Blue", hexCode: "#135FCC" },
     { name: "White", hexCode: "#FFFFFF" },
-    { name: "Pink", hexCode: "#FFC0CB" },
-    { name: "Purple", hexCode: "#800080" },
-    { name: "Orange", hexCode: "#FFA500" },
-    { name: "Brown", hexCode: "#A52A2A" },
-    { name: "Grey", hexCode: "#808080" },
+    { name: "Olive", hexCode: "#36885E" },
+    { name: "Green", hexCode: "#52A451" },
+    { name: "Red", hexCode: "#C43647" },
+    { name: "Maroon", hexCode: "#9C1E4E" },
+    { name: "Teal", hexCode: "#156E6C" },
+    { name: "Turquoise Blue", hexCode: "#42DBC6" },
+    { name: "Pink", hexCode: "#ff3fd7" },
+    { name: "Yellow", hexCode: "#efef39" },
+    { name: "Purple", hexCode: "#bf43e8" },
+    { name: "Mustard Yellow", hexCode: "#FFDB58" },
     { name: "Multi-color", hexCode: "linear-gradient(to right, red,orange,yellow,green,blue,indigo,violet)" }
 ];
+
 
 const genders = [
     { name: "Boys" },

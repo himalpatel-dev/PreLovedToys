@@ -12,8 +12,11 @@ class ApiService {
     if (withToken) {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
+
       if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
+        // CHANGED: Use 'x-access-token' instead of 'Authorization'
+        // Usually custom headers don't use 'Bearer ' prefix, just the token string.
+        headers['x-access-token'] = token;
       }
     }
 
@@ -58,6 +61,25 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Error: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
+    final url = Uri.parse('${Constants.baseUrl}$endpoint');
+    final headers = await _getHeaders(true); // Always needs token
+
+    print("PUT Request to: $url");
+    print("Data: $data");
+
+    try {
+      final response = await http.put(
+        url,
+        headers: headers,
+        body: jsonEncode(data),
+      );
+      return _processResponse(response);
+    } catch (e) {
+      throw Exception('Network Error: $e');
     }
   }
 }

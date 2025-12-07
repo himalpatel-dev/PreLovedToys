@@ -8,7 +8,7 @@ const Order = sequelize.define('Order', {
         primaryKey: true
     },
     totalAmount: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.BIGINT,
         allowNull: false
     },
     status: {

@@ -37,8 +37,7 @@ class ProductProvider with ChangeNotifier {
 
       _products = dataList.map((item) => Product.fromJson(item)).toList();
     } catch (e) {
-      print("Error fetching products: $e");
-      // You could store an error message string here to show in UI
+      SnackBar(content: Text(e.toString()));
     } finally {
       _isLoading = false;
       notifyListeners(); // Tell UI to show the list

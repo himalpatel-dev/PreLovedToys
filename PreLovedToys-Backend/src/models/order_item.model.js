@@ -12,7 +12,7 @@ const OrderItem = sequelize.define('OrderItem', {
         allowNull: false
     },
     priceAtPurchase: {
-        type: DataTypes.DECIMAL(10, 2), // Important: We save the price AT THAT MOMENT
+        type: DataTypes.BIGINT, // Important: We save the price AT THAT MOMENT
         allowNull: false
     }
     // orderId and productId added automatically

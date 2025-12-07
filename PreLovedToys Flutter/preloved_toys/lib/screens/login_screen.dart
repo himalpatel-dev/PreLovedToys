@@ -15,6 +15,12 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _mobileController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _mobileController.text = '9727376727';
+  }
+
   void _handleSendOtp() async {
     final mobile = _mobileController.text.trim();
     if (mobile.isEmpty || mobile.length < 10) {

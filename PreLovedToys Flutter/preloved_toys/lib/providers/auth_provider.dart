@@ -64,4 +64,65 @@ class AuthProvider with ChangeNotifier {
     if (!prefs.containsKey('token')) return false;
     return true;
   }
+
+  Future<Map<String, dynamic>> updateProfile(
+    Map<String, dynamic> updates,
+  ) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // Calls PUT /api/profile
+      final response = await _apiService.put('/users/profile', updates);
+
+      // Backend returns: { message: '...', user: { ...updated user... }, pointsCredited: 20 }
+      final updatedUserData = response['user'];
+
+      // We need to preserve the token because the response might not send it back
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      // Update local user state
+      if (updatedUserData != null) {
+        _user = User.fromJson(updatedUserData, token: token);
+      }
+
+      return response; // Return full response to showing points toast
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token'); // Delete the JWT
+    _user = null; // Clear user from memory
+    notifyListeners(); // Update UI
+  }
+
+  Future<Map<String, String>> fetchUserStats() async {
+    try {
+      // Calls GET /api/user/stats
+      final response = await _apiService.get('/users/stats');
+
+      // Backend returns: { "totalOrders": 12, "totalSales": 5, "totalPoints": 500 }
+
+      // Parse safely (handle int, string, or null)
+      final orders = response['totalOrders']?.toString() ?? '0';
+      final sales = response['totalSales']?.toString() ?? '0';
+      final points = response['totalPoints']?.toString() ?? '0';
+
+      return {'orders': orders, 'sells': sales, 'points': points};
+    } catch (e) {
+      print("Error fetching stats: $e");
+      return {
+        'orders': '-', // Show '-' on error so user knows it failed
+        'sells': '-',
+        'points': '-',
+      };
+    }
+  }
 }

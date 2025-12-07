@@ -6,7 +6,7 @@ const Wallet = db.Wallet;
 const WalletTransaction = db.WalletTransaction;
 
 async function getOrCreateWallet(userId, tOptions = {}) {
-    let wallet = await Wallet.findOne({ where: { userId } , transaction: tOptions.transaction});
+    let wallet = await Wallet.findOne({ where: { userId }, transaction: tOptions.transaction });
     if (!wallet) {
         wallet = await Wallet.create({ userId, balance: 0 }, tOptions);
     }
@@ -32,7 +32,7 @@ async function getHistory(userId, { limit = 50, offset = 0 } = {}) {
 async function credit(userId, amount, description = null, opts = {}) {
     if (amount <= 0) throw new Error('Amount must be positive');
 
-    return await sequelize.transaction(async (t) => {
+    const executeCredit = async (t) => {
         const tOptions = { transaction: t };
         const wallet = await getOrCreateWallet(userId, tOptions);
         const newBalance = BigInt(wallet.balance) + BigInt(amount);
@@ -41,11 +41,18 @@ async function credit(userId, amount, description = null, opts = {}) {
             walletId: wallet.id,
             type: 'credit',
             amount,
-            balanceAfter: newBalance.toString(),
+            balanceAfter: newBalance,
             description
         }, tOptions);
+
         return { wallet, tx };
-    });
+    };
+
+    if (opts && opts.transaction) {
+        return executeCredit(opts.transaction);
+    }
+
+    return await sequelize.transaction(executeCredit);
 }
 
 async function debit(userId, amount, description = null, opts = {}) {

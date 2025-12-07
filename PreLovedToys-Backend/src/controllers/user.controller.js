@@ -1,6 +1,7 @@
 const db = require('../models');
 const User = db.User;
 const walletService = require('../services/wallet.service');
+const userService = require('../services/user.service');
 
 // 1. Get All Users (Exclude Admins usually, or show all)
 const getAllUsers = async (req, res) => {
@@ -143,9 +144,23 @@ const getProfile = async (req, res) => {
 };
 
 
+// 4. Get User Stats
+const getUserStats = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const stats = await userService.getUserStats(userId);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getAllUsers,
     toggleUserStatus,
     updateProfile,
-    getProfile
+    getProfile,
+    getUserStats
 };

@@ -39,7 +39,7 @@ export class ProfilePage {
     private toastCtrl: ToastController,
     private masterService: MasterService
   ) {
-    addIcons({ trashOutline, logOutOutline,checkmarkOutline ,checkmarkCircle,starOutline,closeOutline,addCircleOutline,fileTrayOutline,heartOutline,informationCircleOutline,cubeOutline ,listOutline,callOutline,pencil,walletOutline,gridOutline,swapHorizontalOutline,pricetagOutline,personOutline,pricetagsOutline });
+    addIcons({ trashOutline, logOutOutline, checkmarkOutline, checkmarkCircle, starOutline, closeOutline, addCircleOutline, fileTrayOutline, heartOutline, informationCircleOutline, cubeOutline, listOutline, callOutline, pencil, walletOutline, gridOutline, swapHorizontalOutline, pricetagOutline, personOutline, pricetagsOutline });
   }
 
   ionViewWillEnter() {
@@ -66,7 +66,7 @@ export class ProfilePage {
   }
 
   loadWallet() {
-    this.api.get(`wallet/${this.user.id}`).subscribe({
+    this.api.get(`wallet`).subscribe({
       next: (res: any) => {
         this.wallet = { balance: res.balance };
         this.transactions = res.transactions || [];
@@ -101,7 +101,7 @@ export class ProfilePage {
     this.masterService.getAllCategories().subscribe({
       next: (categories: any) => {
         this.categories = Array.isArray(categories) ? categories : [];
-        
+
         // If user has existing interestedIn set as CSV or array, populate selectedInterests
         // NOTE: store categories (not subcategories) in selectedInterests
         if (this.user && this.user.interestedIn) {

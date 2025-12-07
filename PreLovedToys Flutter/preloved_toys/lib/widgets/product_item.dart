@@ -20,7 +20,7 @@ class ProductItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20), // More rounded corners
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withAlpha(100),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 5),
