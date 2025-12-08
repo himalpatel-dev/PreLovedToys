@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:preloved_toys/providers/favorite_provider.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/category_provider.dart';
@@ -26,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProductProvider>(context, listen: false).fetchProducts();
       Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+      Provider.of<FavoriteProvider>(context, listen: false).fetchFavorites();
     });
   }
 
@@ -275,7 +278,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 // --- PRODUCT GRID ---
                 Expanded(
                   child: productData.isLoading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const Center(
+                          child: BouncingDiceLoader(color: AppColors.primary),
+                        )
                       : products.isEmpty
                       ? const Center(child: Text("No toys found!"))
                       : NotificationListener<UserScrollNotification>(

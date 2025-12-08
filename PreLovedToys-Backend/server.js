@@ -19,6 +19,8 @@ const orderRoutes = require('./src/routes/order.routes');
 const userRoutes = require('./src/routes/user.routes');
 const statsRoutes = require('./src/routes/stats.routes');
 const walletRoutes = require('./src/routes/wallet.routes');
+const favoriteRoutes = require('./src/routes/favorite.routes');
+const savedAddressRoutes = require('./src/routes/savedaddress.routes');
 
 // 2. USE ROUTES
 app.use('/api/auth', authRoutes);
@@ -30,6 +32,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/addresses', savedAddressRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

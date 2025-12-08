@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
-import '../models/user_model.dart';
+import '../providers/category_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -17,15 +17,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // Controllers
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _occupationController = TextEditingController();
   final _collegeController = TextEditingController();
-  final _purposeController = TextEditingController();
   final _aboutController = TextEditingController();
-  final _interestsController = TextEditingController();
 
+  // State for Selection Fields
   String? _selectedGender;
+  String? _selectedOccupation;
+  List<String> _selectedInterests = [];
+  List<String> _selectedPurposes = [];
 
-  // Points Config (Matches your Backend)
+  // Options Lists
+  final List<String> _purposeOptions = [
+    'Make Extra Income',
+    'Donate / Charity',
+    'Swap / Trade',
+    'Seasonal Sell',
+    'Test New Toys',
+    'Friendly Seller',
+    'Open to Negotiation',
+  ];
+
+  final List<String> _occupationOptions = [
+    'Student',
+    'Parent',
+    'Freelancer',
+    'Self-Employed',
+    'Shop Owner',
+    'Business Owner',
+    'Homemaker',
+    'Play School Staff',
+    'Other',
+  ];
+
   final Map<String, int> _pointsMap = {
     'name': 20,
     'email': 30,
@@ -37,30 +60,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'interestedIn': 30,
   };
 
-  // Track initial empty state to know if points are available
   Map<String, bool> _wasEmptyInitially = {};
 
   @override
   void initState() {
     super.initState();
-    // Load existing data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+    });
+
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     if (user != null) {
       _nameController.text = user.name ?? '';
       _emailController.text = user.email ?? '';
-      _occupationController.text = user.occupation ?? '';
       _collegeController.text = user.collegeOrUniversity ?? '';
-      _purposeController.text = user.purpose ?? '';
       _aboutController.text = user.aboutMe ?? '';
 
-      // Handle Interest Array or String
-      if (user.interestedIn != null) {
-        _interestsController.text = user.interestedIn!.join(', ');
+      if (user.gender != null) {
+        String dbGender = user.gender!.trim();
+        if (dbGender.isNotEmpty) {
+          _selectedGender = dbGender[0].toUpperCase() + dbGender.substring(1);
+        }
       }
 
-      _selectedGender = user.gender;
+      if (user.occupation != null && user.occupation!.isNotEmpty) {
+        _selectedOccupation = user.occupation;
+        if (!_occupationOptions.contains(_selectedOccupation)) {
+          _occupationOptions.add(_selectedOccupation!);
+        }
+      }
 
-      // Determine which fields were empty initially (Eligible for points)
+      if (user.interestedIn != null) {
+        _selectedInterests = List.from(user.interestedIn!);
+      }
+
+      if (user.purpose != null && user.purpose!.isNotEmpty) {
+        _selectedPurposes = user.purpose!
+            .split(',')
+            .map((e) => e.trim())
+            .toList();
+      }
+
       _wasEmptyInitially = {
         'name': _isEmpty(user.name),
         'email': _isEmpty(user.email),
@@ -75,50 +115,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  bool _isEmpty(String? val) {
-    return val == null || val.trim().isEmpty;
-  }
+  bool _isEmpty(String? val) => val == null || val.trim().isEmpty;
 
-  // Calculate points user WILL earn if they save now
   int _calculatePotentialPoints() {
     int total = 0;
-    if (_wasEmptyInitially['name']! && _nameController.text.isNotEmpty)
+    bool eligible(String key) => _wasEmptyInitially[key] ?? false;
+
+    if (eligible('name') && _nameController.text.isNotEmpty) total += 20;
+    if (eligible('email') && _emailController.text.isNotEmpty) total += 30;
+    if (eligible('collegeOrUniversity') && _collegeController.text.isNotEmpty)
       total += 20;
-    if (_wasEmptyInitially['email']! && _emailController.text.isNotEmpty)
-      total += 30;
-    if (_wasEmptyInitially['occupation']! &&
-        _occupationController.text.isNotEmpty)
-      total += 20;
-    if (_wasEmptyInitially['collegeOrUniversity']! &&
-        _collegeController.text.isNotEmpty)
-      total += 20;
-    if (_wasEmptyInitially['purpose']! && _purposeController.text.isNotEmpty)
-      total += 30;
-    if (_wasEmptyInitially['aboutMe']! && _aboutController.text.isNotEmpty)
-      total += 30;
-    if (_wasEmptyInitially['interestedIn']! &&
-        _interestsController.text.isNotEmpty)
-      total += 30;
-    if (_wasEmptyInitially['gender']! && _selectedGender != null) total += 20;
+    if (eligible('aboutMe') && _aboutController.text.isNotEmpty) total += 30;
+    if (eligible('gender') && _selectedGender != null) total += 20;
+    if (eligible('occupation') && _selectedOccupation != null) total += 20;
+    if (eligible('purpose') && _selectedPurposes.isNotEmpty) total += 30;
+    if (eligible('interestedIn') && _selectedInterests.isNotEmpty) total += 30;
+
     return total;
   }
 
   void _handleSave() async {
-    if (!_formKey.currentState!.validate()) return;
+    // 1. THIS TRIGGERS THE VALIDATION (RED TEXT)
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in the required fields (Name & Email)'),
+        ),
+      );
+      return;
+    }
 
     final Map<String, dynamic> updates = {
       'name': _nameController.text.trim(),
       'email': _emailController.text.trim(),
-      'occupation': _occupationController.text.trim(),
       'collegeOrUniversity': _collegeController.text.trim(),
-      'purpose': _purposeController.text.trim(),
       'aboutMe': _aboutController.text.trim(),
       'gender': _selectedGender,
-      // Convert comma separated string back to array for backend
-      'interestedIn': _interestsController.text
-          .split(',')
-          .map((e) => e.trim())
-          .toList(),
+      'occupation': _selectedOccupation,
+      'interestedIn': _selectedInterests,
+      'purpose': _selectedPurposes.join(', '),
     };
 
     try {
@@ -140,7 +175,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.pop(context); // Go back
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -155,6 +190,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final potentialPoints = _calculatePotentialPoints();
     final isLoading = Provider.of<AuthProvider>(context).isLoading;
+    final categories = Provider.of<CategoryProvider>(context).categories;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -167,10 +203,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         foregroundColor: AppColors.textDark,
         elevation: 0,
       ),
-      // Bottom Bar showing potential points
       bottomNavigationBar: potentialPoints > 0
           ? Container(
-              color: const Color(0xFFE8F5E9), // Light Green
+              color: const Color(0xFFE8F5E9),
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -178,7 +213,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const Icon(Icons.stars, color: Colors.orange),
                   const SizedBox(width: 8),
                   Text(
-                    "Complete changes to earn $potentialPoints Points!",
+                    "Complete to earn $potentialPoints Points!",
                     style: const TextStyle(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,
@@ -193,78 +228,190 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
-          onChanged: () {
-            setState(() {}); // Refresh UI to update point calculation
-          },
+          onChanged: () => setState(() {}),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTextField("Full Name", _nameController, 'name'),
-              const SizedBox(height: 15),
+              // --- NAME (REQUIRED) ---
               _buildTextField(
-                "Email Address",
+                "Full Name *", // Added star to label
+                _nameController,
+                'name',
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Name is required';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              // --- EMAIL (REQUIRED) ---
+              _buildTextField(
+                "Email Address *",
                 _emailController,
                 'email',
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Email is required';
+                  }
+                  // Simple Email Regex check
+                  if (!RegExp(
+                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                  ).hasMatch(value)) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 15),
 
-              // Gender Dropdown
+              const SizedBox(height: 20),
+
               _buildLabelWithPoints("Gender", 'gender'),
               const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F6F9),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedGender,
-                    isExpanded: true,
-                    hint: const Text("Select Gender"),
-                    items: ['Male', 'Female', 'Other'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedGender = newValue;
-                      });
-                    },
-                  ),
-                ),
+              Row(
+                children: ['Male', 'Female', 'Other'].map((gender) {
+                  return Row(
+                    children: [
+                      Radio<String>(
+                        value: gender,
+                        groupValue: _selectedGender,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) =>
+                            setState(() => _selectedGender = val),
+                      ),
+                      Text(gender, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 10),
+                    ],
+                  );
+                }).toList(),
               ),
 
-              const SizedBox(height: 15),
-              _buildTextField(
-                "Occupation",
-                _occupationController,
-                'occupation',
+              const SizedBox(height: 20),
+
+              _buildLabelWithPoints("Occupation", 'occupation'),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 10,
+                children: _occupationOptions.map((occupation) {
+                  final isSelected = _selectedOccupation == occupation;
+                  return ChoiceChip(
+                    label: Text(occupation),
+                    selected: isSelected,
+                    checkmarkColor: Colors.white,
+                    selectedColor: AppColors.primary,
+                    backgroundColor: const Color(0xFFF5F6F9),
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : AppColors.textDark,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide.none,
+                    ),
+                    onSelected: (bool selected) {
+                      setState(() {
+                        _selectedOccupation = selected ? occupation : null;
+                      });
+                    },
+                  );
+                }).toList(),
               ),
-              const SizedBox(height: 15),
+
+              const SizedBox(height: 20),
               _buildTextField(
                 "College / University",
                 _collegeController,
                 'collegeOrUniversity',
               ),
-              const SizedBox(height: 15),
-              _buildTextField(
-                "Purpose on Platform",
-                _purposeController,
-                'purpose',
-                hint: "Buying, Selling, Browsing...",
+
+              const SizedBox(height: 20),
+
+              _buildLabelWithPoints("Purpose on Platform", 'purpose'),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 10,
+                children: _purposeOptions.map((purpose) {
+                  final isSelected = _selectedPurposes.contains(purpose);
+                  return FilterChip(
+                    label: Text(purpose),
+                    selected: isSelected,
+                    selectedColor: AppColors.primary,
+                    backgroundColor: const Color(0xFFF5F6F9),
+                    checkmarkColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : AppColors.textDark,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide.none,
+                    ),
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedPurposes.add(purpose);
+                        } else {
+                          _selectedPurposes.remove(purpose);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
               ),
-              const SizedBox(height: 15),
-              _buildTextField(
-                "Interests",
-                _interestsController,
-                'interestedIn',
-                hint: "Lego, Cars, Dolls (comma separated)",
+
+              const SizedBox(height: 20),
+
+              _buildLabelWithPoints("Interests", 'interestedIn'),
+              const SizedBox(height: 10),
+              if (categories.isEmpty)
+                const Text(
+                  "Loading interests...",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 10,
+                children: categories.map((cat) {
+                  final isSelected = _selectedInterests.contains(cat.name);
+                  return FilterChip(
+                    label: Text(cat.name),
+                    selected: isSelected,
+                    selectedColor: AppColors.primary,
+                    backgroundColor: const Color(0xFFF5F6F9),
+                    checkmarkColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : AppColors.textDark,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide.none,
+                    ),
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedInterests.add(cat.name);
+                        } else {
+                          _selectedInterests.remove(cat.name);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
               ),
-              const SizedBox(height: 15),
+
+              const SizedBox(height: 20),
               _buildTextField(
                 "About Me",
                 _aboutController,
@@ -290,7 +437,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -298,13 +445,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  // UPDATED HELPER WIDGET (Now accepts validator)
   Widget _buildTextField(
     String label,
     TextEditingController controller,
     String fieldKey, {
     int maxLines = 1,
     TextInputType? keyboardType,
-    String? hint,
+    String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,9 +463,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
+          validator: validator, // <--- Passes the check function here
+          autovalidateMode: AutovalidateMode
+              .onUserInteraction, // Shows error as you type (optional)
           decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
             filled: true,
             fillColor: const Color(0xFFF5F6F9),
             contentPadding: const EdgeInsets.symmetric(
@@ -326,11 +475,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -339,6 +484,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: 1.5,
               ),
             ),
+            errorBorder: OutlineInputBorder(
+              // Red border on error
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.0),
+            ),
           ),
         ),
       ],
@@ -346,7 +496,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildLabelWithPoints(String label, String fieldKey) {
-    // Only show points badge if the field was EMPTY initially
     final bool showPoints = _wasEmptyInitially[fieldKey] ?? false;
     final int points = _pointsMap[fieldKey] ?? 0;
 
@@ -357,6 +506,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             color: AppColors.textDark,
+            fontSize: 15,
           ),
         ),
         if (showPoints) ...[
@@ -364,7 +514,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9), // Light Green
+              color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: Colors.green.withOpacity(0.3)),
             ),

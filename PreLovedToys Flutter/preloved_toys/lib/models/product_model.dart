@@ -8,6 +8,8 @@ class Product {
   final String status; // active, sold, etc.
   final List<String> images; // We will store just the URLs here for easy UI use
   final String? categoryName; // Optional: specific to how your API sends data
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Product({
     required this.id,
@@ -19,6 +21,8 @@ class Product {
     required this.status,
     required this.images,
     this.categoryName,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -55,6 +59,8 @@ class Product {
       status: json['status'] ?? 'active',
       images: imgList,
       categoryName: catName,
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 }

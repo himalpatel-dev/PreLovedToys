@@ -14,9 +14,7 @@ class ApiService {
       final token = prefs.getString('token');
 
       if (token != null) {
-        // CHANGED: Use 'x-access-token' instead of 'Authorization'
-        // Usually custom headers don't use 'Bearer ' prefix, just the token string.
-        headers['x-access-token'] = token;
+        headers['Authorization'] = 'Bearer $token';
       }
     }
 
@@ -64,6 +62,7 @@ class ApiService {
     }
   }
 
+  // Generic PUT Request
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('${Constants.baseUrl}$endpoint');
     final headers = await _getHeaders(true); // Always needs token
@@ -77,6 +76,21 @@ class ApiService {
         headers: headers,
         body: jsonEncode(data),
       );
+      return _processResponse(response);
+    } catch (e) {
+      throw Exception('Network Error: $e');
+    }
+  }
+
+  // Generic DELETE Request
+  Future<dynamic> delete(String endpoint) async {
+    final url = Uri.parse('${Constants.baseUrl}$endpoint');
+    final headers = await _getHeaders(true); // Delete needs auth
+
+    print("DELETE Request to: $url");
+
+    try {
+      final response = await http.delete(url, headers: headers);
       return _processResponse(response);
     } catch (e) {
       throw Exception('Network Error: $e');

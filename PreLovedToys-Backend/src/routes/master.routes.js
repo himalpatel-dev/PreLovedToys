@@ -2,9 +2,14 @@ const express = require('express');
 const router = express.Router();
 const masterController = require('../controllers/master.controller');
 
+const verifyToken = require('../middlewares/auth.middleware');
+
+router.use(verifyToken); // Protect all routes
+
 // ================== CATEGORY ROUTES ==================
 router.post('/categories', masterController.createCategory);
 router.get('/categories', masterController.getAllCategories);
+router.get('/allcategories', masterController.getAllCategoriesWithSubCategories);
 router.get('/categories/:id', masterController.getCategoryById);
 router.put('/categories/:id', masterController.updateCategory);
 router.delete('/categories/:id', masterController.deleteCategory);

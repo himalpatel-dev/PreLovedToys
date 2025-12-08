@@ -15,6 +15,8 @@ const Gender = require('./gender.model');
 const Material = require('./material.model');
 const Wallet = require('./wallet.model');
 const WalletTransaction = require('./wallet_transaction.model');
+const Favorite = require('./favorite.model');
+const SavedAddress = require('./savedaddress.model');
 
 const db = {};
 
@@ -33,6 +35,8 @@ db.Gender = Gender;
 db.Material = Material;
 db.Wallet = Wallet;
 db.WalletTransaction = WalletTransaction;
+db.Favorite = Favorite;
+db.SavedAddress = SavedAddress;
 
 // =========================================
 // DEFINE RELATIONSHIPS
@@ -116,5 +120,19 @@ db.Wallet.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
 // Wallet -> Transactions
 db.Wallet.hasMany(db.WalletTransaction, { foreignKey: 'walletId', as: 'transactions' });
 db.WalletTransaction.belongsTo(db.Wallet, { foreignKey: 'walletId', as: 'wallet' });
+
+// Favorite relationships
+// User <-> Favorite (A user can have many favorites)
+db.User.hasMany(db.Favorite, { foreignKey: 'userId', as: 'favorites' });
+db.Favorite.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
+
+// Product <-> Favorite (A product can be favorited by many users)
+db.Product.hasMany(db.Favorite, { foreignKey: 'productId', as: 'favoritedBy' });
+db.Favorite.belongsTo(db.Product, { foreignKey: 'productId', as: 'product' });
+
+// SavedAddress relationships
+// User <-> SavedAddress (A user can have many saved addresses)
+db.User.hasMany(db.SavedAddress, { foreignKey: 'userId', as: 'savedAddresses' });
+db.SavedAddress.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
 
 module.exports = db;

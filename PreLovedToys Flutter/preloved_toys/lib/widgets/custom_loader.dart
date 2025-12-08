@@ -15,7 +15,7 @@ class BouncingDiceLoader extends StatefulWidget {
   final double size;
   final Color? color; // Changed to nullable to support Theme fallback
 
-  const BouncingDiceLoader({super.key, this.size = 60.0, this.color});
+  const BouncingDiceLoader({super.key, this.size = 50.0, this.color});
 
   @override
   State<BouncingDiceLoader> createState() => _BouncingDiceLoaderState();
@@ -83,11 +83,7 @@ class _BouncingDiceLoaderState extends State<BouncingDiceLoader>
         return Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            _buildBouncingDie(0, effectiveColor),
-            SizedBox(width: widget.size * 0.5),
-            _buildBouncingDie(0.5, effectiveColor),
-          ],
+          children: [_buildBouncingDie(0, effectiveColor)],
         );
       },
     );
@@ -161,11 +157,8 @@ class _BouncingDiceLoaderState extends State<BouncingDiceLoader>
         child: Container(
           decoration: BoxDecoration(
             color: color, // Use the effective color
-            borderRadius: BorderRadius.circular(widget.size * 0.15),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.3),
-              width: 1.5,
-            ),
+            borderRadius: BorderRadius.circular(widget.size * 0.05),
+            border: Border.all(color: Colors.white.withAlpha(230), width: 2),
           ),
           child: CustomPaint(painter: DicePipsPainter(pips: pips)),
         ),

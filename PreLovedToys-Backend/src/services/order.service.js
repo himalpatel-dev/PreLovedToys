@@ -50,6 +50,7 @@ const createOrder = async (userId, address) => {
                     sellerCredits[item.product.userId] = 0;
                 }
                 sellerCredits[item.product.userId] += totalPrice;
+                totalAmount += totalPrice;
             } else {
                 // Real money purchase
                 totalAmount += totalPrice;
@@ -91,6 +92,7 @@ const createOrder = async (userId, address) => {
             totalAmount: totalAmount || 0,
             shippingAddress: address,
             status: 'placed',
+            isPoints: pointsToDeduct > 0 ?? false,
             paymentStatus: pointsToDeduct > 0 && totalAmount === 0 ? 'paid' : 'pending' // Mark as paid if only points
         }, { transaction: t });
 

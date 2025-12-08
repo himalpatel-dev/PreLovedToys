@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/screens/my_favorites_screen.dart';
+import 'package:preloved_toys/screens/my_listings_screen.dart';
+import 'package:preloved_toys/screens/privacy_policy_screen.dart';
+import 'package:preloved_toys/screens/saved_addresses_screen.dart';
+import 'package:preloved_toys/screens/terms_and_conditions_screen.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import '../widgets/custom_loader.dart';
+import 'my_orders_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,33 +20,13 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // State variables for the stats
-  String _totalOrders = "-";
-  String _totalSell = "-";
-  String _myPoints = "-";
-  bool _isLoadingStats = true;
-
   @override
   void initState() {
     super.initState();
-    _loadStats();
-  }
-
-  void _loadStats() async {
-    // Fetch fresh stats from backend
-    final stats = await Provider.of<AuthProvider>(
-      context,
-      listen: false,
-    ).fetchUserStats();
-
-    if (mounted) {
-      setState(() {
-        _totalOrders = stats['orders']!;
-        _totalSell = stats['sells']!;
-        _myPoints = stats['points']!;
-        _isLoadingStats = false;
-      });
-    }
+    // Refresh stats silently in background when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthProvider>(context, listen: false).fetchUserStats();
+    });
   }
 
   void _handleLogout(BuildContext context) async {
@@ -55,7 +41,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).user;
+    // Watch for global changes
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
+    final stats = authProvider.stats;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -147,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // --- 2. STATS CARD (REAL DATA) ---
+            // --- 2. STATS CARD (Always Visible) ---
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
               decoration: BoxDecoration(
@@ -162,23 +151,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-              child: _isLoadingStats
-                  // --- REPLACED LOADER HERE ---
-                  ? const Center(
-                      child: BouncingDiceLoader(
-                        size: 50.0, // Fits perfectly in the card
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildStatItem(_totalOrders, "Total Orders"),
-                        _buildVerticalLine(),
-                        _buildStatItem(_totalSell, "Total Sell"),
-                        _buildVerticalLine(),
-                        _buildStatItem(_myPoints, "My Points", isPoints: true),
-                      ],
-                    ),
+              // REMOVED THE LOADING CHECK HERE. JUST SHOW THE ROW.
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStatItem(stats['orders']!, "Total Orders"),
+                  _buildVerticalLine(),
+                  _buildStatItem(stats['sells']!, "Total Sell"),
+                  _buildVerticalLine(),
+                  _buildStatItem(stats['points']!, "My Points", isPoints: true),
+                ],
+              ),
             ),
 
             const SizedBox(height: 20),
@@ -203,13 +186,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context,
                     Icons.person,
                     "Personal Details",
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const EditProfileScreen(),
                         ),
                       );
+                      // Silent refresh when returning
+                      if (context.mounted) {
+                        Provider.of<AuthProvider>(
+                          context,
+                          listen: false,
+                        ).fetchUserStats();
+                      }
                     },
                   ),
                   _buildDivider(),
@@ -217,28 +207,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context,
                     Icons.shopping_bag,
                     "My Order",
-                    onTap: () {},
+                    onTap: () {
+                      // Navigate to the new My Orders Screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyOrdersScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     context,
                     Icons.favorite,
                     "My Favourites",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyFavoritesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    context,
+                    Icons.inventory_2,
+                    "My Listings",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyListingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     context,
                     Icons.local_shipping,
                     "Shipping Address",
-                    onTap: () {},
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.credit_card,
-                    "My Card",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SavedAddressesScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
@@ -253,7 +272,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // --- 4. FOOTER MENU CARD ---
+            // --- 4. FOOTER MENU ---
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -271,16 +290,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   _buildMenuItem(
                     context,
-                    Icons.info_outline,
-                    "FAQs",
-                    onTap: () {},
+                    Icons.description_outlined,
+                    "Terms & Conditions",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const TermsAndConditionsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     context,
                     Icons.privacy_tip_outlined,
                     "Privacy Policy",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PrivacyPolicyScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -294,6 +328,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildStatItem(String value, String label, {bool isPoints = false}) {
+    // Small check: If value is '-' (still fetching), show mini-horse or just wait
+    Widget content;
+    if (value == '-') {
+      content = const SizedBox(
+        height: 30,
+        width: 30,
+        child: BouncingDiceLoader(color: AppColors.primary, size: 30),
+      );
+    } else {
+      content = Text(
+        value,
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      );
+    }
+
     return Column(
       children: [
         Row(
@@ -305,14 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: EdgeInsets.only(bottom: 4, right: 2),
                 child: Icon(Icons.stars, color: Colors.amber, size: 18),
               ),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            content,
           ],
         ),
         const SizedBox(height: 4),

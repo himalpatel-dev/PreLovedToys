@@ -22,7 +22,11 @@ const Order = sequelize.define('Order', {
     shippingAddress: {
         type: DataTypes.TEXT, // We will store the full address string here for now
         allowNull: false
-    }
+    },
+    isPoints: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
     // userId will be added automatically
 }, {
     tableName: 'tbl_orders',

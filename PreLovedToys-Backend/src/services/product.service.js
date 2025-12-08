@@ -23,7 +23,7 @@ const createProduct = async (data, userId) => {
 
         // Validate isPoints flag
         let isPoints = data.isPoints !== undefined ? data.isPoints : true;
-        
+
         if (!isPoints && completedPointsSales < 3) {
             throw new Error(`You must complete at least 3 point-based sales before unlocking real money listings. Current: ${completedPointsSales}/3`);
         }
@@ -127,7 +127,7 @@ const getUserProducts = async (userId) => {
     return await Product.findAll({
         where: { userId },
         include: [{ model: ProductImage, as: 'images' }], // Show images
-        order: [['createdAt', 'DESC']]
+        order: [['updatedAt', 'DESC']]
     });
 };
 

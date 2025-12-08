@@ -3,16 +3,19 @@ const router = express.Router();
 const userController = require('../controllers/user.controller');
 const verifyToken = require('../middlewares/auth.middleware');
 
+router.use(verifyToken); // Protect all routes
+
+
 // Protect these routes! Only logged-in Admins should access.
 // (Assuming verifyToken checks for valid user, you might want an 'isAdmin' middleware later)
-router.get('/', verifyToken, userController.getAllUsers);
-router.put('/:id/status', verifyToken, userController.toggleUserStatus);
+router.get('/', userController.getAllUsers);
+router.put('/:id/status', userController.toggleUserStatus);
 // Allow authenticated user to update their own profile
-router.put('/profile', verifyToken, userController.updateProfile);
+router.put('/profile', userController.updateProfile);
 // Get authenticated user's profile
-router.get('/profile', verifyToken, userController.getProfile);
+router.get('/profile', userController.getProfile);
 
 // Get authenticated user's stats (orders, sales, wallet)
-router.get('/stats', verifyToken, userController.getUserStats);
+router.get('/stats', userController.getUserStats);
 
 module.exports = router;

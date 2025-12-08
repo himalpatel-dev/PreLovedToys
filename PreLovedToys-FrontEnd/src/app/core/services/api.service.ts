@@ -15,10 +15,11 @@ export class ApiService {
   // Helper to get headers with Token
   private getHeaders() {
     const token = localStorage.getItem('token'); // We will save token here later
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('x-access-token', token);
-    }
+    //use barere token using autorization
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
     return headers;
   }
 

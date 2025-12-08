@@ -1,5 +1,5 @@
 class User {
-  final int id; // Changed to int because Sequelize uses DataTypes.INTEGER
+  final int id;
   final String mobile;
   final String? name;
   final String? email;
@@ -8,10 +8,10 @@ class User {
   final String? collegeOrUniversity;
   final String? aboutMe;
   final String? purpose;
-  final List<dynamic>? interestedIn; // Handles the DataTypes.JSON array
+  final List<String>? interestedIn;
   final String role;
   final bool isActive;
-  final String? token; // To store the JWT
+  final String? token;
 
   User({
     required this.id,
@@ -29,19 +29,36 @@ class User {
     this.token,
   });
 
-  // Factory constructor to create a User from JSON
   factory User.fromJson(Map<String, dynamic> json, {String? token}) {
+    // --- DEBUGGING PRINTS ---
+    print("--- PARSING USER JSON ---");
+    print("Raw Email value: ${json['email']}");
+    print("Raw Gender value: ${json['gender']}");
+    print("Full JSON keys: ${json.keys.toList()}");
+    // ------------------------
+
+    // Helper to safely parse the 'interestedIn' array or string
+    List<String> interests = [];
+    if (json['interestedIn'] != null) {
+      if (json['interestedIn'] is List) {
+        interests = List<String>.from(json['interestedIn']);
+      } else if (json['interestedIn'] is String) {
+        interests = json['interestedIn'].toString().split(',');
+      }
+    }
+
     return User(
-      id: json['id'], 
-      mobile: json['mobile'],
+      id: json['id'],
+      mobile: json['mobile'] ?? '',
       name: json['name'],
-      email: json['email'],
-      gender: json['gender'],
+      // Ensure we treat it as a string, or null if missing
+      email: json['email']?.toString(),
+      gender: json['gender']?.toString(),
       occupation: json['occupation'],
       collegeOrUniversity: json['collegeOrUniversity'],
       aboutMe: json['aboutMe'],
       purpose: json['purpose'],
-      interestedIn: json['interestedIn'] != null ? List<dynamic>.from(json['interestedIn']) : [],
+      interestedIn: interests,
       role: json['role'] ?? 'user',
       isActive: json['isActive'] ?? true,
       token: token,

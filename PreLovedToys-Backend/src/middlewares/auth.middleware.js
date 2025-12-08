@@ -1,26 +1,30 @@
 const jwt = require('jsonwebtoken');
 
 const verifyToken = (req, res, next) => {
-    // 1. Get token directly from the custom header
-    // We use 'x-access-token' which is a standard custom header name
-    const token = req.headers['x-access-token'];
+    // 1. Get token from header (typically looks like: 'Bearer <TOKEN>')
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-        return res.status(403).json({
-            message: "No token provided! Add 'x-access-token' to headers."
-        });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Access denied. No token provided or invalid format.' });
     }
 
-    // 2. Verify token
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ message: "Unauthorized! Invalid Token." });
-        }
+    // Extract the actual token string
+    const token = authHeader.split(' ')[1];
 
-        // 3. Save user ID to request object
+    try {
+        // 2. Verify the token using the secret key
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // 3. Attach the decoded user info to the request object
         req.user = decoded;
+
+
+        // Token is valid and role is admin, proceed to the next middleware/route handler
         next();
-    });
+    } catch (ex) {
+        // Token is expired, invalid, or corrupted
+        res.status(401).json({ message: 'Invalid token or session expired.' });
+    }
 };
 
 module.exports = verifyToken;

@@ -9,22 +9,27 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   bool _isLoading = false;
 
+  // --- NEW: Global Stats State ---
+  Map<String, String> _stats = {'orders': '-', 'sells': '-', 'points': '-'};
+
   User? get user => _user;
   bool get isLoading => _isLoading;
+  Map<String, String> get stats => _stats; // Getter for UI
 
   // 1. Send OTP
   Future<dynamic> sendOtp(String mobile) async {
     _isLoading = true;
     notifyListeners();
+    print("--- 1. STARTING SEND OTP ---");
 
     try {
-      // Capture the response here
       final response = await _apiService.post('/auth/send-otp', {
         'mobile': mobile,
       }, withToken: false);
-
-      return response; // <--- RETURN THE DATA TO THE UI
+      print("--- 3. SUCCESS ---");
+      return response;
     } catch (e) {
+      print("--- ERROR: $e ---");
       rethrow;
     } finally {
       _isLoading = false;
@@ -32,24 +37,37 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // 2. Verify OTP & Login
+  // 2. Verify OTP & Fetch Full Profile + Stats
   Future<void> verifyOtp(String mobile, String otp) async {
     _isLoading = true;
     notifyListeners();
 
     try {
+      // Step A: Login
       final response = await _apiService.post('/auth/verify-otp', {
         'mobile': mobile,
         'otp': otp,
       }, withToken: false);
 
       final String token = response['token'];
-      final Map<String, dynamic> userData = response['user'];
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
 
-      _user = User.fromJson(userData, token: token);
+      // Step B: Fetch Full Profile immediately
+      try {
+        final profileResponse = await _apiService.get('/users/profile');
+        if (profileResponse['user'] != null) {
+          _user = User.fromJson(profileResponse['user'], token: token);
+        } else {
+          _user = User.fromJson(response['user'], token: token);
+        }
+      } catch (e) {
+        print("Warning: Could not fetch profile: $e");
+        _user = User.fromJson(response['user'], token: token);
+      }
+
+      // Step C: Fetch Stats immediately so they are ready for Profile Screen
+      await fetchUserStats();
     } catch (e) {
       rethrow;
     } finally {
@@ -58,13 +76,35 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // 3. Check if already logged in
+  // 3. Auto Login (Profile + Stats)
   Future<bool> tryAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
     if (!prefs.containsKey('token')) return false;
-    return true;
+
+    final token = prefs.getString('token');
+
+    try {
+      final response = await _apiService.get('/users/profile');
+
+      if (response['user'] != null) {
+        _user = User.fromJson(response['user'], token: token);
+
+        // Also fetch stats on auto-login!
+        fetchUserStats();
+
+        notifyListeners();
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print("Auto-login failed: $e");
+      await logout();
+      return false;
+    }
   }
 
+  // Update Profile
   Future<Map<String, dynamic>> updateProfile(
     Map<String, dynamic> updates,
   ) async {
@@ -72,22 +112,21 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Calls PUT /api/profile
       final response = await _apiService.put('/users/profile', updates);
 
-      // Backend returns: { message: '...', user: { ...updated user... }, pointsCredited: 20 }
-      final updatedUserData = response['user'];
-
-      // We need to preserve the token because the response might not send it back
+      // Refresh Profile
+      final refreshResponse = await _apiService.get('/users/profile');
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      // Update local user state
-      if (updatedUserData != null) {
-        _user = User.fromJson(updatedUserData, token: token);
+      if (refreshResponse['user'] != null) {
+        _user = User.fromJson(refreshResponse['user'], token: token);
       }
 
-      return response; // Return full response to showing points toast
+      // Refresh Stats (Because updating profile gives points)
+      await fetchUserStats();
+
+      return response;
     } catch (e) {
       rethrow;
     } finally {
@@ -96,33 +135,32 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token'); // Delete the JWT
-    _user = null; // Clear user from memory
-    notifyListeners(); // Update UI
-  }
-
+  // Fetch Stats (Updates Global State)
   Future<Map<String, String>> fetchUserStats() async {
     try {
-      // Calls GET /api/user/stats
       final response = await _apiService.get('/users/stats');
 
-      // Backend returns: { "totalOrders": 12, "totalSales": 5, "totalPoints": 500 }
-
-      // Parse safely (handle int, string, or null)
       final orders = response['totalOrders']?.toString() ?? '0';
       final sales = response['totalSales']?.toString() ?? '0';
       final points = response['totalPoints']?.toString() ?? '0';
 
-      return {'orders': orders, 'sells': sales, 'points': points};
+      // Update Global State
+      _stats = {'orders': orders, 'sells': sales, 'points': points};
+
+      notifyListeners(); // Tell UI to update immediately
+
+      return _stats;
     } catch (e) {
       print("Error fetching stats: $e");
-      return {
-        'orders': '-', // Show '-' on error so user knows it failed
-        'sells': '-',
-        'points': '-',
-      };
+      return _stats; // Return existing stats on error
     }
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    _user = null;
+    _stats = {'orders': '-', 'sells': '-', 'points': '-'}; // Reset stats
+    notifyListeners();
   }
 }
