@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/order_provider.dart';
@@ -39,9 +40,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         centerTitle: true,
       ),
       body: orderData.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
+          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
           : orders.isEmpty
           ? const Center(child: Text("No orders found!"))
           : ListView.separated(

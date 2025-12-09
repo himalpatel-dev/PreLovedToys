@@ -16,7 +16,6 @@ class MyListingsProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Calls GET /api/products/my-listings
       final response = await _apiService.get('/products/my-listings');
 
       List<dynamic> dataList = [];
@@ -27,15 +26,30 @@ class MyListingsProvider with ChangeNotifier {
       }
 
       _listings = dataList.map((item) => Product.fromJson(item)).toList();
-
-      // Sort by newest first
-      // Assuming your Product model has a createdAt field, if not, skip sorting or add it to model
-      // _listings.sort((a, b) => b.id.compareTo(a.id));
     } catch (e) {
       print("Error fetching my listings: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // --- ADD THIS DELETE FUNCTION ---
+  Future<void> deleteListing(int id) async {
+    // 1. Optimistic Update (Remove locally first)
+    final originalList = List<Product>.from(_listings);
+    _listings.removeWhere((item) => item.id == id);
+    notifyListeners();
+
+    try {
+      // 2. Call API: DELETE /api/products/:id
+      await _apiService.delete('/products/$id');
+    } catch (e) {
+      // 3. Revert if failed
+      _listings = originalList;
+      notifyListeners();
+      print("Error deleting listing: $e");
+      rethrow;
     }
   }
 }

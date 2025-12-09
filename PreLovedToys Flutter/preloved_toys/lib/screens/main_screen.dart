@@ -1,8 +1,8 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../utils/app_colors.dart';
 import 'home_screen.dart';
+import 'cart_screen.dart';
 import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -16,10 +16,8 @@ class _MainScreenState extends State<MainScreen> {
   int _page = 0;
   final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
 
-  // State to control visibility
   bool _isBottomNavVisible = true;
 
-  // Toggle function passed to Home
   void _toggleBottomNav(bool isVisible) {
     if (_isBottomNavVisible != isVisible) {
       setState(() {
@@ -28,14 +26,57 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  // --- NEW: Handle Back Button Logic ---
+  Future<bool> _onWillPop() async {
+    // 1. If currently NOT on Home Tab (Index 0), go back to Home
+    if (_page != 0) {
+      setState(() {
+        _page = 0;
+        _isBottomNavVisible = true; // Ensure nav bar is visible
+      });
+      // Update the visual tab bar to select Home
+      final navState = _bottomNavigationKey.currentState;
+      navState?.setPage(0);
+
+      return false; // Do NOT exit app
+    }
+    // 2. If already on Home Tab, show Exit Dialog
+    else {
+      return await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Exit App'),
+              content: const Text('Are you sure you want to exit?'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false), // Stay
+                  child: const Text('No', style: TextStyle(color: Colors.grey)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true), // Exit
+                  child: const Text(
+                    'Yes',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ) ??
+          false; // Default to false (stay) if dialog is dismissed
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Screens list
     final List<Widget> screens = [
       HomeScreen(onScrollCallback: _toggleBottomNav),
-      const Center(
-        child: Text("Search Screen", style: TextStyle(fontSize: 24)),
-      ),
+      const CartScreen(),
       const Center(child: Text("Sell Screen", style: TextStyle(fontSize: 24))),
       const Center(
         child: Text("Message Screen", style: TextStyle(fontSize: 24)),
@@ -43,49 +84,43 @@ class _MainScreenState extends State<MainScreen> {
       const ProfileScreen(),
     ];
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.black,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
+    // Wrap the Scaffold with WillPopScope to intercept the back button
+    return WillPopScope(
+      onWillPop: _onWillPop,
       child: Scaffold(
-        extendBody: true, // Content goes behind the bar
+        extendBody: true,
         backgroundColor: Colors.grey[50],
 
-        // Use Stack to overlay the sliding Nav Bar on top of the body
         body: Stack(
           children: [
-            // 1. THE MAIN CONTENT
-            // It fills the whole screen
             Positioned.fill(child: screens[_page]),
 
-            // 2. THE SLIDING NAV BAR
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
               left: 0,
               right: 0,
-              // If visible: sits at bottom (0).
-              // If hidden: slides down by 100px (off screen).
-              bottom: _isBottomNavVisible ? 0 : -120,
+              bottom: _isBottomNavVisible ? 0 : -100,
 
               child: SafeArea(
                 top: false,
-                // We maintain bottom padding so it looks good on iPhone X etc.
                 maintainBottomViewPadding: true,
                 child: CurvedNavigationBar(
                   key: _bottomNavigationKey,
                   index: 0,
-                  height: 60.0, // Fixed height for the bar itself
+                  height: 60.0,
                   color: AppColors.primary,
                   buttonBackgroundColor: AppColors.primary,
-                  backgroundColor:
-                      Colors.transparent, // Allows body to show through curve
+                  backgroundColor: Colors.transparent,
                   animationCurve: Curves.easeInOut,
                   animationDuration: const Duration(milliseconds: 400),
                   items: <Widget>[
                     Icon(Icons.home_outlined, size: 30, color: Colors.white),
-                    Icon(Icons.search, size: 30, color: Colors.white),
+                    Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 30,
+                      color: Colors.white,
+                    ),
                     Icon(Icons.explore_outlined, size: 30, color: Colors.white),
                     Icon(
                       Icons.chat_bubble_outline,
@@ -97,7 +132,7 @@ class _MainScreenState extends State<MainScreen> {
                   onTap: (index) {
                     setState(() {
                       _page = index;
-                      _isBottomNavVisible = true; // Always show when tapping
+                      _isBottomNavVisible = true;
                     });
                   },
                 ),

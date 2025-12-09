@@ -48,4 +48,17 @@ class ProductProvider with ChangeNotifier {
   Product findById(int id) {
     return _products.firstWhere((prod) => prod.id == id);
   }
+
+  // Fetch Single Product Details
+  Future<Product> fetchProductDetails(int id) async {
+    try {
+      // GET /api/products/:id
+      final response = await _apiService.get('/products/$id');
+      // The API returns the product object directly (based on your JSON)
+      return Product.fromJson(response);
+    } catch (e) {
+      print("Error fetching product details: $e");
+      rethrow;
+    }
+  }
 }

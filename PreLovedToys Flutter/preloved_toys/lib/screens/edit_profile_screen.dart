@@ -196,12 +196,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          "Edit Personal Details",
+          "Personal Details",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textDark,
         elevation: 0,
+        centerTitle: true,
       ),
       bottomNavigationBar: potentialPoints > 0
           ? Container(

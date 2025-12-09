@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // Ensure intl is added to pubspec.yaml
+import 'package:intl/intl.dart';
 import '../providers/my_listings_provider.dart';
 import '../utils/app_colors.dart';
 import '../models/product_model.dart';
+import '../widgets/custom_loader.dart';
 
 class MyListingsScreen extends StatefulWidget {
   const MyListingsScreen({super.key});
@@ -12,58 +13,176 @@ class MyListingsScreen extends StatefulWidget {
   State<MyListingsScreen> createState() => _MyListingsScreenState();
 }
 
-class _MyListingsScreenState extends State<MyListingsScreen> {
+class _MyListingsScreenState extends State<MyListingsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _hintController;
+  late Animation<Offset> _hintAnimation;
+
+  // Track selected tab index (0 = Active, 1 = Sold)
+  int _selectedTabIndex = 0;
+
   @override
   void initState() {
     super.initState();
+
+    _hintController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _hintAnimation =
+        Tween<Offset>(begin: Offset.zero, end: const Offset(-0.2, 0.0)).animate(
+          CurvedAnimation(
+            parent: _hintController,
+            curve: Curves.easeOut,
+            reverseCurve: Curves.easeIn,
+          ),
+        );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<MyListingsProvider>(context, listen: false).fetchMyListings();
+      Provider.of<MyListingsProvider>(
+        context,
+        listen: false,
+      ).fetchMyListings().then((_) {
+        if (mounted) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            _hintController.forward().then((_) {
+              Future.delayed(const Duration(milliseconds: 200), () {
+                if (mounted) _hintController.reverse();
+              });
+            });
+          });
+        }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _hintController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final listingsData = Provider.of<MyListingsProvider>(context);
-    final listings = listingsData.listings;
+    final allListings = listingsData.listings;
+
+    final activeListings = allListings
+        .where((p) => p.status.toLowerCase() == 'active')
+        .toList();
+    final soldListings = allListings
+        .where((p) => p.status.toLowerCase() == 'sold')
+        .toList();
+
+    final currentList = _selectedTabIndex == 0 ? activeListings : soldListings;
+    final isEditable = _selectedTabIndex == 0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        title: const Text(
-          "My Listings",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textDark,
         elevation: 0,
-        centerTitle: true,
+        // --- CUSTOM TITLE ROW ---
+        title: Row(
+          children: [
+            const Text(
+              "My Listings",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Spacer(), // Pushes the toggle to the right
+            // Toggle Switch
+            Container(
+              height: 36, // Smaller height to fit in AppBar
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTabButton("Selling", 0),
+                  const SizedBox(width: 2),
+                  _buildTabButton("Sold", 1),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       body: listingsData.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : listings.isEmpty
-          ? _buildEmptyState()
-          : ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: listings.length,
-              separatorBuilder: (ctx, i) => const SizedBox(height: 16),
-              itemBuilder: (ctx, index) {
-                return _buildListingCard(listings[index]);
-              },
-            ),
+          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
+          : _buildList(currentList, isEditable: isEditable),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildTabButton(String text, int index) {
+    final isSelected = _selectedTabIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[600],
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(List<Product> items, {required bool isEditable}) {
+    if (items.isEmpty) return _buildEmptyState(isEditable);
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      itemCount: items.length,
+      separatorBuilder: (ctx, i) => const SizedBox(height: 16),
+      itemBuilder: (ctx, index) {
+        final product = items[index];
+
+        if (isEditable) {
+          if (index == 0) {
+            return _buildAnimatedDismissibleItem(product);
+          }
+          return _buildDismissibleItem(product);
+        }
+
+        return _buildListingCard(product, isEditable: false);
+      },
+    );
+  }
+
+  Widget _buildEmptyState(bool isActiveTab) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[300]),
+          Icon(
+            isActiveTab
+                ? Icons.inventory_2_outlined
+                : Icons.shopping_bag_outlined,
+            size: 80,
+            color: Colors.grey[300],
+          ),
           const SizedBox(height: 16),
           Text(
-            "No listings yet",
+            isActiveTab ? "No active listings" : "No sold items yet",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -75,16 +194,87 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     );
   }
 
-  Widget _buildListingCard(Product product) {
+  Widget _buildAnimatedDismissibleItem(Product product) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Container(
+            padding: const EdgeInsets.only(right: 20),
+            alignment: Alignment.centerRight,
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.delete, color: Colors.white, size: 30),
+          ),
+        ),
+        SlideTransition(
+          position: _hintAnimation,
+          child: _buildDismissibleItem(product),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDismissibleItem(Product product) {
+    return Dismissible(
+      key: ValueKey(product.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        padding: const EdgeInsets.only(right: 20),
+        alignment: Alignment.centerRight,
+        decoration: BoxDecoration(
+          color: Colors.redAccent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(Icons.delete, color: Colors.white, size: 30),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Delete Listing?"),
+            content: const Text(
+              "Are you sure you want to remove this listing?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) {
+        Provider.of<MyListingsProvider>(
+          context,
+          listen: false,
+        ).deleteListing(product.id);
+      },
+      child: _buildListingCard(product, isEditable: true),
+    );
+  }
+
+  Widget _buildListingCard(Product product, {required bool isEditable}) {
     final imageUrl = product.images.isNotEmpty
         ? product.images[0]
         : 'https://via.placeholder.com/150';
+
+    final dateStr = product.updatedAt;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20), // More rounded like image
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.08),
@@ -97,7 +287,6 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- 1. IMAGE (Left Side) ---
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.network(
@@ -113,15 +302,12 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
               ),
             ),
           ),
-
           const SizedBox(width: 14),
 
-          // --- 2. DETAILS (Right Side) ---
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title + Edit Icon Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,64 +324,35 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // Edit Icon (Circular Grey Background)
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        shape: BoxShape.circle,
+                    if (isEditable) ...[
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Edit coming soon!")),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.edit,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       ),
-                      child: Icon(
-                        Icons.edit,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                    ],
                   ],
                 ),
 
                 const SizedBox(height: 8),
 
-                // Badges Row (Status + Condition)
                 Row(
                   children: [
-                    // Status Badge (Red dot + text)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusBgColor(product.status),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: _getStatusDotColor(product.status),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            product.status.toUpperCase(), // e.g. SOLD
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: _getStatusTextColor(product.status),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Condition Badge (Greenish/Grey)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -206,13 +363,13 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        product.condition, // e.g. Good
+                        product.condition,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: _getStatusConditionTextColor(
                             product.condition,
-                          ), // Dark Green Text
+                          ),
                         ),
                       ),
                     ),
@@ -221,12 +378,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
 
                 const SizedBox(height: 12),
 
-                // Price + Date Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // Price
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -256,7 +411,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                               product.price.toStringAsFixed(2),
                               style: const TextStyle(
                                 fontSize: 20,
-                                fontWeight: FontWeight.w900, // Extra Bold
+                                fontWeight: FontWeight.w900,
                                 color: AppColors.textDark,
                               ),
                             ),
@@ -264,8 +419,6 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                         ),
                       ],
                     ),
-
-                    // Listed Date
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -275,7 +428,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          DateFormat('MMM d, yyyy').format(product.updatedAt),
+                          dateStr.toString(),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -292,30 +445,6 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         ],
       ),
     );
-  }
-
-  // --- COLOR HELPERS ---
-
-  Color _getStatusBgColor(String status) {
-    if (status.toLowerCase() == 'sold') {
-      return const Color(0xFFFFEBEE); // Light Red
-    }
-    if (status.toLowerCase() == 'active') {
-      return const Color(0xFFE3F2FD); // Light Blue
-    }
-    return Colors.grey[100]!;
-  }
-
-  Color _getStatusDotColor(String status) {
-    if (status.toLowerCase() == 'sold') return Colors.red;
-    if (status.toLowerCase() == 'active') return Colors.blue;
-    return Colors.grey;
-  }
-
-  Color _getStatusTextColor(String status) {
-    if (status.toLowerCase() == 'sold') return Colors.red[800]!;
-    if (status.toLowerCase() == 'active') return Colors.blue[800]!;
-    return Colors.grey[800]!;
   }
 
   Color _getStatusConditionBgColor(String status) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:preloved_toys/providers/address_provider.dart';
+import 'package:preloved_toys/providers/cart_provider.dart';
 import 'package:preloved_toys/providers/favorite_provider.dart';
 import 'package:preloved_toys/providers/my_listings_provider.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MyListingsProvider()),
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(create: (_) => AddressProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MaterialApp(
         title: 'PreLoved Toys',

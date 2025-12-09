@@ -38,7 +38,6 @@ const getUserAddresses = async (userId) => {
         const addresses = await SavedAddress.findAll({
             where: { userId },
             order: [
-                ['is_default', 'DESC'], // Default address first
                 ['createdAt', 'DESC']
             ]
         });

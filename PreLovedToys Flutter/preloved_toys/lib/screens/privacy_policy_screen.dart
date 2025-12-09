@@ -16,6 +16,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textDark,
         elevation: 0,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),

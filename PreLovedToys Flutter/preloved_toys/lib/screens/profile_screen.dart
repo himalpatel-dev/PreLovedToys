@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 35),
 
             // --- 1. PROFILE HEADER CARD ---
             Container(
@@ -101,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            user?.email ?? user?.mobile ?? "No Email",
+                            user?.mobile ?? "No Mobile Number",
                             style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.textLight,
@@ -117,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () => _handleLogout(context),
                       borderRadius: BorderRadius.circular(50),
                       child: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
                           color: Colors.red.withOpacity(0.1),
                           shape: BoxShape.circle,
@@ -125,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: const Icon(
                           Icons.logout,
                           color: Colors.red,
-                          size: 20,
+                          size: 25,
                         ),
                       ),
                     ),
@@ -259,13 +259,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     },
                   ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.settings,
-                    "Settings",
-                    onTap: () {},
-                  ),
                 ],
               ),
             ),
@@ -288,6 +281,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
+                  _buildMenuItem(
+                    context,
+                    Icons.settings,
+                    "Support Center",
+                    onTap: () {},
+                  ),
+                  _buildDivider(),
                   _buildMenuItem(
                     context,
                     Icons.description_outlined,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
+import 'package:preloved_toys/widgets/product_item2.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorite_provider.dart';
 import '../utils/app_colors.dart';
-import '../widgets/product_item.dart'; // Reusing your existing card!
 
 class MyFavoritesScreen extends StatefulWidget {
   const MyFavoritesScreen({super.key});
@@ -38,9 +39,7 @@ class _MyFavoritesScreenState extends State<MyFavoritesScreen> {
         centerTitle: true,
       ),
       body: favData.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
+          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
           : favorites.isEmpty
           ? _buildEmptyState()
           : GridView.builder(
@@ -54,7 +53,7 @@ class _MyFavoritesScreenState extends State<MyFavoritesScreen> {
               ),
               itemBuilder: (ctx, index) {
                 // Pass the nested product to your existing ProductItem widget
-                return ProductItem(product: favorites[index].product);
+                return ProductItem2(product: favorites[index].product);
               },
             ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:preloved_toys/screens/add_address_screen.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../providers/address_provider.dart';
 import '../utils/app_colors.dart';
@@ -12,13 +13,56 @@ class SavedAddressesScreen extends StatefulWidget {
   State<SavedAddressesScreen> createState() => _SavedAddressesScreenState();
 }
 
-class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
+class _SavedAddressesScreenState extends State<SavedAddressesScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _hintController;
+  late Animation<Offset> _hintAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // 1. Setup Animation: Slide LEFT (-0.2) to simulate Right-to-Left swipe
+    _hintController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _hintAnimation =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-0.2, 0.0), // Negative X moves card to the LEFT
+        ).animate(
+          CurvedAnimation(
+            parent: _hintController,
+            curve: Curves.easeOut,
+            reverseCurve: Curves.easeIn,
+          ),
+        );
+
+    // 2. Fetch & Trigger Hint
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AddressProvider>(context, listen: false).fetchAddresses();
+      Provider.of<AddressProvider>(
+        context,
+        listen: false,
+      ).fetchAddresses().then((_) {
+        if (mounted) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            _hintController.forward().then((_) {
+              Future.delayed(const Duration(milliseconds: 200), () {
+                if (mounted) _hintController.reverse();
+              });
+            });
+          });
+        }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _hintController.dispose();
+    super.dispose();
   }
 
   @override
@@ -52,9 +96,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
         ],
       ),
       body: addressData.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
+          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
           : addresses.isEmpty
           ? const Center(child: Text("No addresses saved."))
           : ListView.separated(
@@ -62,9 +104,90 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
               itemCount: addresses.length,
               separatorBuilder: (ctx, i) => const SizedBox(height: 20),
               itemBuilder: (ctx, index) {
-                return _buildAddressCard(addresses[index]);
+                final address = addresses[index];
+
+                // Only animate the FIRST item for the hint
+                if (index == 0) {
+                  return _buildAnimatedDismissibleItem(address);
+                }
+
+                return _buildDismissibleItem(address);
               },
             ),
+    );
+  }
+
+  // --- ANIMATED WRAPPER (For the Hint) ---
+  Widget _buildAnimatedDismissibleItem(Address address) {
+    return Stack(
+      children: [
+        // A. FAKE BACKGROUND (Behind the card)
+        Positioned.fill(
+          child: Container(
+            padding: const EdgeInsets.only(right: 20), // Padding on RIGHT
+            alignment: Alignment.centerRight, // Icon on RIGHT
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.delete, color: Colors.white, size: 30),
+          ),
+        ),
+
+        // B. THE SLIDING CARD
+        SlideTransition(
+          position: _hintAnimation,
+          child: _buildDismissibleItem(address),
+        ),
+      ],
+    );
+  }
+
+  // --- ACTUAL DISMISSIBLE ITEM ---
+  Widget _buildDismissibleItem(Address address) {
+    return Dismissible(
+      key: ValueKey(address.id),
+      direction: DismissDirection.endToStart, // Swipe Right -> Left
+      background: Container(
+        padding: const EdgeInsets.only(right: 20), // Padding on RIGHT
+        alignment: Alignment.centerRight, // Icon on RIGHT
+        decoration: BoxDecoration(
+          color: Colors.redAccent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete, color: Colors.white, size: 30),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Delete Address?"),
+            content: const Text(
+              "Are you sure you want to remove this address?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) {
+        Provider.of<AddressProvider>(
+          context,
+          listen: false,
+        ).deleteAddress(address.id);
+      },
+      child: _buildAddressCard(address),
     );
   }
 
@@ -86,26 +209,18 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- HEADER ROW (Icon, Name/Type, Actions) ---
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Location Icon (Left)
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.location_on_outlined,
-                  color: AppColors.textDark,
-                  size: 20,
-                ),
+                child: _buildAddressTypeIcon(address.addressType),
               ),
               const SizedBox(width: 15),
-
-              // Name & Type
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +236,6 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // Address Type Badge
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -150,47 +264,27 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                   ],
                 ),
               ),
-
-              // Action Buttons (Edit/Delete)
-              Row(
-                children: [
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AddEditAddressScreen(address: address),
-                        ),
-                      );
-                    },
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 20,
-                      color: Colors.grey[400],
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          AddEditAddressScreen(address: address),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  InkWell(
-                    onTap: () {}, // Delete
-                    child: Icon(
-                      Icons.delete_outline,
-                      size: 20,
-                      color: Colors.grey[400],
-                    ),
-                  ),
-                ],
+                  );
+                },
+                child: Icon(
+                  Icons.edit_outlined,
+                  size: 22,
+                  color: Colors.grey[400],
+                ),
               ),
             ],
           ),
-
           const SizedBox(height: 15),
-
-          // --- ADDRESS TEXT ---
           Padding(
-            padding: const EdgeInsets.only(
-              left: 55,
-            ), // Indent to align with text above
+            padding: const EdgeInsets.only(left: 55),
             child: Text(
               address.fullAddress,
               style: TextStyle(
@@ -200,14 +294,10 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
           const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
           const SizedBox(height: 15),
-
-          // --- FOOTER (Default Status) ---
           if (address.isDefault)
-            // Green "Default Address" Label
             Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -215,7 +305,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9), // Light Green bg
+                  color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
@@ -236,11 +326,13 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
               ),
             )
           else
-            // "Set as Default" Button
             Center(
               child: TextButton(
                 onPressed: () {
-                  // Call set default logic
+                  Provider.of<AddressProvider>(
+                    context,
+                    listen: false,
+                  ).setDefaultAddress(address.id);
                 },
                 child: const Text(
                   "Set as Default",
@@ -254,5 +346,19 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
         ],
       ),
     );
+  }
+}
+
+//add icon to replace that location icon based on address type
+Widget _buildAddressTypeIcon(String type) {
+  switch (type) {
+    case "Home":
+      return const Icon(Icons.home, color: AppColors.primary);
+    case "Work":
+      return const Icon(Icons.work, color: AppColors.primary);
+    case "Other":
+      return const Icon(Icons.location_on, color: AppColors.primary);
+    default:
+      return const Icon(Icons.location_on, color: AppColors.primary);
   }
 }

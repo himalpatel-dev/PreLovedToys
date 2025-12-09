@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:preloved_toys/providers/favorite_provider.dart';
 import 'package:preloved_toys/widgets/custom_loader.dart';
+import 'package:preloved_toys/widgets/product_item2.dart';
 import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/category_provider.dart';
-import '../widgets/product_item.dart';
 import '../utils/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -273,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
 
                 // --- PRODUCT GRID ---
                 Expanded(
@@ -300,12 +300,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2,
-                                  childAspectRatio: 0.65,
+                                  childAspectRatio: 0.60,
                                   crossAxisSpacing: 15,
-                                  mainAxisSpacing: 15,
+                                  mainAxisSpacing: 25,
                                 ),
                             itemBuilder: (ctx, index) {
-                              return ProductItem(product: products[index]);
+                              return ProductItem2(product: products[index]);
                             },
                           ),
                         ),
