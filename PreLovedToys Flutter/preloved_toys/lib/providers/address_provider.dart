@@ -171,4 +171,20 @@ class AddressProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<Address?> fetchDefaultAddress() async {
+    try {
+      // Assuming you have an endpoint for this, or we filter from the list
+      // If backend has specific endpoint:
+      final response = await _apiService.get('/addresses/default');
+      return Address.fromJson(response);
+
+      // OR if we just filter locally from existing list:
+      // if (_addresses.isEmpty) await fetchAddresses();
+      // return _addresses.firstWhere((a) => a.isDefault, orElse: () => _addresses.first);
+    } catch (e) {
+      print("Error fetching default address: $e");
+      return null;
+    }
+  }
 }

@@ -24,18 +24,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Product? _product;
   bool _isLoading = true;
 
-  // Local state for UI interactivity (Mocking these as they might not be in your API)
-  int _quantity = 1;
-  int _selectedSizeIndex = 1; // Default 'M'
-  int _selectedColorIndex = 2; // Default 3rd color
-  final List<String> _sizes = ['S', 'M', 'L', 'XL'];
-  final List<Color> _colors = [
-    Color(0xFFEAD3D3), // Light pinkish
-    Color(0xFF565E73), // Dark Grey/Blue
-    Color(0xFF222222), // Black
-    Colors.white, // White
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -58,34 +46,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _addToCart() async {
-    if (_product == null) return;
-
-    try {
-      // Call Provider
-      await Provider.of<CartProvider>(
-        context,
-        listen: false,
-      ).addToCart(_product!.id);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Added to Cart Successfully!"),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to add: $e")));
-      }
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/screens/checkout_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../utils/app_colors.dart';
@@ -391,8 +392,11 @@ class _CartScreenState extends State<CartScreen>
               height: 55,
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Proceeding to Checkout...")),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CheckoutScreen(),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
