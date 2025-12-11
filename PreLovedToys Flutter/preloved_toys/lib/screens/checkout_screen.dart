@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/screens/order_success_screen.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/cart_provider.dart';
 import '../providers/address_provider.dart';
 import '../models/address_model.dart';
-import '../widgets/product_item2.dart'; // Using the horizontal card widget
+import '../models/product_model.dart';
+import 'address_selection_screen.dart';
+import '../providers/order_provider.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -39,9 +42,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cartProvider = Provider.of<CartProvider>(context);
     final cartItems = cartProvider.items;
 
-    // Calculate total from cart items directly
     double totalAmount = cartProvider.totalRupees;
-    // Note: If you have points logic mixed, you might need a getter for mixed total or just rupees
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -73,8 +74,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 TextButton(
-                  onPressed: () {
-                    // Navigate to Address List to change
+                  onPressed: () async {
+                    // Navigate and wait for result
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddressSelectionScreen(
+                          selectedId: _defaultAddress
+                              ?.id, // Pass current ID to highlight it
+                        ),
+                      ),
+                    );
+
+                    // If user confirmed a selection, update UI
+                    if (result != null && result is Address) {
+                      setState(() {
+                        _defaultAddress = result;
+                      });
+                    }
                   },
                   child: const Text(
                     "Edit",
@@ -101,15 +118,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       borderRadius: const BorderRadius.horizontal(
                         left: Radius.circular(15),
                       ),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          "https://via.placeholder.com/150",
-                        ), // Replace with a map snippet asset
-                        fit: BoxFit.cover,
-                      ),
                     ),
                     child: const Center(
-                      child: Icon(Icons.location_on, color: Colors.red),
+                      child: Icon(Icons.map, color: Colors.red, size: 30),
                     ),
                   ),
 
@@ -125,7 +136,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _defaultAddress!.addressType, // e.g. "Home"
+                                _defaultAddress!.addressType,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
@@ -158,13 +169,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
             ListView.separated(
               physics:
-                  const NeverScrollableScrollPhysics(), // Scroll entire page instead
+                  const NeverScrollableScrollPhysics(), // Important inside SingleChildScrollView
               shrinkWrap: true,
               itemCount: cartItems.length,
               separatorBuilder: (ctx, i) => const SizedBox(height: 15),
               itemBuilder: (ctx, i) {
-                // We use ProductItem2 (horizontal card) but disable qty controls for checkout view
-                return ProductItem2(product: cartItems[i].product);
+                // Use LOCAL horizontal widget instead of ProductItem2
+                return _buildCheckoutItem(cartItems[i].product);
               },
             ),
 
@@ -192,10 +203,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       color: Colors.green[50],
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.money,
-                      color: Colors.green,
-                    ), // COD Icon
+                    child: const Icon(Icons.attach_money, color: Colors.green),
                   ),
                   const SizedBox(width: 15),
                   const Expanded(
@@ -209,7 +217,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
 
-            const SizedBox(height: 100), // Space for bottom bar
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -251,11 +259,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () {
-                  // Call Place Order API here
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Order Placed Successfully!")),
-                  );
+                onPressed: () async {
+                  if (_defaultAddress == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please select an address first"),
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    // Call the API with the selected address ID
+                    await Provider.of<OrderProvider>(
+                      context,
+                      listen: false,
+                    ).placeOrder(_defaultAddress!.id);
+
+                    if (context.mounted) {
+                      // Navigate to Success Screen
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const OrderSuccessScreen(),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Failed to place order: $e")),
+                      );
+                    }
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -263,18 +299,92 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: const Text(
-                  "Checkout Now",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+                child: Provider.of<OrderProvider>(context).isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Place Order",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // --- NEW LOCAL WIDGET (Horizontal Layout) ---
+  Widget _buildCheckoutItem(Product product) {
+    final imageUrl = product.images.isNotEmpty ? product.images[0] : '';
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Image
+          Container(
+            height: 70,
+            width: 70,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) =>
+                    const Icon(Icons.broken_image, color: Colors.grey),
+              ),
+            ),
+          ),
+          const SizedBox(width: 15),
+
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Condition: ${product.condition}", // Using condition as detail
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+
+          // Price
+          Text(
+            "\$${product.price.toStringAsFixed(0)}",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ],
       ),
     );
   }

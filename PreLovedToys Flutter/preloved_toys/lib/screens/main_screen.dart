@@ -117,7 +117,7 @@ class _MainScreenState extends State<MainScreen> {
                   items: <Widget>[
                     Icon(Icons.home_outlined, size: 30, color: Colors.white),
                     Icon(
-                      Icons.shopping_bag_outlined,
+                      Icons.shopping_cart_outlined,
                       size: 30,
                       color: Colors.white,
                     ),

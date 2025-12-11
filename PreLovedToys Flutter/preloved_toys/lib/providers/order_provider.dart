@@ -37,4 +37,26 @@ class OrderProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> placeOrder(int addressId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // POST /api/orders
+      // Body: { "address": addressId }
+      final body = {"address": addressId};
+
+      await _apiService.post('/orders', body);
+
+      // You might want to clear the cart locally here if the backend doesn't do it automatically,
+      // or fetch the cart again to show it's empty.
+    } catch (e) {
+      print("Error placing order: $e");
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

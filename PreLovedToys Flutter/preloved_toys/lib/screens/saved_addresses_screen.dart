@@ -227,12 +227,15 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen>
                   children: [
                     Row(
                       children: [
-                        Text(
-                          address.receiverName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+                        Expanded(
+                          child: Text(
+                            address.receiverName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
