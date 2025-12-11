@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
 import 'edit_profile_screen.dart';
-import 'login_screen.dart';
 import '../widgets/custom_loader.dart';
 import 'my_orders_screen.dart';
 
@@ -29,21 +28,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void _handleLogout(BuildContext context) async {
-    await Provider.of<AuthProvider>(context, listen: false).logout();
-    if (context.mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Watch for global changes
     final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.user;
     final stats = authProvider.stats;
 
     return Scaffold(
@@ -52,89 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            const SizedBox(height: 35),
-
-            // --- 1. PROFILE HEADER CARD ---
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.05),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Colors.grey[200],
-                      image: const DecorationImage(
-                        image: NetworkImage('https://i.pravatar.cc/150?img=11'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user?.name ?? "Guest User",
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user?.mobile ?? "No Mobile Number",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textLight,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _handleLogout(context),
-                      borderRadius: BorderRadius.circular(50),
-                      child: Container(
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.logout,
-                          color: Colors.red,
-                          size: 25,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
+            const SizedBox(height: 50),
 
             // --- 2. STATS CARD (Always Visible) ---
             Container(

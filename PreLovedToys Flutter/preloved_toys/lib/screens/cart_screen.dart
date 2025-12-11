@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../utils/app_colors.dart';
 import '../models/cart_model.dart';
-import '../models/product_model.dart';
 import 'checkout_screen.dart'; // Import Checkout Screen
 
 class CartScreen extends StatefulWidget {

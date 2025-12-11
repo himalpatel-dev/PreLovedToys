@@ -1,12 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
 import 'package:preloved_toys/providers/favorite_provider.dart';
 import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:preloved_toys/widgets/product_item2.dart';
-import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/category_provider.dart';
 import '../utils/app_colors.dart';
+
+// ... (Keep your HeaderCurvePainter class exactly as it is) ...
+class HeaderCurvePainter extends CustomPainter {
+  final Color color;
+  final double curveHeight;
+
+  HeaderCurvePainter({required this.color, required this.curveHeight});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final w = size.width;
+    final h = curveHeight;
+
+    path.moveTo(0, 0);
+    path.lineTo(0, h * .5);
+    path.quadraticBezierTo(w * 0.18, h * 0.95, w * 0.5, h * 0.95);
+    path.quadraticBezierTo(w * 0.82, h * 0.95, w, h * 0.35);
+    path.lineTo(w, 0);
+    path.lineTo(0, 0);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
 class HomeScreen extends StatefulWidget {
   final Function(bool isVisible) onScrollCallback;
@@ -22,9 +54,19 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
+  late final PageController _catPageController;
+  double _currentPageValue = 0.0;
+
   @override
   void initState() {
     super.initState();
+    _catPageController = PageController(viewportFraction: 0.25, initialPage: 0);
+    _catPageController.addListener(() {
+      setState(() {
+        _currentPageValue = _catPageController.page ?? 0.0;
+      });
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProductProvider>(context, listen: false).fetchProducts();
       Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
@@ -36,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _catPageController.dispose();
     super.dispose();
   }
 
@@ -46,10 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final products = productData.products;
     final categories = categoryData.categories;
 
-    final double fullWidth = MediaQuery.of(context).size.width - 40;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      primary: false,
+      backgroundColor: Colors.transparent,
       body: GestureDetector(
         onTap: () {
           if (_isSearchActive) {
@@ -60,258 +102,162 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           }
         },
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-
-                // --- HEADER ---
-                SizedBox(
-                  height: 60,
+        // WRAPPER: Handles scroll detection to hide/show bottom bar
+        child: NotificationListener<UserScrollNotification>(
+          onNotification: (notification) {
+            if (notification.direction == ScrollDirection.reverse) {
+              widget.onScrollCallback(false); // Hide bottom bar
+            } else if (notification.direction == ScrollDirection.forward) {
+              widget.onScrollCallback(true); // Show bottom bar
+            }
+            return true;
+          },
+          // CORE CHANGE: CustomScrollView allows mixed content types to scroll together
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // 1. THE HEADER (Scrolls away now)
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 300,
                   child: Stack(
-                    alignment: Alignment.centerLeft,
                     children: [
-                      // TITLE
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: AnimatedOpacity(
-                          opacity: _isSearchActive ? 0.0 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: const Text(
-                            "Preloved Toys",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
-                            ),
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: HeaderCurvePainter(
+                            color: AppColors.primary,
+                            curveHeight: 70,
                           ),
                         ),
                       ),
+                      if (categoryData.isLoading)
+                        const Center(
+                          child: LinearProgressIndicator(minHeight: 2),
+                        )
+                      else if (categories.isNotEmpty)
+                        PageView.builder(
+                          controller: _catPageController,
+                          itemCount: categories.length,
+                          physics: const ClampingScrollPhysics(),
+                          padEnds: false,
+                          itemBuilder: (context, index) {
+                            double itemWidth = 0.25;
+                            double itemCenterPos =
+                                (index - _currentPageValue) * itemWidth +
+                                (itemWidth / 2);
+                            double distFromCenter = itemCenterPos - 0.5;
+                            double dy =
+                                -200 * (distFromCenter * distFromCenter);
+                            dy = dy.clamp(-60.0, 0.0);
 
-                      // SEARCH BAR
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          clipBehavior: Clip.hardEdge,
-                          width: _isSearchActive ? fullWidth : 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(30),
-                            // NO BORDER defined here, only Shadow
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withAlpha(150),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const NeverScrollableScrollPhysics(),
-                            child: SizedBox(
-                              width: _isSearchActive ? fullWidth : 50,
-                              height: 50,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Icon
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _isSearchActive = true;
-                                      });
-                                      Future.delayed(
-                                        const Duration(milliseconds: 100),
-                                        () {
-                                          _searchFocusNode.requestFocus();
-                                        },
-                                      );
-                                    },
-                                    child: Container(
-                                      width: 50,
-                                      height: 50,
-                                      color: Colors.transparent,
-                                      child: const Icon(
-                                        Icons.search,
-                                        color: Colors.grey,
+                            final cat = categories[index];
+
+                            return Transform.translate(
+                              offset: Offset(0, dy + 10),
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedCategoryIndex = index;
+                                  });
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 200,
                                       ),
-                                    ),
-                                  ),
-                                  // Input
-                                  Expanded(
-                                    child: _isSearchActive
-                                        ? Theme(
-                                            // NUCLEAR OPTION: Override ALL Input Decorations for this widget only
-                                            data: Theme.of(context).copyWith(
-                                              inputDecorationTheme:
-                                                  const InputDecorationTheme(
-                                                    border: InputBorder.none,
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
+                                      width: 62,
+                                      height: 62,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF8E9B7),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.05,
                                             ),
-                                            child: TextField(
-                                              controller: _searchController,
-                                              focusNode: _searchFocusNode,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                              ),
-                                              decoration: const InputDecoration(
-                                                hintText: "Search for toys...",
-                                                hintStyle: TextStyle(
-                                                  color: Colors.grey,
-                                                ),
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                    ),
-                                              ),
-                                            ),
-                                          )
-                                        : const SizedBox(),
-                                  ),
-                                  // Close Button
-                                  if (_isSearchActive)
-                                    GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _isSearchActive = false;
-                                          _searchController.clear();
-                                          _searchFocusNode.unfocus();
-                                        });
-                                      },
-                                      child: Container(
-                                        width: 50,
-                                        height: 50,
-                                        color: Colors.transparent,
-                                        child: const Icon(
-                                          Icons.close,
-                                          color: AppColors.textDark,
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                        border: Border.all(
+                                          color: AppColors.primary,
+                                          width: 2,
                                         ),
                                       ),
+                                      child: Image.network(
+                                        cat.image!,
+                                        height: 28,
+                                        width: 28,
+                                        fit: BoxFit.contain,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Icon(
+                                                Icons.category,
+                                                size: 28,
+                                                color: AppColors.primary,
+                                              );
+                                            },
+                                      ),
                                     ),
-                                ],
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      cat.name,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textDark,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      ),
                     ],
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 5),
-
-                // --- CATEGORIES ---
-                const Text(
-                  "Categories",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+              // 2. THE PRODUCT GRID
+              if (productData.isLoading)
+                const SliverFillRemaining(
+                  child: Center(
+                    child: BouncingDiceLoader(color: AppColors.primary),
                   ),
-                ),
-                const SizedBox(height: 15),
-
-                if (categoryData.isLoading)
-                  const LinearProgressIndicator(minHeight: 2)
-                else if (categories.isNotEmpty)
-                  SizedBox(
-                    height: 40,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: categories.length,
-                      itemBuilder: (ctx, index) {
-                        final cat = categories[index];
-                        final isSelected = index == _selectedCategoryIndex;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedCategoryIndex = index;
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: isSelected
-                                  ? null
-                                  : Border.all(
-                                      color: Colors.grey.withAlpha(100),
-                                    ),
-                            ),
-                            child: Text(
-                              cat.name,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : AppColors.textLight,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                )
+              else if (products.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(child: Text("No toys found!")),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
                   ),
-
-                const SizedBox(height: 30),
-
-                // --- PRODUCT GRID ---
-                Expanded(
-                  child: productData.isLoading
-                      ? const Center(
-                          child: BouncingDiceLoader(color: AppColors.primary),
-                        )
-                      : products.isEmpty
-                      ? const Center(child: Text("No toys found!"))
-                      : NotificationListener<UserScrollNotification>(
-                          onNotification: (notification) {
-                            if (notification.direction ==
-                                ScrollDirection.reverse) {
-                              widget.onScrollCallback(false);
-                            } else if (notification.direction ==
-                                ScrollDirection.forward) {
-                              widget.onScrollCallback(true);
-                            }
-                            return true;
-                          },
-                          child: GridView.builder(
-                            padding: const EdgeInsets.only(bottom: 100),
-                            itemCount: products.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.60,
-                                  crossAxisSpacing: 15,
-                                  mainAxisSpacing: 25,
-                                ),
-                            itemBuilder: (ctx, index) {
-                              return ProductItem2(product: products[index]);
-                            },
-                          ),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.60,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 25,
                         ),
+                    delegate: SliverChildBuilderDelegate((ctx, index) {
+                      return ProductItem2(product: products[index]);
+                    }, childCount: products.length),
+                  ),
                 ),
-              ],
-            ),
+
+              // Add a little bottom padding so the last item isn't behind the nav bar
+              const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
           ),
         ),
       ),
