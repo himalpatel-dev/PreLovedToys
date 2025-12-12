@@ -22,7 +22,7 @@ class OrderSuccessScreen extends StatelessWidget {
 
               // --- 1. SUCCESS IMAGE ---
               Image.asset(
-                'images/cartsuccess.jpg',
+                'assets/images/cartsuccess.jpg',
                 height: size.height * 0.3, // 30% of screen height
                 fit: BoxFit.contain,
                 errorBuilder: (c, e, s) => const Icon(

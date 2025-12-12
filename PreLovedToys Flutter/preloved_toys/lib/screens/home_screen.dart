@@ -8,7 +8,7 @@ import '../providers/product_provider.dart';
 import '../providers/category_provider.dart';
 import '../utils/app_colors.dart';
 
-// ... (Keep your HeaderCurvePainter class exactly as it is) ...
+// --- HeaderCurvePainter (KEEP AS IS) ---
 class HeaderCurvePainter extends CustomPainter {
   final Color color;
   final double curveHeight;
@@ -39,6 +39,7 @@ class HeaderCurvePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+// ---------------------------------------
 
 class HomeScreen extends StatefulWidget {
   final Function(bool isVisible) onScrollCallback;
@@ -67,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Initiate data fetching for all necessary resources
       Provider.of<ProductProvider>(context, listen: false).fetchProducts();
       Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
       Provider.of<FavoriteProvider>(context, listen: false).fetchFavorites();
@@ -88,6 +90,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final products = productData.products;
     final categories = categoryData.categories;
 
+    // **CORE CHANGE:** Determine the overall loading state
+    final bool isLoading = productData.isLoading || categoryData.isLoading;
+
+    // If both category and product data are loading, show a full screen loader.
+    if (isLoading && products.isEmpty && categories.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.black.withOpacity(0.25),
+        body: Center(child: BouncingDiceLoader(color: AppColors.primary)),
+      );
+    }
+
     return Scaffold(
       primary: false,
       backgroundColor: Colors.transparent,
@@ -101,7 +114,6 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           }
         },
-        // WRAPPER: Handles scroll detection to hide/show bottom bar
         child: NotificationListener<UserScrollNotification>(
           onNotification: (notification) {
             if (notification.direction == ScrollDirection.reverse) {
@@ -111,9 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
             return true;
           },
-          // CORE CHANGE: CustomScrollView allows mixed content types to scroll together
           child: CustomScrollView(
-            //    physics: const BouncingScrollPhysics(),
             physics: const ClampingScrollPhysics(),
             slivers: [
               // 1. THE HEADER (Scrolls away now)
@@ -122,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 180,
                   child: Stack(
                     children: [
+                      // Background curve
                       Positioned.fill(
                         child: CustomPaint(
                           painter: HeaderCurvePainter(
@@ -130,9 +141,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      if (categoryData.isLoading)
+
+                      // Show a simple progress indicator inside the header if
+                      // *only* category data is still loading
+                      if (categoryData.isLoading && categories.isEmpty)
                         const Center(
-                          child: LinearProgressIndicator(minHeight: 2),
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 80.0),
+                            child: LinearProgressIndicator(minHeight: 2),
+                          ),
                         )
                       else if (categories.isNotEmpty)
                         PageView.builder(
@@ -141,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           physics: const ClampingScrollPhysics(),
                           padEnds: false,
                           itemBuilder: (context, index) {
+                            // ... (Category item building logic remains the same)
                             double itemWidth = 0.25;
                             double itemCenterPos =
                                 (index - _currentPageValue) * itemWidth +
@@ -156,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               offset: Offset(0, dy + 0),
                               child: GestureDetector(
                                 onTap: () {
+                                  // Add category selection logic here if needed
                                   setState(() {});
                                 },
                                 child: Column(
@@ -223,15 +242,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               // 2. THE PRODUCT GRID
-              if (productData.isLoading)
-                const SliverFillRemaining(
+              // If we reach here, it means we passed the main full-screen loader check.
+              // We only need to check if products are still loading/empty.
+              if (products.isEmpty)
+                SliverFillRemaining(
                   child: Center(
-                    child: BouncingDiceLoader(color: AppColors.primary),
+                    child: productData.isLoading
+                        ? const LinearProgressIndicator(
+                            minHeight: 2,
+                          ) // Show product-specific loader if loading
+                        : const Text(
+                            "No toys found!",
+                          ), // Show empty message if not loading
                   ),
-                )
-              else if (products.isEmpty)
-                const SliverFillRemaining(
-                  child: Center(child: Text("No toys found!")),
                 )
               else
                 SliverPadding(

@@ -401,6 +401,9 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen>
                   ],
                 ),
               ),
+              // --- MODIFICATION START: ADDED SPACE BEFORE EDIT BUTTON ---
+              const SizedBox(width: 16),
+              // --- MODIFICATION END ---
               InkWell(
                 onTap: () {
                   Navigator.push(
@@ -414,7 +417,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen>
                 child: Icon(
                   Icons.edit_outlined,
                   size: 22,
-                  color: Colors.grey[400],
+                  color: AppColors.primary,
                 ),
               ),
             ],

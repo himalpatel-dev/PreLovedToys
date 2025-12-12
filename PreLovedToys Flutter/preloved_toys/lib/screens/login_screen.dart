@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:preloved_toys/screens/otp_screen.dart';
 import 'package:preloved_toys/utils/flutter_shapes.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
@@ -200,20 +201,29 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextField(
                               controller: _mobileController,
                               keyboardType: TextInputType.phone,
+
                               style: const TextStyle(
+                                letterSpacing: 3,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                               ),
                               decoration: const InputDecoration(
                                 hintText: 'Enter Mobile Number',
                                 hintStyle: TextStyle(
+                                  letterSpacing: 3,
                                   color: AppColors.textLight,
                                   fontWeight: FontWeight.normal,
                                 ),
-                                prefixIcon: Icon(
-                                  Icons.phone_android,
-                                  color: AppColors.medium,
+                                prefixIcon: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 25.0,
+                                  ), // adjust as needed
+                                  child: Icon(
+                                    Icons.phone_android,
+                                    color: AppColors.medium,
+                                  ),
                                 ),
+
                                 filled: true,
                                 fillColor: Colors.white,
                               ),
@@ -223,17 +233,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             SizedBox(
                               height: 55,
-                              child: isLoading
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : ElevatedButton(
-                                      onPressed: _handleSendOtp,
-                                      child: const Text(
-                                        'Send OTP',
-                                        style: TextStyle(fontSize: 18),
-                                      ),
-                                    ),
+                              child: ElevatedButton(
+                                onPressed: _handleSendOtp,
+                                child: const Text(
+                                  'Send OTP',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                              ),
                             ),
 
                             const SizedBox(height: 20),
@@ -256,6 +262,20 @@ class _LoginScreenState extends State<LoginScreen> {
               },
             ),
           ),
+
+          // --- FULL-SCREEN LOADER (Shown when isLoading == true) ---
+          if (isLoading)
+            // Use AbsorbPointer to block interactions with underlying widgets.
+            AbsorbPointer(
+              absorbing: true,
+              child: Container(
+                // cover entire screen
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black.withOpacity(0.25),
+                child: const Center(child: BouncingDiceLoader()),
+              ),
+            ),
         ],
       ),
     );

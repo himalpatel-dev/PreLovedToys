@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/address_provider.dart';
@@ -21,12 +22,10 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _pincodeController;
-  // Removed _stateController (now using _selectedState)
   late TextEditingController _cityController;
   late TextEditingController _address1Controller;
   late TextEditingController _address2Controller;
-  late TextEditingController
-  _countryController; // Kept for logic, hidden from UI
+  late TextEditingController _countryController;
 
   String _selectedType = "Home";
   bool _isDefault = false;
@@ -81,12 +80,9 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     final addr = widget.address;
 
     // 1. GET USER DATA FOR AUTO-FILL
-    // We listen: false because we just need data once, not updates
     final user = Provider.of<AuthProvider>(context, listen: false).user;
 
     // 2. INITIALIZE CONTROLLERS
-    // If Editing: Use address data
-    // If Adding: Use User data (Auto-fill)
     _nameController = TextEditingController(
       text: addr?.receiverName ?? user?.name ?? '',
     );
@@ -143,6 +139,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
             onPressed: () async {
               Navigator.pop(ctx);
               try {
+                // The provider will automatically update its isLoading state
                 await Provider.of<AddressProvider>(
                   context,
                   listen: false,
@@ -165,6 +162,9 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
 
   void _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // The logic to handle loading screen is implicitly managed by AddressProvider's isLoading state
+    // since this function calls provider methods which should set that state to true/false.
 
     final formData = {
       "receiver_name": _nameController.text.trim(),
@@ -206,328 +206,365 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
         ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     }
+    // No finally block needed here, as AddressProvider should manage
+    // setting `isLoading` back to false within its methods.
   }
 
   @override
   Widget build(BuildContext context) {
+    // Get the loading state from the provider
     final isLoading = Provider.of<AddressProvider>(context).isLoading;
     final isEditing = widget.address != null;
 
     return Scaffold(
       backgroundColor: _headerColor,
-      body: Column(
+      // --- WRAP BODY IN STACK FOR LOADER OVERLAY ---
+      body: Stack(
         children: [
-          // --- Custom Header (now shows delete when editing) ---
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // LEFT: Back Button
-                  _buildCircleButton(
-                    icon: Icons.arrow_back_ios_new,
-                    onTap: () => Navigator.pop(context),
+          // --- Main Content ---
+          Column(
+            children: [
+              // --- Custom Header (now shows delete when editing) ---
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
                   ),
-
-                  // CENTER: Title
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        isEditing ? "Edit Address" : "Add New Address",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // LEFT: Back Button
+                      _buildCircleButton(
+                        icon: Icons.arrow_back_ios_new,
+                        onTap: () => Navigator.pop(context),
                       ),
-                    ),
-                  ),
 
-                  // RIGHT: Delete button (visible only when editing)
-                  isEditing
-                      ? GestureDetector(
-                          onTap: _handleDelete,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
+                      // CENTER: Title
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            isEditing ? "Edit Address" : "Add New Address",
+                            style: const TextStyle(
                               color: Colors.white,
-                              shape: BoxShape.circle,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                              size: 20,
-                            ),
-                          ),
-                        )
-                      : Opacity(
-                          opacity: 0,
-                          child: _buildCircleButton(
-                            icon: Icons.more_horiz,
-                            onTap: () {},
                           ),
                         ),
-                ],
-              ),
-            ),
-          ),
-
-          // --- Curved sheet ---
-          Expanded(
-            child: ClipPath(
-              clipper: TopConvexClipper(),
-              child: Container(
-                color: const Color(0xFFF9F9F9),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 18),
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(2),
                       ),
-                    ),
 
-                    // Content area
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Type chips
-                            Wrap(
-                              spacing: 10,
-                              children: ["Home", "Work", "Other"].map((type) {
-                                final isSelected = _selectedType == type;
-                                return ChoiceChip(
-                                  label: Text(type),
-                                  selected: isSelected,
-                                  checkmarkColor: Colors.white,
-                                  selectedColor: AppColors.primary,
-                                  backgroundColor: const Color(0xFFF5F6F9),
-                                  labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : AppColors.textDark,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    side: BorderSide.none,
-                                  ),
-                                  onSelected: (selected) {
-                                    if (selected)
-                                      setState(() => _selectedType = type);
-                                  },
-                                );
-                              }).toList(),
-                            ),
-
-                            const SizedBox(height: 15),
-                            const Text(
-                              "Contact Details",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                      // RIGHT: Delete button (visible only when editing)
+                      isEditing
+                          ? GestureDetector(
+                              onTap: _handleDelete,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                              ),
+                            )
+                          : Opacity(
+                              opacity: 0,
+                              child: _buildCircleButton(
+                                icon: Icons.more_horiz,
+                                onTap: () {},
                               ),
                             ),
-                            const SizedBox(height: 15),
+                    ],
+                  ),
+                ),
+              ),
 
-                            // Pre-filled with User Name
-                            Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildTextField(
-                                    "Receiver Name*",
-                                    _nameController,
-                                    validator: _requiredValidator,
-                                  ),
-                                  const SizedBox(height: 15),
-                                  // Pre-filled with User Mobile
-                                  _buildTextField(
-                                    "Phone Number*",
-                                    _phoneController,
-                                    keyboardType: TextInputType.phone,
-                                    validator: _phoneValidator,
-                                  ),
-                                  const SizedBox(height: 25),
+              // --- Curved sheet ---
+              Expanded(
+                child: ClipPath(
+                  clipper: TopConvexClipper(),
+                  child: Container(
+                    color: const Color(0xFFF9F9F9),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 18),
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
 
-                                  const Text(
-                                    "Address Details",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 15),
-                                  _buildTextField(
-                                    "House No., Building Name*",
-                                    _address1Controller,
-                                    validator: _requiredValidator,
-                                  ),
-                                  const SizedBox(height: 15),
-                                  _buildTextField(
-                                    "Road Name, Area, Colony (Optional)",
-                                    _address2Controller,
-                                  ),
-                                  const SizedBox(height: 15),
+                        // Content area
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Type chips
+                                Wrap(
+                                  spacing: 10,
+                                  children: ["Home", "Work", "Other"].map((
+                                    type,
+                                  ) {
+                                    final isSelected = _selectedType == type;
+                                    return ChoiceChip(
+                                      labelPadding: const EdgeInsets.symmetric(
+                                        horizontal: 25,
+                                      ),
+                                      label: Text(type),
+                                      selected: isSelected,
+                                      checkmarkColor: Colors.white,
+                                      selectedColor: AppColors.primary,
+                                      backgroundColor: const Color(0xFFF5F6F9),
+                                      labelStyle: TextStyle(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppColors.textDark,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        side: BorderSide.none,
+                                      ),
+                                      onSelected: (selected) {
+                                        if (selected)
+                                          setState(() => _selectedType = type);
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
 
-                                  _buildTextField(
-                                    "Pincode*",
-                                    _pincodeController,
-                                    keyboardType: TextInputType.number,
-                                    validator: _requiredValidator,
+                                const SizedBox(height: 15),
+                                const Text(
+                                  "Contact Details",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(height: 15),
-                                  Row(
+                                ),
+                                const SizedBox(height: 15),
+
+                                // Pre-filled with User Name
+                                Form(
+                                  key: _formKey,
+                                  child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                        child: _buildTextField(
-                                          "City*",
-                                          _cityController,
-                                          validator: _requiredValidator,
+                                      _buildTextField(
+                                        "Receiver Name*",
+                                        _nameController,
+                                        validator: _requiredValidator,
+                                      ),
+                                      const SizedBox(height: 15),
+                                      // Pre-filled with User Mobile
+                                      _buildTextField(
+                                        "Phone Number*",
+                                        _phoneController,
+                                        keyboardType: TextInputType.phone,
+                                        validator: _phoneValidator,
+                                      ),
+                                      const SizedBox(height: 25),
+
+                                      const Text(
+                                        "Address Details",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const SizedBox(width: 15),
+                                      const SizedBox(height: 15),
+                                      _buildTextField(
+                                        "House No., Building Name*",
+                                        _address1Controller,
+                                        validator: _requiredValidator,
+                                      ),
+                                      const SizedBox(height: 15),
+                                      _buildTextField(
+                                        "Road Name, Area, Colony (Optional)",
+                                        _address2Controller,
+                                      ),
+                                      const SizedBox(height: 15),
 
-                                      // --- STATE DROPDOWN ---
-                                      Expanded(
-                                        child: DropdownButtonFormField<String>(
-                                          value: _selectedState,
-                                          icon: const Icon(
-                                            Icons.keyboard_arrow_down,
-                                          ),
-                                          isExpanded: true,
-                                          decoration: InputDecoration(
-                                            labelText: "State*",
-                                            labelStyle: const TextStyle(
-                                              color: Colors.grey,
+                                      _buildTextField(
+                                        "Pincode*",
+                                        _pincodeController,
+                                        keyboardType: TextInputType.number,
+                                        validator: _requiredValidator,
+                                      ),
+                                      const SizedBox(height: 15),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: _buildTextField(
+                                              "City*",
+                                              _cityController,
+                                              validator: _requiredValidator,
                                             ),
-                                            filled: true,
-                                            fillColor: const Color(0xFFF5F6F9),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                  horizontal: 16,
-                                                  vertical: 16,
+                                          ),
+                                          const SizedBox(width: 15),
+
+                                          // --- STATE DROPDOWN ---
+                                          Expanded(
+                                            child: DropdownButtonFormField<String>(
+                                              value: _selectedState,
+                                              icon: const Icon(
+                                                Icons.keyboard_arrow_down,
+                                              ),
+                                              isExpanded: true,
+                                              decoration: InputDecoration(
+                                                labelText: "State*",
+                                                labelStyle: const TextStyle(
+                                                  color: Colors.grey,
                                                 ),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: AppColors.primary,
-                                                width: 1.5,
-                                              ),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Colors.red,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
-                                          menuMaxHeight: 300,
-                                          items: _indianStates.map((
-                                            String state,
-                                          ) {
-                                            return DropdownMenuItem<String>(
-                                              value: state,
-                                              child: Text(
-                                                state,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
+                                                filled: true,
+                                                fillColor: const Color(
+                                                  0xFFF5F6F9,
+                                                ),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 16,
+                                                    ),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: BorderSide.none,
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                      borderSide:
+                                                          const BorderSide(
+                                                            color: AppColors
+                                                                .primary,
+                                                            width: 1.5,
+                                                          ),
+                                                    ),
+                                                errorBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: const BorderSide(
+                                                    color: Colors.red,
+                                                    width: 1,
+                                                  ),
                                                 ),
                                               ),
-                                            );
-                                          }).toList(),
-                                          onChanged: (val) => setState(
-                                            () => _selectedState = val,
+                                              menuMaxHeight: 300,
+                                              items: _indianStates.map((
+                                                String state,
+                                              ) {
+                                                return DropdownMenuItem<String>(
+                                                  value: state,
+                                                  child: Text(
+                                                    state,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                              onChanged: (val) => setState(
+                                                () => _selectedState = val,
+                                              ),
+                                              validator: (val) => val == null
+                                                  ? 'Required'
+                                                  : null,
+                                            ),
                                           ),
-                                          validator: (val) =>
-                                              val == null ? 'Required' : null,
+                                        ],
+                                      ),
+
+                                      const SizedBox(height: 8),
+
+                                      SwitchListTile(
+                                        contentPadding: EdgeInsets.zero,
+                                        title: const Text(
+                                          "Make this my default address",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        value: _isDefault,
+                                        activeColor: AppColors.primary,
+                                        onChanged: (val) =>
+                                            setState(() => _isDefault = val),
+                                      ),
+
+                                      const SizedBox(height: 10),
+
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 55,
+                                        child: ElevatedButton(
+                                          // Disable button if loading
+                                          onPressed: isLoading
+                                              ? null
+                                              : _handleSave,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.primary,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            isEditing
+                                                ? "Update Address"
+                                                : "Save Address",
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
-
-                                  const SizedBox(height: 20),
-
-                                  SwitchListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text(
-                                      "Make this my default address",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    value: _isDefault,
-                                    activeColor: AppColors.primary,
-                                    onChanged: (val) =>
-                                        setState(() => _isDefault = val),
-                                  ),
-
-                                  const SizedBox(height: 25),
-
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 55,
-                                    child: ElevatedButton(
-                                      onPressed: isLoading ? null : _handleSave,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            15,
-                                          ),
-                                        ),
-                                      ),
-                                      child: isLoading
-                                          ? const CircularProgressIndicator(
-                                              color: Colors.white,
-                                            )
-                                          : Text(
-                                              isEditing
-                                                  ? "Update Address"
-                                                  : "Save Address",
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
+
+          // --- FULL-SCREEN LOADER OVERLAY ---
+          if (isLoading) _buildLoadingOverlay(context),
         ],
       ),
     );
   }
+
+  // --- NEW HELPER WIDGET FOR LOADING OVERLAY ---
+  Widget _buildLoadingOverlay(BuildContext context) {
+    return Container(
+      color: Colors.black.withOpacity(0.3), // Semi-transparent black background
+      child: const Center(child: BouncingDiceLoader(color: AppColors.primary)),
+    );
+  }
+
+  // --- Existing Helper Widgets ---
 
   Widget _buildTextField(
     String label,

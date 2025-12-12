@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/screens/add_address_screen.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../providers/address_provider.dart';
 import '../models/address_model.dart';
@@ -66,12 +68,16 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
                   ),
 
                   // RIGHT: Invisible button to balance the row
-                  Opacity(
-                    opacity: 0,
-                    child: _buildCircleButton(
-                      icon: Icons.more_horiz,
-                      onTap: () {},
-                    ),
+                  _buildCircleButton(
+                    icon: Icons.add,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddEditAddressScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -91,119 +97,82 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
+                        color: Colors
+                            .transparent, // This element seems unused or is meant as a small drag indicator
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
 
-                    // Content area
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // --- HEADER TEXT ---
-                            const Text(
-                              "Choose your location",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                    // Content Area - CONDITIONAL LOGIC HERE
+                    addressProvider.isLoading
+                        ? Expanded(
+                            // Expanded ensures the loader takes up the remaining space
+                            child: Center(
+                              child: BouncingDiceLoader(
+                                // Your custom loader
+                                color: AppColors.primary,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Let's find your unforgettable event. Choose a location below to get started.",
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 13,
-                                height: 1.5,
-                              ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // --- SEARCH BAR (visual only) ---
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              height: 50,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(30),
-                                color: Colors.white,
-                              ),
-                              child: Row(
+                          )
+                        : Expanded(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.fromLTRB(20, 40, 20, 0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    color: AppColors.textDark,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Expanded(
-                                    child: Text(
-                                      "San Diego, CA", // Placeholder text
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  // --- HEADER TEXT ---
+                                  const Text(
+                                    "Choose your location",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  Icon(
-                                    Icons.my_location,
-                                    color: Colors.grey[400],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Let's find your unforgettable event. Choose a location below to get started.",
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 13,
+                                      height: 1.5,
+                                    ),
                                   ),
+
+                                  // --- ADDRESS LIST ---
+                                  if (addresses.isEmpty)
+                                    const Center(
+                                      child: Text("No addresses found."),
+                                    )
+                                  else
+                                    ListView.separated(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      shrinkWrap: true,
+                                      itemCount: addresses.length,
+                                      separatorBuilder: (ctx, i) =>
+                                          const SizedBox(height: 15),
+                                      itemBuilder: (ctx, index) {
+                                        return _buildAddressCard(
+                                          addresses[index],
+                                        );
+                                      },
+                                    ),
+
+                                  // keep some bottom spacing so confirm button isn't too close
+                                  const SizedBox(height: 40),
                                 ],
                               ),
                             ),
+                          ),
 
-                            const SizedBox(height: 25),
-                            const Text(
-                              "Select location",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-
-                            // --- ADDRESS LIST ---
-                            if (addressProvider.isLoading)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                            else if (addresses.isEmpty)
-                              const Center(child: Text("No addresses found."))
-                            else
-                              ListView.separated(
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount: addresses.length,
-                                separatorBuilder: (ctx, i) =>
-                                    const SizedBox(height: 15),
-                                itemBuilder: (ctx, index) {
-                                  return _buildAddressCard(addresses[index]);
-                                },
-                              ),
-
-                            const SizedBox(height: 20),
-                            // keep some bottom spacing so confirm button isn't too close
-                            const SizedBox(height: 40),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // --- BOTTOM CONFIRM BUTTON (inside sheet bottom) ---
+                    // --- BOTTOM CONFIRM BUTTON (outside the conditional area) ---
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                       child: SizedBox(
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
+                          // ... button logic remains the same
                           onPressed: () {
                             // Return the selected address object back to Checkout
                             if (_selectedAddressId != null) {
@@ -257,7 +226,7 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 25),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),

@@ -104,7 +104,7 @@ class _MyFavoritesScreenState extends State<MyFavoritesScreen> {
                           : GridView.builder(
                               padding: const EdgeInsets.fromLTRB(
                                 16,
-                                20,
+                                40,
                                 16,
                                 20,
                               ),

@@ -1,5 +1,6 @@
 import 'dart:async'; // Required for Timer
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
@@ -322,17 +323,13 @@ class _OtpScreenState extends State<OtpScreen> {
                             // Verify Button
                             SizedBox(
                               height: 55,
-                              child: isLoading
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : ElevatedButton(
-                                      onPressed: _handleVerify,
-                                      child: const Text(
-                                        'Verify & Login',
-                                        style: TextStyle(fontSize: 18),
-                                      ),
-                                    ),
+                              child: ElevatedButton(
+                                onPressed: _handleVerify,
+                                child: const Text(
+                                  'Verify & Login',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                              ),
                             ),
 
                             const SizedBox(height: 10),
@@ -383,6 +380,18 @@ class _OtpScreenState extends State<OtpScreen> {
               },
             ),
           ),
+          if (isLoading)
+            // Use AbsorbPointer to block interactions with underlying widgets.
+            AbsorbPointer(
+              absorbing: true,
+              child: Container(
+                // cover entire screen
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black.withOpacity(0.25),
+                child: const Center(child: BouncingDiceLoader()),
+              ),
+            ),
         ],
       ),
     );

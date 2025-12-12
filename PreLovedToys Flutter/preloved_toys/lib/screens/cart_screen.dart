@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../utils/app_colors.dart';
@@ -36,9 +37,7 @@ class _CartScreenState extends State<CartScreen> {
         leading: Container(),
       ),
       body: cartData.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
+          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
           : items.isEmpty
           // --- 1. SHOW EMPTY STATE IF NO ITEMS ---
           ? _buildEmptyState()

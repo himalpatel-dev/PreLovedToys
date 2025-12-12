@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/screens/cart_screen.dart';
 import 'package:preloved_toys/utils/app_colors.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart'; // for clipboard
 import '../models/product_model.dart';
@@ -53,7 +55,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_product == null && _isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: BouncingDiceLoader(color: AppColors.primary)),
+      );
     }
     final product = _product!;
     final imageUrl = product.images.isNotEmpty ? product.images[0] : '';
@@ -102,7 +106,58 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
 
-                  // Actions: Favorite & Share
+                  Row(
+                    children: [
+                      Consumer<CartProvider>(
+                        builder: (context, cart, child) {
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const CartScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 36, // Increased size for better tap target
+                              height: 36,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.shopping_bag_outlined,
+                                    color: Colors.black,
+                                    size: 20,
+                                  ),
+                                  if (cart.items.isNotEmpty)
+                                    Positioned(
+                                      top: 6,
+                                      right: 6,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.redAccent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 8,
+                                          minHeight: 8,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

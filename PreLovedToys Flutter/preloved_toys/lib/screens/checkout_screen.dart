@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:preloved_toys/screens/order_success_screen.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/cart_provider.dart';
@@ -28,12 +29,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   void _loadData() async {
     final addrProvider = Provider.of<AddressProvider>(context, listen: false);
-    final addr = await addrProvider.fetchDefaultAddress();
-    if (mounted) {
-      setState(() {
-        _defaultAddress = addr;
-        _isLoadingAddress = false;
-      });
+    try {
+      final addr = await addrProvider.fetchDefaultAddress();
+      if (mounted) {
+        setState(() {
+          _defaultAddress = addr;
+          _isLoadingAddress = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingAddress = false;
+        });
+      }
+      // Optionally show error
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load address: $e')));
     }
   }
 
@@ -43,238 +56,268 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cartItems = cartProvider.items;
     double totalAmount = cartProvider.totalRupees;
 
+    // OrderProvider used to show full-screen loader when placing order
+    final orderProvider = Provider.of<OrderProvider>(context);
+
     return Scaffold(
       backgroundColor: AppColors.primary,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // --------------------- CURVED HEADER ---------------------
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Back Button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
+      // Use a Stack so we can display a full-screen modal loader on top
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                // --------------------- CURVED HEADER ---------------------
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Back Button
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+
+                      const Text(
+                        "Payment",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(width: 35), // balance spacing
+                    ],
+                  ),
+                ),
+
+                // --------------------- CURVED WHITE SHEET ---------------------
+                Expanded(
+                  child: ClipPath(
+                    clipper: TopConvexClipper(),
                     child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.black,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-
-                  const Text(
-                    "Payment",
-                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(width: 35), // balance spacing
-                ],
-              ),
-            ),
-
-            // --------------------- CURVED WHITE SHEET ---------------------
-            Expanded(
-              child: ClipPath(
-                clipper: TopConvexClipper(),
-                child: Container(
-                  color: Colors.white,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // --- 1. ADDRESS SECTION ---
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // --- 1. ADDRESS SECTION ---
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "Address",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AddressSelectionScreen(
+                                              selectedId: _defaultAddress?.id,
+                                            ),
+                                      ),
+                                    );
+
+                                    if (result != null && result is Address) {
+                                      setState(() {
+                                        _defaultAddress = result;
+                                      });
+                                    }
+                                  },
+                                  child: const Text(
+                                    "Edit",
+                                    style: TextStyle(color: AppColors.primary),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 25),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(color: Colors.grey[200]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 100,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue[50],
+                                      borderRadius:
+                                          const BorderRadius.horizontal(
+                                            left: Radius.circular(15),
+                                          ),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.map,
+                                        color: Colors.red,
+                                        size: 30,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 15),
+
+                                  Expanded(
+                                    child: _isLoadingAddress
+                                        // <-- your linear loader inside the address area
+                                        ? const LinearProgressIndicator()
+                                        : _defaultAddress == null
+                                        ? const Text("No Default Address Set")
+                                        : Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                _defaultAddress!.addressType,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                _defaultAddress!.fullAddress,
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 12,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                  ),
+
+                                  const SizedBox(width: 10),
+                                ],
+                              ),
+                            ),
+
+                            // --- 2. PRODUCTS LIST ---
+                            Text(
+                              "Products (${cartItems.length})",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+
+                            ListView.separated(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: cartItems.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 15),
+                              itemBuilder: (ctx, i) =>
+                                  _buildCheckoutItem(cartItems[i].product),
+                            ),
+
+                            const SizedBox(height: 25),
+
+                            // --- 3. PAYMENT METHOD ---
                             const Text(
-                              "Address",
+                              "Payment Method",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            TextButton(
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        AddressSelectionScreen(
-                                          selectedId: _defaultAddress?.id,
-                                        ),
-                                  ),
-                                );
+                            const SizedBox(height: 15),
 
-                                if (result != null && result is Address) {
-                                  setState(() {
-                                    _defaultAddress = result;
-                                  });
-                                }
-                              },
-                              child: const Text(
-                                "Edit",
-                                style: TextStyle(color: AppColors.primary),
+                            Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey[200]!),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.attach_money,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 15),
+                                  const Expanded(
+                                    child: Text(
+                                      "Cash on Delivery",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
                               ),
                             ),
+
+                            const SizedBox(height: 30),
                           ],
                         ),
-
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 25),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.grey[200]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 100,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[50],
-                                  borderRadius: const BorderRadius.horizontal(
-                                    left: Radius.circular(15),
-                                  ),
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.map,
-                                    color: Colors.red,
-                                    size: 30,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 15),
-
-                              Expanded(
-                                child: _isLoadingAddress
-                                    ? const LinearProgressIndicator()
-                                    : _defaultAddress == null
-                                    ? const Text("No Default Address Set")
-                                    : Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            _defaultAddress!.addressType,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _defaultAddress!.fullAddress,
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 12,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                              ),
-
-                              const SizedBox(width: 10),
-                            ],
-                          ),
-                        ),
-
-                        // --- 2. PRODUCTS LIST ---
-                        Text(
-                          "Products (${cartItems.length})",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-
-                        ListView.separated(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: cartItems.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 15),
-                          itemBuilder: (ctx, i) =>
-                              _buildCheckoutItem(cartItems[i].product),
-                        ),
-
-                        const SizedBox(height: 25),
-
-                        // --- 3. PAYMENT METHOD ---
-                        const Text(
-                          "Payment Method",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-
-                        Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[200]!),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.green[50],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.attach_money,
-                                  color: Colors.green,
-                                ),
-                              ),
-                              const SizedBox(width: 15),
-                              const Expanded(
-                                child: Text(
-                                  "Cash on Delivery",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              const Icon(
-                                Icons.check_circle,
-                                color: AppColors.primary,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 30),
-                      ],
+                      ),
                     ),
+                  ),
+                ),
+
+                // --------------------- BOTTOM SHEET ---------------------
+                _buildBottomBar(totalAmount),
+              ],
+            ),
+          ),
+
+          // --------------------- FULL-SCREEN LOADER ---------------------
+          // Driven by OrderProvider.isLoading so it appears while placing order.
+          if (orderProvider.isLoading)
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: false, // block touches
+                child: Container(
+                  color: Colors.black45,
+                  child: const Center(
+                    child: BouncingDiceLoader(color: AppColors.primary),
                   ),
                 ),
               ),
             ),
-
-            // --------------------- BOTTOM SHEET ---------------------
-            _buildBottomBar(totalAmount),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -324,16 +367,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: Provider.of<OrderProvider>(context).isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                      "Place Order",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+              child: const Text(
+                "Place Order",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
         ],
