@@ -17,8 +17,10 @@ class _MyListingsScreenState extends State<MyListingsScreen>
   late AnimationController _hintController;
   late Animation<Offset> _hintAnimation;
 
-  // Track selected tab index (0 = Active, 1 = Sold)
+  // Track selected tab index (0 = Selling, 1 = Sold)
   int _selectedTabIndex = 0;
+
+  final Color _headerColor = AppColors.primary;
 
   @override
   void initState() {
@@ -78,92 +80,164 @@ class _MyListingsScreenState extends State<MyListingsScreen>
     final isEditable = _selectedTabIndex == 0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textDark,
-        elevation: 0,
-        // --- CUSTOM TITLE ROW ---
-        title: Row(
-          children: [
-            const Text(
-              "My Listings",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Spacer(), // Pushes the toggle to the right
-            // Toggle Switch
-            Container(
-              height: 36, // Smaller height to fit in AppBar
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.all(2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+      backgroundColor: _headerColor,
+      body: Column(
+        children: [
+          // --- Custom Header with Tabs ---
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Column(
                 children: [
-                  _buildTabButton("Selling", 0),
-                  const SizedBox(width: 2),
-                  _buildTabButton("Sold", 1),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // LEFT: Back Button
+                      _buildCircleButton(
+                        icon: Icons.arrow_back_ios_new,
+                        onTap: () => Navigator.pop(context),
+                      ),
+
+                      // CENTER: Title
+                      const Expanded(
+                        child: Center(
+                          child: Text(
+                            "My Listings",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // RIGHT: Invisible button (balance)
+                      Opacity(
+                        opacity: 0,
+                        child: _buildCircleButton(
+                          icon: Icons.more_horiz,
+                          onTap: () {},
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Tabs row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildTabButton("Selling", 0),
+                      const SizedBox(width: 12),
+                      _buildTabButton("Sold", 1),
+                    ],
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          // --- Curved sheet with listings ---
+          Expanded(
+            child: ClipPath(
+              clipper: TopConvexClipper(),
+              child: Container(
+                color: const Color(0xFFF9F9F9),
+                child: listingsData.isLoading
+                    ? const Center(
+                        child: BouncingDiceLoader(color: AppColors.primary),
+                      )
+                    : currentList.isEmpty
+                    ? _buildEmptyState(isEditable)
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 50,
+                        ),
+                        itemCount: currentList.length,
+                        separatorBuilder: (ctx, i) =>
+                            const SizedBox(height: 16),
+                        itemBuilder: (ctx, index) {
+                          final product = currentList[index];
+
+                          if (isEditable) {
+                            if (index == 0) {
+                              return _buildAnimatedDismissibleItem(product);
+                            }
+                            return _buildDismissibleItem(product);
+                          }
+
+                          return _buildListingCard(product, isEditable: false);
+                        },
+                      ),
+              ),
+            ),
+          ),
+        ],
       ),
-      body: listingsData.isLoading
-          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
-          : _buildList(currentList, isEditable: isEditable),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.black, size: 20),
+      ),
     );
   }
 
   Widget _buildTabButton(String text, int index) {
     final isSelected = _selectedTabIndex == index;
+
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedTabIndex = index;
-        });
+        setState(() => _selectedTabIndex = index);
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-        alignment: Alignment.center,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut, // Smoother animation curve
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(30),
+          // Add a subtle shadow only when selected for depth
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
         ),
-        child: Text(
-          text,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[600],
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
+            // Assuming AppColors.primary is defined, otherwise use Colors.blue
+            color: isSelected
+                ? AppColors.primary
+                : Colors.white.withOpacity(0.8),
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 15,
+            fontFamily: 'Inter', // Suggesting a modern font
           ),
+          child: Text(text),
         ),
       ),
-    );
-  }
-
-  Widget _buildList(List<Product> items, {required bool isEditable}) {
-    if (items.isEmpty) return _buildEmptyState(isEditable);
-
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      itemCount: items.length,
-      separatorBuilder: (ctx, i) => const SizedBox(height: 16),
-      itemBuilder: (ctx, index) {
-        final product = items[index];
-
-        if (isEditable) {
-          if (index == 0) {
-            return _buildAnimatedDismissibleItem(product);
-          }
-          return _buildDismissibleItem(product);
-        }
-
-        return _buildListingCard(product, isEditable: false);
-      },
     );
   }
 
@@ -347,9 +421,7 @@ class _MyListingsScreenState extends State<MyListingsScreen>
                     ],
                   ],
                 ),
-
                 const SizedBox(height: 8),
-
                 Row(
                   children: [
                     Container(
@@ -374,9 +446,7 @@ class _MyListingsScreenState extends State<MyListingsScreen>
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -461,4 +531,26 @@ class _MyListingsScreenState extends State<MyListingsScreen>
     if (status.toLowerCase() == 'fair') return Colors.orange[800]!;
     return Colors.grey[800]!;
   }
+}
+
+/// Custom clipper that creates a centered upward arch (convex/hill)
+class TopConvexClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+
+    // The vertical height of the curve (how much it arches)
+    double curveHeight = 40.0;
+
+    path.moveTo(0, curveHeight);
+    path.quadraticBezierTo(size.width / 2, 0, size.width, curveHeight);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

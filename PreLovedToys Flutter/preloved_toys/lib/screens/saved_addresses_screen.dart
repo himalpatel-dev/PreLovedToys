@@ -18,6 +18,8 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen>
   late AnimationController _hintController;
   late Animation<Offset> _hintAnimation;
 
+  final Color _headerColor = AppColors.primary;
+
   @override
   void initState() {
     super.initState();
@@ -71,49 +73,181 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen>
     final addresses = addressData.addresses;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
-      appBar: AppBar(
-        title: const Text(
-          "Shipping Address",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textDark,
-        elevation: 0,
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.primary),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddEditAddressScreen(),
+      backgroundColor: _headerColor,
+      body: Column(
+        children: [
+          // --- Custom Header ---
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // LEFT: Back Button
+                  _buildCircleButton(
+                    icon: Icons.arrow_back_ios_new,
+                    onTap: () => Navigator.pop(context),
+                  ),
+
+                  // CENTER: Title
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        "Shipping Address",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // RIGHT: Add Button (visible)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddEditAddressScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // --- Curved sheet with content ---
+          Expanded(
+            child: ClipPath(
+              clipper: TopConvexClipper(),
+              child: Container(
+                color: const Color(0xFFF9F9F9),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 18),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+
+                    // Content area
+                    Expanded(
+                      child: addressData.isLoading
+                          ? const Center(
+                              child: BouncingDiceLoader(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : Column(
+                              children: [
+                                // Top row inside sheet: Add button aligned right (kept for convenience)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    18,
+                                    16,
+                                    8,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Expanded(child: SizedBox()),
+
+                                      // Add button (secondary)
+                                      InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const AddEditAddressScreen(),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.grey.withOpacity(
+                                                  0.05,
+                                                ),
+                                                blurRadius: 6,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 8),
+
+                                // The list / empty state
+                                Expanded(
+                                  child: addresses.isEmpty
+                                      ? const Center(
+                                          child: Text("No addresses saved."),
+                                        )
+                                      : ListView.separated(
+                                          padding: const EdgeInsets.all(20),
+                                          itemCount: addresses.length,
+                                          separatorBuilder: (ctx, i) =>
+                                              const SizedBox(height: 20),
+                                          itemBuilder: (ctx, index) {
+                                            final address = addresses[index];
+
+                                            // Only animate the FIRST item for the hint
+                                            if (index == 0) {
+                                              return _buildAnimatedDismissibleItem(
+                                                address,
+                                              );
+                                            }
+
+                                            return _buildDismissibleItem(
+                                              address,
+                                            );
+                                          },
+                                        ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ],
       ),
-      body: addressData.isLoading
-          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
-          : addresses.isEmpty
-          ? const Center(child: Text("No addresses saved."))
-          : ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: addresses.length,
-              separatorBuilder: (ctx, i) => const SizedBox(height: 20),
-              itemBuilder: (ctx, index) {
-                final address = addresses[index];
-
-                // Only animate the FIRST item for the hint
-                if (index == 0) {
-                  return _buildAnimatedDismissibleItem(address);
-                }
-
-                return _buildDismissibleItem(address);
-              },
-            ),
     );
   }
 
@@ -350,18 +484,57 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen>
       ),
     );
   }
+
+  // add icon to replace that location icon based on address type
+  Widget _buildAddressTypeIcon(String type) {
+    switch (type) {
+      case "Home":
+        return const Icon(Icons.home, color: AppColors.primary);
+      case "Work":
+        return const Icon(Icons.work, color: AppColors.primary);
+      case "Other":
+        return const Icon(Icons.location_on, color: AppColors.primary);
+      default:
+        return const Icon(Icons.location_on, color: AppColors.primary);
+    }
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.black, size: 20),
+      ),
+    );
+  }
 }
 
-//add icon to replace that location icon based on address type
-Widget _buildAddressTypeIcon(String type) {
-  switch (type) {
-    case "Home":
-      return const Icon(Icons.home, color: AppColors.primary);
-    case "Work":
-      return const Icon(Icons.work, color: AppColors.primary);
-    case "Other":
-      return const Icon(Icons.location_on, color: AppColors.primary);
-    default:
-      return const Icon(Icons.location_on, color: AppColors.primary);
+/// Custom clipper that creates a centered upward arch (convex/hill)
+class TopConvexClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+
+    // The vertical height of the curve (how much it arches)
+    double curveHeight = 40.0;
+
+    path.moveTo(0, curveHeight);
+    path.quadraticBezierTo(size.width / 2, 0, size.width, curveHeight);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    return path;
   }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

@@ -36,199 +36,226 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 50),
-
-            // --- 2. STATS CARD (Always Visible) ---
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
+      // STEP 1: Use a Column instead of SingleChildScrollView
+      body: Column(
+        children: [
+          // --- FIXED HEADER SECTION (Non-scrollable) ---
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              0,
+              20,
+              0,
+            ), // Maintain side padding
+            child: Column(
+              children: [
+                const SizedBox(height: 50), // Keep your top spacing
+                // --- 2. STATS CARD (Always Visible) ---
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 10,
                   ),
-                ],
-              ),
-              // REMOVED THE LOADING CHECK HERE. JUST SHOW THE ROW.
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildStatItem(stats['orders']!, "Total Orders"),
-                  _buildVerticalLine(),
-                  _buildStatItem(stats['sells']!, "Total Sell"),
-                  _buildVerticalLine(),
-                  _buildStatItem(stats['points']!, "My Points", isPoints: true),
-                ],
-              ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        spreadRadius: 2,
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStatItem(stats['orders']!, "Total Orders"),
+                      _buildVerticalLine(),
+                      _buildStatItem(stats['sells']!, "Total Sell"),
+                      _buildVerticalLine(),
+                      _buildStatItem(
+                        stats['points']!,
+                        "My Points",
+                        isPoints: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: 20),
-
-            // --- 3. MAIN MENU CARD ---
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.05),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
+          // --- SCROLLABLE CONTENT SECTION (Fills remaining space) ---
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+              ), // Maintain side padding
               child: Column(
                 children: [
-                  _buildMenuItem(
-                    context,
-                    Icons.person,
-                    "Personal Details",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EditProfileScreen(),
+                  const SizedBox(height: 20), // Spacing between Stats and Menu
+                  // --- 3. MAIN MENU CARD ---
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.05),
+                          spreadRadius: 2,
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
-                      );
-                      // Silent refresh when returning
-                      if (context.mounted) {
-                        Provider.of<AuthProvider>(
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildMenuItem(
                           context,
-                          listen: false,
-                        ).fetchUserStats();
-                      }
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.shopping_bag,
-                    "My Order",
-                    onTap: () {
-                      // Navigate to the new My Orders Screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MyOrdersScreen(),
+                          Icons.person,
+                          "Personal Details",
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EditProfileScreen(),
+                              ),
+                            );
+                            if (context.mounted) {
+                              Provider.of<AuthProvider>(
+                                context,
+                                listen: false,
+                              ).fetchUserStats();
+                            }
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.favorite,
-                    "My Favourites",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MyFavoritesScreen(),
+                        _buildDivider(),
+                        _buildMenuItem(
+                          context,
+                          Icons.shopping_bag,
+                          "My Order",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MyOrdersScreen(),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.inventory_2,
-                    "My Listings",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MyListingsScreen(),
+                        _buildDivider(),
+                        _buildMenuItem(
+                          context,
+                          Icons.favorite,
+                          "My Favourites",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MyFavoritesScreen(),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.local_shipping,
-                    "Shipping Address",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SavedAddressesScreen(),
+                        _buildDivider(),
+                        _buildMenuItem(
+                          context,
+                          Icons.inventory_2,
+                          "My Listings",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MyListingsScreen(),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                        _buildDivider(),
+                        _buildMenuItem(
+                          context,
+                          Icons.local_shipping,
+                          "Shipping Address",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SavedAddressesScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  // --- 4. FOOTER MENU ---
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.05),
+                          spreadRadius: 2,
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildMenuItem(
+                          context,
+                          Icons.settings,
+                          "Support Center",
+                          onTap: () {},
+                        ),
+                        _buildDivider(),
+                        _buildMenuItem(
+                          context,
+                          Icons.description_outlined,
+                          "Terms & Conditions",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const TermsAndConditionsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildDivider(),
+                        _buildMenuItem(
+                          context,
+                          Icons.privacy_tip_outlined,
+                          "Privacy Policy",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PrivacyPolicyScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            // --- 4. FOOTER MENU ---
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.05),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    context,
-                    Icons.settings,
-                    "Support Center",
-                    onTap: () {},
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.description_outlined,
-                    "Terms & Conditions",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const TermsAndConditionsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    context,
-                    Icons.privacy_tip_outlined,
-                    "Privacy Policy",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PrivacyPolicyScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 100),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

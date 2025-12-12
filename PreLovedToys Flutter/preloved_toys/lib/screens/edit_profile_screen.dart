@@ -62,6 +62,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Map<String, bool> _wasEmptyInitially = {};
 
+  final Color _headerColor = AppColors.primary;
+
   @override
   void initState() {
     super.initState();
@@ -135,7 +137,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _handleSave() async {
-    // 1. THIS TRIGGERS THE VALIDATION (RED TEXT)
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -193,255 +194,363 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final categories = Provider.of<CategoryProvider>(context).categories;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "Personal Details",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textDark,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      bottomNavigationBar: potentialPoints > 0
-          ? Container(
-              color: const Color(0xFFE8F5E9),
-              padding: const EdgeInsets.all(16),
+      backgroundColor: _headerColor,
+      body: Column(
+        children: [
+          // --- Custom Header ---
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.stars, color: Colors.orange),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Complete to earn $potentialPoints Points!",
-                    style: const TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  // LEFT: Back Button
+                  _buildCircleButton(
+                    icon: Icons.arrow_back_ios_new,
+                    onTap: () => Navigator.pop(context),
+                  ),
+
+                  // CENTER: Title
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        "Personal Details",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // RIGHT: Invisible button to balance the row
+                  Opacity(
+                    opacity: 0,
+                    child: _buildCircleButton(
+                      icon: Icons.more_horiz,
+                      onTap: () {},
                     ),
                   ),
                 ],
               ),
-            )
-          : null,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          onChanged: () => setState(() {}),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- NAME (REQUIRED) ---
-              _buildTextField(
-                "Full Name *", // Added star to label
-                _nameController,
-                'name',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
-                  }
-                  return null;
-                },
-              ),
+            ),
+          ),
 
-              const SizedBox(height: 20),
-
-              // --- EMAIL (REQUIRED) ---
-              _buildTextField(
-                "Email Address *",
-                _emailController,
-                'email',
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Email is required';
-                  }
-                  // Simple Email Regex check
-                  if (!RegExp(
-                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                  ).hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              _buildLabelWithPoints("Gender", 'gender'),
-              const SizedBox(height: 8),
-              Row(
-                children: ['Male', 'Female', 'Other'].map((gender) {
-                  return Row(
-                    children: [
-                      Radio<String>(
-                        value: gender,
-                        groupValue: _selectedGender,
-                        activeColor: AppColors.primary,
-                        onChanged: (val) =>
-                            setState(() => _selectedGender = val),
+          // --- Curved sheet ---
+          Expanded(
+            child: ClipPath(
+              clipper: TopConvexClipper(),
+              child: Container(
+                color: const Color(0xFFF9F9F9),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 18),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      Text(gender, style: const TextStyle(fontSize: 16)),
-                      const SizedBox(width: 10),
-                    ],
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 20),
-
-              _buildLabelWithPoints("Occupation", 'occupation'),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 10,
-                children: _occupationOptions.map((occupation) {
-                  final isSelected = _selectedOccupation == occupation;
-                  return ChoiceChip(
-                    label: Text(occupation),
-                    selected: isSelected,
-                    checkmarkColor: Colors.white,
-                    selectedColor: AppColors.primary,
-                    backgroundColor: const Color(0xFFF5F6F9),
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textDark,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide.none,
-                    ),
-                    onSelected: (bool selected) {
-                      setState(() {
-                        _selectedOccupation = selected ? occupation : null;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
 
-              const SizedBox(height: 20),
-              _buildTextField(
-                "College / University",
-                _collegeController,
-                'collegeOrUniversity',
-              ),
+                    // Content area
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                        child: Form(
+                          key: _formKey,
+                          onChanged: () => setState(() {}),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // --- NAME (REQUIRED) ---
+                              _buildTextField(
+                                "Full Name *",
+                                _nameController,
+                                'name',
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Name is required';
+                                  }
+                                  return null;
+                                },
+                              ),
 
-              const SizedBox(height: 20),
+                              const SizedBox(height: 20),
 
-              _buildLabelWithPoints("Purpose on Platform", 'purpose'),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 10,
-                children: _purposeOptions.map((purpose) {
-                  final isSelected = _selectedPurposes.contains(purpose);
-                  return FilterChip(
-                    label: Text(purpose),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    backgroundColor: const Color(0xFFF5F6F9),
-                    checkmarkColor: Colors.white,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textDark,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide.none,
-                    ),
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedPurposes.add(purpose);
-                        } else {
-                          _selectedPurposes.remove(purpose);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
+                              // --- EMAIL (REQUIRED) ---
+                              _buildTextField(
+                                "Email Address *",
+                                _emailController,
+                                'email',
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Email is required';
+                                  }
+                                  if (!RegExp(
+                                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                  ).hasMatch(value)) {
+                                    return 'Please enter a valid email';
+                                  }
+                                  return null;
+                                },
+                              ),
 
-              const SizedBox(height: 20),
+                              const SizedBox(height: 20),
 
-              _buildLabelWithPoints("Interests", 'interestedIn'),
-              const SizedBox(height: 10),
-              if (categories.isEmpty)
-                const Text(
-                  "Loading interests...",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              Wrap(
-                spacing: 8,
-                runSpacing: 10,
-                children: categories.map((cat) {
-                  final isSelected = _selectedInterests.contains(cat.name);
-                  return FilterChip(
-                    label: Text(cat.name),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    backgroundColor: const Color(0xFFF5F6F9),
-                    checkmarkColor: Colors.white,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textDark,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide.none,
-                    ),
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedInterests.add(cat.name);
-                        } else {
-                          _selectedInterests.remove(cat.name);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
+                              _buildLabelWithPoints("Gender", 'gender'),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: ['Male', 'Female', 'Other'].map((
+                                  gender,
+                                ) {
+                                  return Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: gender,
+                                        groupValue: _selectedGender,
+                                        activeColor: AppColors.primary,
+                                        onChanged: (val) => setState(
+                                          () => _selectedGender = val,
+                                        ),
+                                      ),
+                                      Text(
+                                        gender,
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                      const SizedBox(width: 10),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
 
-              const SizedBox(height: 20),
-              _buildTextField(
-                "About Me",
-                _aboutController,
-                'aboutMe',
-                maxLines: 3,
-              ),
+                              const SizedBox(height: 20),
 
-              const SizedBox(height: 30),
+                              _buildLabelWithPoints("Occupation", 'occupation'),
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 10,
+                                children: _occupationOptions.map((occupation) {
+                                  final isSelected =
+                                      _selectedOccupation == occupation;
+                                  return ChoiceChip(
+                                    label: Text(occupation),
+                                    selected: isSelected,
+                                    checkmarkColor: Colors.white,
+                                    selectedColor: AppColors.primary,
+                                    backgroundColor: const Color(0xFFF5F6F9),
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppColors.textDark,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide.none,
+                                    ),
+                                    onSelected: (bool selected) {
+                                      setState(() {
+                                        _selectedOccupation = selected
+                                            ? occupation
+                                            : null;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
 
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : _handleSave,
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          "Save Details",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                              const SizedBox(height: 20),
+                              _buildTextField(
+                                "College / University",
+                                _collegeController,
+                                'collegeOrUniversity',
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              _buildLabelWithPoints(
+                                "Purpose on Platform",
+                                'purpose',
+                              ),
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 10,
+                                children: _purposeOptions.map((purpose) {
+                                  final isSelected = _selectedPurposes.contains(
+                                    purpose,
+                                  );
+                                  return FilterChip(
+                                    label: Text(purpose),
+                                    selected: isSelected,
+                                    selectedColor: AppColors.primary,
+                                    backgroundColor: const Color(0xFFF5F6F9),
+                                    checkmarkColor: Colors.white,
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppColors.textDark,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide.none,
+                                    ),
+                                    onSelected: (bool selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          _selectedPurposes.add(purpose);
+                                        } else {
+                                          _selectedPurposes.remove(purpose);
+                                        }
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              _buildLabelWithPoints(
+                                "Interests",
+                                'interestedIn',
+                              ),
+                              const SizedBox(height: 10),
+                              if (categories.isEmpty)
+                                const Text(
+                                  "Loading interests...",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 10,
+                                children: categories.map((cat) {
+                                  final isSelected = _selectedInterests
+                                      .contains(cat.name);
+                                  return FilterChip(
+                                    label: Text(cat.name),
+                                    selected: isSelected,
+                                    selectedColor: AppColors.primary,
+                                    backgroundColor: const Color(0xFFF5F6F9),
+                                    checkmarkColor: Colors.white,
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : AppColors.textDark,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide.none,
+                                    ),
+                                    onSelected: (bool selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          _selectedInterests.add(cat.name);
+                                        } else {
+                                          _selectedInterests.remove(cat.name);
+                                        }
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+
+                              const SizedBox(height: 20),
+                              _buildTextField(
+                                "About Me",
+                                _aboutController,
+                                'aboutMe',
+                                maxLines: 3,
+                              ),
+
+                              const SizedBox(height: 30),
+
+                              SizedBox(
+                                width: double.infinity,
+                                height: 55,
+                                child: ElevatedButton(
+                                  onPressed: isLoading ? null : _handleSave,
+                                  child: isLoading
+                                      ? const CircularProgressIndicator(
+                                          color: Colors.white,
+                                        )
+                                      : const Text(
+                                          "Save Details",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 30),
+                            ],
                           ),
                         ),
+                      ),
+                    ),
+
+                    // Points banner (inside curved sheet)
+                    if (potentialPoints > 0)
+                      Container(
+                        width: double.infinity,
+                        color: const Color(0xFFE8F5E9),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.stars, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Complete to earn $potentialPoints Points!",
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 30),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // Helper Widgets (unchanged logic)
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
         ),
+        child: Icon(icon, color: Colors.black, size: 20),
       ),
     );
   }
@@ -464,9 +573,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          validator: validator, // <--- Passes the check function here
-          autovalidateMode: AutovalidateMode
-              .onUserInteraction, // Shows error as you type (optional)
+          validator: validator,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           decoration: InputDecoration(
             filled: true,
             fillColor: const Color(0xFFF5F6F9),
@@ -486,7 +594,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
             errorBorder: OutlineInputBorder(
-              // Red border on error
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.red, width: 1.0),
             ),
@@ -538,4 +645,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ],
     );
   }
+}
+
+/// Custom clipper that creates a centered upward arch (convex/hill)
+class TopConvexClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+
+    double curveHeight = 40.0;
+
+    path.moveTo(0, curveHeight);
+    path.quadraticBezierTo(size.width / 2, 0, size.width, curveHeight);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

@@ -102,7 +102,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     // --- HEIGHT LOGIC ---
     // Only Home (0) gets the tall header (120). All others get standard (140).
-    final double headerHeight = _page == 0 ? 130.0 : 150.0;
+    final double headerHeight = 150.0;
 
     // This must match the value used in your HeaderClipper (size.height - 50)
     const double curveDepth = 50.0;
@@ -209,11 +209,11 @@ class _MainScreenState extends State<MainScreen> {
   // --- HEADER BUILDER ---
   Widget _buildCustomHeader(double currentHeight) {
     return ClipPath(
-      clipper: _page == 0 ? null : HeaderClipper(),
+      clipper: HeaderClipper(),
       child: Container(
         color: AppColors.primary,
         // Adjust padding to center content vertically
-        padding: EdgeInsets.fromLTRB(20, 10, 20, _page == 0 ? 0 : 20),
+        padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -49,7 +49,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedCategoryIndex = 0;
   bool _isSearchActive = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -114,12 +113,13 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           // CORE CHANGE: CustomScrollView allows mixed content types to scroll together
           child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
+            //    physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             slivers: [
               // 1. THE HEADER (Scrolls away now)
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 300,
+                  height: 180,
                   child: Stack(
                     children: [
                       Positioned.fill(
@@ -153,12 +153,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             final cat = categories[index];
 
                             return Transform.translate(
-                              offset: Offset(0, dy + 10),
+                              offset: Offset(0, dy + 0),
                               child: GestureDetector(
                                 onTap: () {
-                                  setState(() {
-                                    _selectedCategoryIndex = index;
-                                  });
+                                  setState(() {});
                                 },
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,

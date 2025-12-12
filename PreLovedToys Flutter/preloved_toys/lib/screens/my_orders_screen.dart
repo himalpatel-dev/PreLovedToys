@@ -14,6 +14,8 @@ class MyOrdersScreen extends StatefulWidget {
 }
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
+  final Color _headerColor = AppColors.primary;
+
   @override
   void initState() {
     super.initState();
@@ -28,29 +30,120 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     final orders = orderData.orders;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
-      appBar: AppBar(
-        title: const Text(
-          "My Orders",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textDark,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: orderData.isLoading
-          ? const Center(child: BouncingDiceLoader(color: AppColors.primary))
-          : orders.isEmpty
-          ? const Center(child: Text("No orders found!"))
-          : ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: orders.length,
-              separatorBuilder: (ctx, i) => const SizedBox(height: 16),
-              itemBuilder: (ctx, index) {
-                return _buildOrderCard(orders[index]);
-              },
+      backgroundColor: _headerColor,
+      body: Column(
+        children: [
+          // --- Custom Header ---
+          SafeArea(
+            bottom: false,
+
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // LEFT: Back Button
+                  _buildCircleButton(
+                    icon: Icons.arrow_back_ios_new,
+                    onTap: () => Navigator.pop(context),
+                  ),
+
+                  // CENTER: Title
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        "My Orders",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // RIGHT: Invisible button to balance the row
+                  Opacity(
+                    opacity: 0, // fully invisible
+                    child: _buildCircleButton(
+                      icon: Icons.more_horiz, // dummy icon (won't show)
+                      onTap: () {},
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+
+          // --- THE CURVED SHEET (using ClipPath + TopConcaveClipper) ---
+          Expanded(
+            child: ClipPath(
+              clipper: TopConvexClipper(),
+              child: Container(
+                color: const Color(0xFFF9F9F9),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 18),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+
+                    // Content area
+                    Expanded(
+                      child: orderData.isLoading
+                          ? const Center(
+                              child: BouncingDiceLoader(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : orders.isEmpty
+                          ? const Center(child: Text("No orders found!"))
+                          : ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                20,
+                                20,
+                                20,
+                              ),
+                              itemCount: orders.length,
+                              separatorBuilder: (ctx, i) =>
+                                  const SizedBox(height: 20),
+                              itemBuilder: (ctx, index) {
+                                return _buildOrderCard(orders[index]);
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Helper Widgets ---
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.black, size: 20),
+      ),
     );
   }
 
@@ -58,7 +151,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.08),
@@ -72,11 +165,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- 1. HEADER: Status & Date ---
+          // Header: Status & Date
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Status Badge
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -84,10 +176,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: _getStatusColor(order.status).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20), // Pill shape
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       width: 6,
@@ -109,7 +200,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   ],
                 ),
               ),
-              // Date
               Text(
                 DateFormat('MMM dd, yyyy').format(order.createdAt),
                 style: TextStyle(color: Colors.grey[500], fontSize: 13),
@@ -119,11 +209,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
           const SizedBox(height: 16),
 
-          // --- 2. ITEMS LIST ---
+          // Items List (Non-scrollable, fits inside card)
           ListView.separated(
-            physics:
-                const NeverScrollableScrollPhysics(), // Disable scrolling inside card
-            shrinkWrap: true, // Take only needed space
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
             itemCount: order.items.length,
             separatorBuilder: (ctx, i) => const SizedBox(height: 16),
             itemBuilder: (ctx, i) {
@@ -132,10 +221,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
           ),
 
           const SizedBox(height: 16),
-          const Divider(height: 1, color: Color(0xFFF0F0F0)),
+          Divider(height: 1, color: Colors.grey[200]),
           const SizedBox(height: 16),
 
-          // --- 3. FOOTER: Order ID & Total ---
+          // Footer: ID & Price
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -149,9 +238,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "ORD-${order.id.toString().padLeft(4, '0')}", // e.g. ORD-0003
+                    "ORD-${order.id.toString().padLeft(4, '0')}",
                     style: const TextStyle(
-                      color: AppColors.textDark,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
@@ -177,16 +265,13 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
-                        ), // Use $ as requested
+                        ),
                       const SizedBox(width: 2),
                       Text(
-                        order.totalAmount.toStringAsFixed(
-                          2,
-                        ), // Match format 449.00
+                        order.totalAmount.toStringAsFixed(2),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
                         ),
                       ),
                     ],
@@ -200,17 +285,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     );
   }
 
-  // Helper Widget for Single Item
   Widget _buildSingleItemRow(OrderItem item, bool isPoints) {
     final product = item.product;
-    final imageUrl = (product.images.isNotEmpty)
+    final imageUrl = product.images.isNotEmpty
         ? product.images[0]
         : 'https://via.placeholder.com/150';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Image
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.network(
@@ -218,17 +301,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             width: 70,
             height: 70,
             fit: BoxFit.cover,
-            errorBuilder: (c, e, s) => Container(
-              width: 70,
-              height: 70,
-              color: Colors.grey[200],
-              child: const Icon(Icons.broken_image, color: Colors.grey),
-            ),
+            errorBuilder: (c, e, s) =>
+                Container(width: 70, height: 70, color: Colors.grey[200]),
           ),
         ),
         const SizedBox(width: 16),
-
-        // Details
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,13 +315,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: AppColors.textDark,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 6),
-              // Price Row for Item
               Row(
                 children: [
                   if (isPoints)
@@ -258,7 +333,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                         color: Colors.grey,
                       ),
                     ),
-                  const SizedBox(width: 2),
                   Text(
                     item.priceAtPurchase.toStringAsFixed(2),
                     style: TextStyle(
@@ -281,21 +355,17 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     );
   }
 
-  // Helper for Status Text
-  String _formatStatus(String status) {
-    if (status.isEmpty) return "Unknown";
-    // Capitalize first letter: "placed" -> "Placed"
-    return status[0].toUpperCase() + status.substring(1);
-  }
+  String _formatStatus(String status) => status.isEmpty
+      ? "Unknown"
+      : status[0].toUpperCase() + status.substring(1);
 
-  // Helper for Status Color
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'placed':
       case 'processing':
-        return Colors.orange; // Orange for active processing
+        return Colors.orange;
       case 'packed':
-        return const Color.fromARGB(255, 196, 167, 8);
+        return const Color(0xFFC4A708);
       case 'shipped':
       case 'in transit':
         return Colors.blue;
@@ -307,4 +377,38 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         return AppColors.textDark;
     }
   }
+}
+
+/// Custom clipper that creates a centered upward arch (convex/hill)
+/// matching the 'Product Details' card in your image.
+class TopConvexClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+
+    // The vertical height of the curve (how much it arches)
+    double curveHeight = 40.0;
+
+    // 1. Start at the left edge, down by curveHeight (skipping the top-left corner)
+    path.moveTo(0, curveHeight);
+
+    // 2. Draw a single smooth quadratic bezier curve
+    //    Control Point: Center Top (x = width/2, y = 0) -> Pulls the curve up
+    //    End Point: Right side, down by curveHeight (x = width, y = curveHeight)
+    path.quadraticBezierTo(size.width / 2, 0, size.width, curveHeight);
+
+    // 3. Line down to the bottom-right corner
+    path.lineTo(size.width, size.height);
+
+    // 4. Line to the bottom-left corner
+    path.lineTo(0, size.height);
+
+    // 5. Close the path back to the start
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
