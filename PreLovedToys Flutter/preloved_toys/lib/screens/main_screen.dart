@@ -1,11 +1,11 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/screens/cart_screen.dart';
+import 'package:preloved_toys/screens/category_selection_screen.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
-import '../providers/cart_provider.dart';
 import 'home_screen.dart';
-import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'login_screen.dart';
 
@@ -115,7 +115,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
       Padding(
         padding: EdgeInsets.only(top: headerHeight - curveDepth),
-        child: const CartScreen(),
+        child: const CategorySelectionScreen(),
       ),
       Padding(
         padding: EdgeInsets.only(top: headerHeight - curveDepth),
@@ -174,11 +174,7 @@ class _MainScreenState extends State<MainScreen> {
                   animationDuration: const Duration(milliseconds: 400),
                   items: const <Widget>[
                     Icon(Icons.home_outlined, size: 30, color: Colors.white),
-                    Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 30,
-                      color: Colors.white,
-                    ),
+                    Icon(Icons.category_rounded, size: 30, color: Colors.white),
                     Icon(
                       Icons.add_circle_outline,
                       size: 30,
@@ -219,7 +215,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             // --- HEADER CONTENT SWITCHER ---
             if (_page == 0 || _page == 1)
-              _buildSearchCartHeaderContent() // Home & Cart
+              _buildSearchCategoryHeaderContent() // Home & Category
             else if (_page == 2)
               _buildSimpleTitleContent("Sell") // Sell Page
             else if (_page == 3)
@@ -232,8 +228,8 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // --- 1. SEARCH & CART HEADER (Home, Cart) ---
-  Widget _buildSearchCartHeaderContent() {
+  // --- 1. SEARCH & CATEGORY HEADER (Home, Category) ---
+  Widget _buildSearchCategoryHeaderContent() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -269,11 +265,10 @@ class _MainScreenState extends State<MainScreen> {
         const SizedBox(width: 15),
         GestureDetector(
           onTap: () {
-            setState(() {
-              _page = 1;
-              _isBottomNavVisible = true;
-            });
-            _bottomNavigationKey.currentState?.setPage(1);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CartScreen()),
+            );
           },
           child: Container(
             width: 50,
@@ -289,27 +284,6 @@ class _MainScreenState extends State<MainScreen> {
                   Icons.shopping_cart_outlined,
                   color: AppColors.textDark,
                   size: 24,
-                ),
-                Consumer<CartProvider>(
-                  builder: (context, cart, child) {
-                    return cart.items.isEmpty
-                        ? const SizedBox()
-                        : Positioned(
-                            top: 10,
-                            right: 10,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.redAccent,
-                                shape: BoxShape.circle,
-                              ),
-                              constraints: const BoxConstraints(
-                                minWidth: 8,
-                                minHeight: 8,
-                              ),
-                            ),
-                          );
-                  },
                 ),
               ],
             ),

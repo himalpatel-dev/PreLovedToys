@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import 'main_screen.dart'; // To go back to Home
-import 'my_orders_screen.dart'; // We will create this or you can link to Profile
 
 class OrderSuccessScreen extends StatelessWidget {
   const OrderSuccessScreen({super.key});
@@ -76,7 +75,7 @@ class OrderSuccessScreen extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -93,42 +92,7 @@ class OrderSuccessScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 20),
-
-              // --- 4. GO TO ORDERS BUTTON ---
-              TextButton(
-                onPressed: () {
-                  // Navigate to My Orders Screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const MyOrdersScreen(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  "Go to Orders",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors
-                        .grey, // Grey color as typical for secondary actions
-                  ),
-                ),
-              ),
-
               const Spacer(flex: 1),
-
-              // Bottom Indicator (Visual Line from your image design)
-              Container(
-                width: 130,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 10),
             ],
           ),
         ),

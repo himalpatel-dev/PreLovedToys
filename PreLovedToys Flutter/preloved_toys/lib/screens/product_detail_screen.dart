@@ -3,7 +3,7 @@ import 'package:preloved_toys/screens/cart_screen.dart';
 import 'package:preloved_toys/utils/app_colors.dart';
 import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/services.dart'; // for clipboard
+import 'dart:math' as math; // Import math for rotation calculations
 import '../models/product_model.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
@@ -26,6 +26,10 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Product? _product;
   bool _isLoading = true;
+
+  // 1. GLOBAL KEYS
+  final GlobalKey _cartKey = GlobalKey();
+  final GlobalKey _imageKey = GlobalKey();
 
   @override
   void initState() {
@@ -52,6 +56,129 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  // ------------------------------------------------------------
+  // 2. NEW "VELOCITY STRETCH / SUCK" ANIMATION
+  // ------------------------------------------------------------
+  // ------------------------------------------------------------
+  // 3. PARABOLIC THROW ANIMATION (Classic E-commerce Style)
+  // ------------------------------------------------------------
+  void _runAddToCartAnimation(String imageUrl) {
+    // 1. Get RenderBoxes to find positions
+    final RenderBox? imageBox =
+        _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? cartBox =
+        _cartKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (imageBox == null || cartBox == null) return;
+
+    // 2. Start Position (Center of the Product Image)
+    final Offset startPos = imageBox.localToGlobal(Offset.zero);
+    final Size startSize = imageBox.size;
+    final Offset p0 = Offset(
+      startPos.dx + startSize.width / 2,
+      startPos.dy + startSize.height / 2,
+    );
+
+    // 3. End Position (Center of the Cart Icon)
+    final Offset endPos = cartBox.localToGlobal(Offset.zero);
+    final Size endSize = cartBox.size;
+    final Offset p2 = Offset(
+      endPos.dx + endSize.width / 2,
+      endPos.dy + endSize.height / 2,
+    );
+
+    // 4. Control Point (The peak of the arc)
+    // We go halfway between X values, and significantly higher than the start Y
+    // to create a nice upward curve (Arc).
+    final double peakHeight = 150.0; // How high it throws
+    final Offset p1 = Offset(
+      (p0.dx + p2.dx) / 2,
+      math.min(p0.dy, p2.dy) - peakHeight,
+    );
+
+    OverlayEntry? overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 800), // Smooth flight
+          curve: Curves.easeInOutCubic, // Starts slow, speeds up into cart
+          builder: (context, value, child) {
+            // BEZIER CURVE FORMULA:
+            // B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+            final double t = value;
+            final double oneMinusT = 1.0 - t;
+
+            final double currentX =
+                (oneMinusT * oneMinusT * p0.dx) +
+                (2 * oneMinusT * t * p1.dx) +
+                (t * t * p2.dx);
+
+            final double currentY =
+                (oneMinusT * oneMinusT * p0.dy) +
+                (2 * oneMinusT * t * p1.dy) +
+                (t * t * p2.dy);
+
+            // SCALE: Shrink from full size to tiny dot
+            // We clamp it so it doesn't disappear completely until the very end
+            final double currentScale = (1.0 - t).clamp(0.1, 1.0);
+
+            // OPACITY: Fade out slightly at the very end
+            final double currentOpacity = (t > 0.9) ? (1.0 - t) * 10 : 1.0;
+
+            // ROTATION: Spin it slightly as it flies
+            final double currentRotation = t * 2 * math.pi;
+
+            return Positioned(
+              left: currentX - (startSize.width / 2),
+              top: currentY - (startSize.height / 2),
+              child: Opacity(
+                opacity: currentOpacity,
+                child: Transform.rotate(
+                  angle: currentRotation, // Optional: Makes it spin
+                  child: Transform.scale(
+                    scale: currentScale,
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: startSize.width,
+                      height: startSize.height,
+                      // Use a Circular Avatar or Rounded Rect to make the flying object look neat
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover, // Keeps image looking normal!
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+          onEnd: () {
+            overlayEntry?.remove();
+          },
+        );
+      },
+    );
+
+    Overlay.of(context).insert(overlayEntry);
+  }
+  // ------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     if (_product == null && _isLoading) {
@@ -67,13 +194,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // --- Header (primary area) ---
+            // --- Header ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -89,8 +215,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   ),
-
-                  // Title (product title truncated)
                   Expanded(
                     child: Center(
                       child: Text(
@@ -105,7 +229,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   ),
-
                   Row(
                     children: [
                       Consumer<CartProvider>(
@@ -120,8 +243,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               );
                             },
                             child: Container(
-                              width: 36, // Increased size for better tap target
-                              height: 36,
+                              key: _cartKey, // 3. Target Key
+                              width: 40,
+                              height: 40,
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
@@ -130,9 +254,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 alignment: Alignment.center,
                                 children: [
                                   const Icon(
-                                    Icons.shopping_bag_outlined,
+                                    Icons.shopping_cart_outlined,
                                     color: Colors.black,
-                                    size: 20,
+                                    size: 24,
                                   ),
                                   if (cart.items.isNotEmpty)
                                     Positioned(
@@ -162,7 +286,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
 
-            // --- Curved / Rounded Content (white sheet) ---
+            // --- Content ---
             Expanded(
               child: ClipPath(
                 clipper: TopConvexClipper(),
@@ -174,10 +298,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 50),
-
-                        // Product Image Card
                         Center(
                           child: Container(
+                            key: _imageKey, // 4. Source Key
                             height: MediaQuery.of(context).size.height * 0.45,
                             width: double.infinity,
                             decoration: BoxDecoration(
@@ -198,10 +321,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                           ),
                         ),
-
+                        // ... Rest of your UI ...
                         const SizedBox(height: 20),
-
-                        // Title row (kept for accessibility) + small fav (same provider)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +337,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                               ),
                             ),
-                            // duplicate small fav to match earlier layout (keeps both synced)
                             Consumer<FavoriteProvider>(
                               builder: (context, favProvider, child) {
                                 final isFav = favProvider.isFavorite(
@@ -244,10 +364,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 15),
-
-                        // Rating
                         Row(
                           children: const [
                             Icon(Icons.star, color: Colors.amber, size: 18),
@@ -266,10 +383,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 20),
-
-                        // Description
                         Text(
                           product.description,
                           style: const TextStyle(
@@ -277,9 +391,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             height: 1.5,
                           ),
                         ),
-
                         const SizedBox(height: 24),
-
                         // Seller Info
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -350,10 +462,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 24),
-
-                        // Specifications
                         const Text(
                           "Specifications",
                           style: TextStyle(
@@ -376,8 +485,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               _buildSpecChip("Age", product.ageGroup!),
                           ],
                         ),
-
-                        const SizedBox(height: 30), // padding for bottom bar
+                        const SizedBox(height: 30),
                       ],
                     ),
                   ),
@@ -403,7 +511,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Price
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -441,40 +548,47 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ],
                     ),
-
-                    // Add to Cart Button
                     SizedBox(
                       height: 50,
                       width: 160,
                       child: ElevatedButton.icon(
                         onPressed: () async {
+                          // 5. Trigger Animation
+                          _runAddToCartAnimation(imageUrl);
                           try {
                             await Provider.of<CartProvider>(
                               context,
                               listen: false,
                             ).addToCart(product.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Added to Cart Successfully!'),
-                                backgroundColor: Colors.green,
-                              ),
+
+                            // Delay snackbar slightly to let animation play
+                            Future.delayed(
+                              const Duration(milliseconds: 500),
+                              () {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Added to Cart Successfully!',
+                                      ),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              },
                             );
                           } catch (e) {
-                            String errorMessage = e.toString().replaceAll(
+                            String msg = e.toString().replaceAll(
                               'Exception: ',
                               '',
                             );
-                            if (errorMessage.contains(
-                              "Product is already in the cart",
-                            )) {
-                              errorMessage = "Product is already in the cart.";
-                            }
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(errorMessage),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            if (mounted)
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(msg),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -532,7 +646,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 }
 
-/// Custom clipper for top convex curve
 class TopConvexClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
