@@ -119,7 +119,12 @@ class _MainScreenState extends State<MainScreen> {
       ),
       Padding(
         padding: EdgeInsets.only(top: headerHeight - curveDepth),
-        child: const Center(child: Text("Sell Content Here")),
+        child: Center(
+          child: Text(
+            "Is Load Data From DB: ${Provider.of<AuthProvider>(context).isLoadDataFromDb}",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
       Padding(
         padding: EdgeInsets.only(top: headerHeight - curveDepth),

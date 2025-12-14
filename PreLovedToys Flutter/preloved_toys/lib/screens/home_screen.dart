@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:preloved_toys/providers/favorite_provider.dart';
+import '../providers/auth_provider.dart';
 import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:preloved_toys/widgets/product_item2.dart';
 import '../providers/product_provider.dart';
@@ -69,8 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Initiate data fetching for all necessary resources
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       Provider.of<ProductProvider>(context, listen: false).fetchProducts();
-      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+      Provider.of<CategoryProvider>(
+        context,
+        listen: false,
+      ).fetchCategories(isLoadFromDb: authProvider.isLoadDataFromDb);
       Provider.of<FavoriteProvider>(context, listen: false).fetchFavorites();
     });
   }
@@ -186,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       width: 62,
                                       height: 62,
+                                      alignment: Alignment.center,
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFF8E9B7),
                                         shape: BoxShape.circle,
@@ -203,19 +209,50 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 2,
                                         ),
                                       ),
-                                      child: Image.network(
-                                        cat.image!,
-                                        height: 28,
-                                        width: 28,
-                                        fit: BoxFit.contain,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                              return Icon(
-                                                Icons.category,
-                                                size: 28,
-                                                color: AppColors.primary,
-                                              );
-                                            },
+                                      child: Builder(
+                                        builder: (context) {
+                                          final imagePath = cat.image ?? '';
+                                          if (imagePath.isEmpty) {
+                                            return Icon(
+                                              Icons.category,
+                                              size: 45,
+                                              color: AppColors.primary,
+                                            );
+                                          }
+
+                                          if (imagePath.startsWith('assets/')) {
+                                            return Image.asset(
+                                              imagePath,
+                                              height: 35,
+                                              width: 35,
+                                              fit: BoxFit.contain,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    return Icon(
+                                                      Icons.category,
+                                                      size: 35,
+                                                      color: AppColors.primary,
+                                                    );
+                                                  },
+                                            );
+                                          } else {
+                                            return Image.network(
+                                              imagePath,
+                                              height: 35,
+                                              width: 35,
+                                              color: AppColors.primary,
+                                              fit: BoxFit.contain,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    return Icon(
+                                                      Icons.category,
+                                                      size: 35,
+                                                      color: AppColors.primary,
+                                                    );
+                                                  },
+                                            );
+                                          }
+                                        },
                                       ),
                                     ),
                                     const SizedBox(height: 8),

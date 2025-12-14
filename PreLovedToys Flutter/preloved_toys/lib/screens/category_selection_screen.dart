@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/category_provider.dart';
 import '../models/category_model.dart';
 import '../models/subcategory_model.dart';
+import '../providers/auth_provider.dart';
 
 class CategorySelectionScreen extends StatefulWidget {
   const CategorySelectionScreen({super.key});
@@ -21,13 +23,20 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     super.initState();
     // 1. Fetch Categories on load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<CategoryProvider>(context, listen: false);
-      provider.fetchCategories().then((_) {
-        // 2. Once categories load, fetch subcategories for the *first* one automatically
-        if (provider.categories.isNotEmpty) {
-          provider.fetchSubCategories(provider.categories[0].id);
-        }
-      });
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final catProvider = Provider.of<CategoryProvider>(context, listen: false);
+
+      catProvider
+          .fetchCategories(isLoadFromDb: authProvider.isLoadDataFromDb)
+          .then((_) {
+            // 2. Once categories load, fetch subcategories for the *first* one
+            if (catProvider.categories.isNotEmpty) {
+              catProvider.fetchSubCategories(
+                catProvider.categories[0].id,
+                isLoadFromDb: authProvider.isLoadDataFromDb,
+              );
+            }
+          });
     });
   }
 
@@ -35,21 +44,13 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "All Categories",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: AppColors.textDark,
-        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
-      ),
+
       body: Consumer<CategoryProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: BouncingDiceLoader(color: AppColors.primary),
+            );
           }
 
           if (provider.categories.isEmpty) {
@@ -61,8 +62,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
               // --- LEFT SIDEBAR (Main Categories) ---
               Container(
                 width: 90,
-                color: const Color(0xFFF0F2F5), // Light grey background
+                color: Colors.white,
                 child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 50, top: 30),
                   itemCount: provider.categories.length,
                   itemBuilder: (ctx, index) {
                     final cat = provider.categories[index];
@@ -75,21 +77,10 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
               Expanded(
                 child: Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(top: 50, bottom: 80),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header: Selected Category Name
-                      Text(
-                        provider.categories[_selectedIndex].name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Grid Content
                       Expanded(
                         child: provider.isSubLoading
                             ? const Center(child: CircularProgressIndicator())
@@ -138,7 +129,12 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
           _selectedIndex = index;
         });
         // Fetch subcategories for the clicked category
-        provider.fetchSubCategories(category.id);
+        // Get the auth flag
+        final isLoadFromDb = Provider.of<AuthProvider>(
+          context,
+          listen: false,
+        ).isLoadDataFromDb;
+        provider.fetchSubCategories(category.id, isLoadFromDb: isLoadFromDb);
       },
       child: Container(
         color: isSelected ? Colors.white : Colors.transparent,
@@ -164,19 +160,47 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                     Container(
                       height: 40,
                       width: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey[200],
-                      ),
-                      child: ClipOval(
-                        child: Image.network(
-                          category.image ?? '',
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, e, s) => const Icon(
-                            Icons.category,
-                            size: 20,
-                            color: Colors.grey,
-                          ),
+                      decoration: BoxDecoration(color: Colors.transparent),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Builder(
+                          builder: (context) {
+                            final imagePath = category.image ?? '';
+                            if (imagePath.isEmpty) {
+                              return const Icon(
+                                Icons.category,
+                                size: 20,
+                                color: Colors.grey,
+                              );
+                            }
+
+                            // Check if it is an asset (local) or network (url)
+                            if (imagePath.startsWith('assets/')) {
+                              return Image.asset(
+                                imagePath,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) {
+                                  return const Icon(
+                                    Icons.broken_image,
+                                    size: 20,
+                                    color: Colors.red,
+                                  );
+                                },
+                              );
+                            } else {
+                              return Image.network(
+                                imagePath,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) {
+                                  return const Icon(
+                                    Icons.category,
+                                    size: 20,
+                                    color: Colors.grey,
+                                  );
+                                },
+                              );
+                            }
+                          },
                         ),
                       ),
                     ),
