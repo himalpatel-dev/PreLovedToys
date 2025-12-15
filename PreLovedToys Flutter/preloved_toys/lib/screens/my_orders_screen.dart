@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../providers/order_provider.dart';
 import '../utils/app_colors.dart';
 import '../models/order_model.dart';
+import 'order_detail_screen.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -161,118 +162,135 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Status & Date
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OrderDetailScreen(order: order),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(order.status).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(order.status),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _formatStatus(order.status),
-                      style: TextStyle(
-                        color: _getStatusColor(order.status),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                DateFormat('MMM dd, yyyy').format(order.createdAt),
-                style: TextStyle(color: Colors.grey[500], fontSize: 13),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Items List (Non-scrollable, fits inside card)
-          ListView.separated(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: order.items.length,
-            separatorBuilder: (ctx, i) => const SizedBox(height: 16),
-            itemBuilder: (ctx, i) {
-              return _buildSingleItemRow(order.items[i], order.isPoints);
-            },
-          ),
-
-          const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey[200]),
-          const SizedBox(height: 16),
-
-          // Footer: ID & Price
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Header: Status & Date
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Order ID",
-                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "ORD-${order.id.toString().padLeft(4, '0')}",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(order.status).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(order.status),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatStatus(order.status),
+                          style: TextStyle(
+                            color: _getStatusColor(order.status),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    DateFormat('MMM dd, yyyy').format(order.createdAt),
+                    style: TextStyle(color: Colors.grey[500], fontSize: 13),
                   ),
                 ],
               ),
-              Column(
+
+              const SizedBox(height: 16),
+
+              // Items List (Non-scrollable, fits inside card)
+              ListView.separated(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: order.items.length,
+                separatorBuilder: (ctx, i) => const SizedBox(height: 16),
+                itemBuilder: (ctx, i) {
+                  return _buildSingleItemRow(order.items[i], order.isPoints);
+                },
+              ),
+
+              const SizedBox(height: 16),
+              Divider(height: 1, color: Colors.grey[200]),
+              const SizedBox(height: 16),
+
+              // Footer: ID & Price
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    "Total Amount",
-                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (order.isPoints)
-                        const Icon(Icons.stars, size: 18, color: Colors.amber),
-                      if (!order.isPoints)
-                        const Text(
-                          '\$',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      const SizedBox(width: 2),
                       Text(
-                        order.totalAmount.toStringAsFixed(2),
+                        "Order ID",
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "ORD-${order.id.toString().padLeft(4, '0')}",
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        "Total Amount",
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          if (order.isPoints)
+                            const Icon(
+                              Icons.stars,
+                              size: 18,
+                              color: Colors.amber,
+                            ),
+                          if (!order.isPoints)
+                            const Text(
+                              '\$',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          const SizedBox(width: 2),
+                          Text(
+                            order.totalAmount.toStringAsFixed(2),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -280,7 +298,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
