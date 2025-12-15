@@ -22,16 +22,13 @@ class AuthProvider with ChangeNotifier {
   Future<dynamic> sendOtp(String mobile) async {
     _isLoading = true;
     notifyListeners();
-    print("--- 1. STARTING SEND OTP ---");
 
     try {
       final response = await _apiService.post('/auth/send-otp', {
         'mobile': mobile,
       }, withToken: false);
-      print("--- 3. SUCCESS ---");
       return response;
     } catch (e) {
-      print("--- ERROR: $e ---");
       rethrow;
     } finally {
       _isLoading = false;
@@ -64,7 +61,6 @@ class AuthProvider with ChangeNotifier {
           _user = User.fromJson(response['user'], token: token);
         }
       } catch (e) {
-        print("Warning: Could not fetch profile: $e");
         _user = User.fromJson(response['user'], token: token);
       }
 
@@ -102,7 +98,6 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print("Auto-login failed: $e");
       await logout();
       return false;
     }
@@ -155,7 +150,6 @@ class AuthProvider with ChangeNotifier {
 
       return _stats;
     } catch (e) {
-      print("Error fetching stats: $e");
       return _stats; // Return existing stats on error
     }
   }
@@ -178,7 +172,6 @@ class AuthProvider with ChangeNotifier {
       }
       return false;
     } catch (e) {
-      print('Error loading master data: $e');
       return false;
     }
   }

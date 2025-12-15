@@ -43,7 +43,7 @@ class CategoryProvider with ChangeNotifier {
         }).toList();
       }
     } catch (e) {
-      print("Error fetching categories: $e");
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -79,7 +79,7 @@ class CategoryProvider with ChangeNotifier {
         }).toList();
       }
     } catch (e) {
-      print("Error fetching subcategories: $e");
+      rethrow;
     } finally {
       _isSubLoading = false;
       notifyListeners();

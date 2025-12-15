@@ -30,13 +30,6 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json, {String? token}) {
-    // --- DEBUGGING PRINTS ---
-    print("--- PARSING USER JSON ---");
-    print("Raw Email value: ${json['email']}");
-    print("Raw Gender value: ${json['gender']}");
-    print("Full JSON keys: ${json.keys.toList()}");
-    // ------------------------
-
     // Helper to safely parse the 'interestedIn' array or string
     List<String> interests = [];
     if (json['interestedIn'] != null) {

@@ -67,9 +67,6 @@ class ApiService {
     final url = Uri.parse('${Constants.baseUrl}$endpoint');
     final headers = await _getHeaders(true); // Always needs token
 
-    print("PUT Request to: $url");
-    print("Data: $data");
-
     try {
       final response = await http.put(
         url,
@@ -86,8 +83,6 @@ class ApiService {
   Future<dynamic> delete(String endpoint) async {
     final url = Uri.parse('${Constants.baseUrl}$endpoint');
     final headers = await _getHeaders(true); // Delete needs auth
-
-    print("DELETE Request to: $url");
 
     try {
       final response = await http.delete(url, headers: headers);

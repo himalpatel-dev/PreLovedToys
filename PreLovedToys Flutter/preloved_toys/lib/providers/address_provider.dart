@@ -30,7 +30,7 @@ class AddressProvider with ChangeNotifier {
       // Sort: Default address first
       //    _addresses.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
     } catch (e) {
-      print("Error fetching addresses: $e");
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -48,8 +48,7 @@ class AddressProvider with ChangeNotifier {
       // Refresh the list immediately
       await fetchAddresses();
     } catch (e) {
-      print("Error adding address: $e");
-      rethrow; // Pass error to UI to show snackbar
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -64,7 +63,6 @@ class AddressProvider with ChangeNotifier {
       final data = response['address'] ?? response;
       return Address.fromJson(data);
     } catch (e) {
-      print("Error fetching address details: $e");
       rethrow;
     }
   }
@@ -81,7 +79,6 @@ class AddressProvider with ChangeNotifier {
       // Refresh list to show changes
       await fetchAddresses();
     } catch (e) {
-      print("Error updating address: $e");
       rethrow;
     } finally {
       _isLoading = false;
@@ -144,12 +141,7 @@ class AddressProvider with ChangeNotifier {
       await _apiService.put('/addresses/$id/set-default', {});
       // Success! We are already done. No need to fetchAddresses() again.
     } catch (e) {
-      print("Error setting default (Reverting): $e");
-
-      // OPTIONAL: Revert UI if server fails (Safety net)
-      // For now, we assume success to keep it "lag-free".
-      // If you want strict safety, you would undo step B here.
-      fetchAddresses(); // Sync with real server state if it failed
+      fetchAddresses();
     }
   }
 
@@ -164,10 +156,8 @@ class AddressProvider with ChangeNotifier {
       // DELETE /api/addresses/:id
       await _apiService.delete('/addresses/$id');
     } catch (e) {
-      // Revert on error
       _addresses = originalList;
       notifyListeners();
-      print("Error deleting address: $e");
       rethrow;
     }
   }
@@ -183,7 +173,6 @@ class AddressProvider with ChangeNotifier {
       // if (_addresses.isEmpty) await fetchAddresses();
       // return _addresses.firstWhere((a) => a.isDefault, orElse: () => _addresses.first);
     } catch (e) {
-      print("Error fetching default address: $e");
       return null;
     }
   }

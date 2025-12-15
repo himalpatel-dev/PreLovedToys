@@ -41,7 +41,7 @@ class FavoriteProvider with ChangeNotifier {
           .map((fav) => fav.product.id)
           .toSet(); // Note: adjusting to map product.id not fav.id
     } catch (e) {
-      print("Error fetching favorites: $e");
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -76,8 +76,6 @@ class FavoriteProvider with ChangeNotifier {
       // 3. Sync (Fetch fresh list to ensure data integrity)
       await fetchFavorites();
     } catch (e) {
-      print("Error toggling favorite: $e");
-      // Revert changes on error
       if (isFav) {
         _favoriteProductIds.add(productId);
       } else {

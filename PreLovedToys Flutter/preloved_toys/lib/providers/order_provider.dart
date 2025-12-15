@@ -31,7 +31,7 @@ class OrderProvider with ChangeNotifier {
       // Sort by newest first
       _orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     } catch (e) {
-      print("Error fetching orders: $e");
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -52,7 +52,6 @@ class OrderProvider with ChangeNotifier {
       // You might want to clear the cart locally here if the backend doesn't do it automatically,
       // or fetch the cart again to show it's empty.
     } catch (e) {
-      print("Error placing order: $e");
       rethrow;
     } finally {
       _isLoading = false;

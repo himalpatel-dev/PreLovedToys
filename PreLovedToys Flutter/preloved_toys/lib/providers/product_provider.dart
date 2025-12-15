@@ -57,7 +57,6 @@ class ProductProvider with ChangeNotifier {
       // The API returns the product object directly (based on your JSON)
       return Product.fromJson(response);
     } catch (e) {
-      print("Error fetching product details: $e");
       rethrow;
     }
   }

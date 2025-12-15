@@ -48,7 +48,7 @@ class CartProvider with ChangeNotifier {
 
       _items = dataList.map((item) => CartItem.fromJson(item)).toList();
     } catch (e) {
-      print("Error fetching cart: $e");
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -72,7 +72,6 @@ class CartProvider with ChangeNotifier {
       // Revert if failed
       _items.insert(index, removedItem);
       notifyListeners();
-      print("Error removing from cart: $e");
       rethrow;
     }
   }

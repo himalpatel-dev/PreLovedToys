@@ -27,7 +27,7 @@ class MyListingsProvider with ChangeNotifier {
 
       _listings = dataList.map((item) => Product.fromJson(item)).toList();
     } catch (e) {
-      print("Error fetching my listings: $e");
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -48,7 +48,6 @@ class MyListingsProvider with ChangeNotifier {
       // 3. Revert if failed
       _listings = originalList;
       notifyListeners();
-      print("Error deleting listing: $e");
       rethrow;
     }
   }
