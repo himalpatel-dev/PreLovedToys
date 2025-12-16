@@ -42,11 +42,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         setState(() {
           _isLoadingAddress = false;
         });
+        // Optionally show error
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load address: $e')));
       }
-      // Optionally show error
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load address: $e')));
     }
   }
 
@@ -234,7 +234,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               physics: const NeverScrollableScrollPhysics(),
                               shrinkWrap: true,
                               itemCount: cartItems.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: 15),
                               itemBuilder: (ctx, i) =>
                                   _buildCheckoutItem(cartItems[i].product),
@@ -397,14 +397,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         listen: false,
       ).placeOrder(_defaultAddress!.id);
 
-      if (context.mounted) {
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Failed to place order: $e")));
@@ -443,7 +443,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
+                errorBuilder: (_, _, _) =>
                     const Icon(Icons.broken_image, color: Colors.grey),
               ),
             ),

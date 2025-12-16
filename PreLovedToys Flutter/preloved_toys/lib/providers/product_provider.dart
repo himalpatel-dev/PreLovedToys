@@ -60,4 +60,35 @@ class ProductProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  // Fetch products by subcategory
+  Future<void> fetchProductsBySubcategory(int subcategoryId) async {
+    _isLoading = true;
+    _products =
+        []; // Clear old products to avoid showing previous category data
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get(
+        '/products/sub-category/$subcategoryId',
+      );
+
+      List<dynamic> dataList = [];
+      if (response is List) {
+        dataList = response;
+      } else if (response['rows'] != null) {
+        dataList = response['rows'];
+      } else if (response['data'] != null) {
+        dataList = response['data'];
+      }
+
+      _products = dataList.map((item) => Product.fromJson(item)).toList();
+    } catch (e) {
+      _products = [];
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

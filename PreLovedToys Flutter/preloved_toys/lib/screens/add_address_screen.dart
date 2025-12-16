@@ -336,8 +336,9 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                                         side: BorderSide.none,
                                       ),
                                       onSelected: (selected) {
-                                        if (selected)
+                                        if (selected) {
                                           setState(() => _selectedType = type);
+                                        }
                                       },
                                     );
                                   }).toList(),
@@ -418,7 +419,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                                           // --- STATE DROPDOWN ---
                                           Expanded(
                                             child: DropdownButtonFormField<String>(
-                                              value: _selectedState,
+                                              initialValue: _selectedState,
                                               icon: const Icon(
                                                 Icons.keyboard_arrow_down,
                                               ),
@@ -500,7 +501,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                                           ),
                                         ),
                                         value: _isDefault,
-                                        activeColor: AppColors.primary,
+                                        activeThumbColor: AppColors.primary,
                                         onChanged: (val) =>
                                             setState(() => _isDefault = val),
                                       ),
@@ -559,7 +560,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
   // --- NEW HELPER WIDGET FOR LOADING OVERLAY ---
   Widget _buildLoadingOverlay(BuildContext context) {
     return Container(
-      color: Colors.black.withOpacity(0.3), // Semi-transparent black background
+      color: Colors.black.withAlpha(120), // Semi-transparent black background
       child: const Center(child: BouncingDiceLoader(color: AppColors.primary)),
     );
   }

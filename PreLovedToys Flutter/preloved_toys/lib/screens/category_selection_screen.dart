@@ -6,6 +6,7 @@ import '../providers/category_provider.dart';
 import '../models/category_model.dart';
 import '../models/subcategory_model.dart';
 import '../providers/auth_provider.dart';
+import 'subcategory_products_screen.dart';
 
 class CategorySelectionScreen extends StatefulWidget {
   const CategorySelectionScreen({super.key});
@@ -230,33 +231,46 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
 
   // --- Subcategory Item Widget ---
   Widget _buildSubCategoryItem(SubCategory subCat) {
-    return Column(
-      children: [
-        Container(
-          height: 60,
-          width: 60,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF5F6F9),
-            shape: BoxShape.circle,
-          ),
-          child: ClipOval(
-            child: Image.network(
-              subCat.image,
-              fit: BoxFit.cover,
-              errorBuilder: (c, e, s) =>
-                  const Icon(Icons.broken_image, color: Colors.grey),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SubcategoryProductsScreen(
+              subcategoryId: subCat.id,
+              subcategoryName: subCat.name,
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          subCat.name,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 12, color: AppColors.textDark),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+        );
+      },
+      child: Column(
+        children: [
+          Container(
+            height: 60,
+            width: 60,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF5F6F9),
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Image.network(
+                subCat.image,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) =>
+                    const Icon(Icons.broken_image, color: Colors.grey),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subCat.name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: AppColors.textDark),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }

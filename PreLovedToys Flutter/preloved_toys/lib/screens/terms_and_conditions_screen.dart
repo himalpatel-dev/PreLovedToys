@@ -6,10 +6,10 @@ class TermsAndConditionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color _headerColor = AppColors.primary;
+    final Color headerColor = AppColors.primary;
 
     return Scaffold(
-      backgroundColor: _headerColor,
+      backgroundColor: headerColor,
       body: Column(
         children: [
           // --- Custom Header (safe area) ---

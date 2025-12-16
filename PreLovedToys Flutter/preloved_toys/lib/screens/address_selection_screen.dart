@@ -33,10 +33,10 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
     final addressProvider = Provider.of<AddressProvider>(context);
     final addresses = addressProvider.addresses;
 
-    final Color _headerColor = AppColors.primary;
+    final Color headerColor = AppColors.primary;
 
     return Scaffold(
-      backgroundColor: _headerColor,
+      backgroundColor: headerColor,
       body: Column(
         children: [
           // --- Custom Header (safe area) ---

@@ -555,6 +555,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         onPressed: () async {
                           // 5. Trigger Animation
                           _runAddToCartAnimation(imageUrl);
+
+                          // Capture context before async operations
+                          final scaffoldMessenger = ScaffoldMessenger.of(
+                            context,
+                          );
+
                           try {
                             await Provider.of<CartProvider>(
                               context,
@@ -566,7 +572,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               const Duration(milliseconds: 500),
                               () {
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  scaffoldMessenger.showSnackBar(
                                     const SnackBar(
                                       content: Text(
                                         'Added to Cart Successfully!',
@@ -582,13 +588,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               'Exception: ',
                               '',
                             );
-                            if (mounted)
-                              ScaffoldMessenger.of(context).showSnackBar(
+                            if (mounted) {
+                              scaffoldMessenger.showSnackBar(
                                 SnackBar(
                                   content: Text(msg),
                                   backgroundColor: Colors.red,
                                 ),
                               );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(

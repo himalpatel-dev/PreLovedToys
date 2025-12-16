@@ -86,7 +86,7 @@ class _CartScreenState extends State<CartScreen> {
                                 vertical: 50,
                               ),
                               itemCount: items.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: 20),
                               itemBuilder: (ctx, index) {
                                 return _buildCartItem(
@@ -180,7 +180,7 @@ class _CartScreenState extends State<CartScreen> {
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(
+                errorBuilder: (_, _, _) => const Icon(
                   Icons.broken_image,
                   size: 40,
                   color: Colors.grey,

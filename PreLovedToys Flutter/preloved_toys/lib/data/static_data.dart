@@ -266,10 +266,11 @@ class StaticData {
 
   // Age Groups
   static final List<String> ageGroups = [
-    '0-2 Years',
-    '3-5 Years',
-    '6-8 Years',
-    '9-12 Years',
+    '0-12 Months',
+    '0-3 Years',
+    '3-7 Years',
+    '7-10 Years',
+    '10-12 Years',
     '12+ Years',
   ];
 

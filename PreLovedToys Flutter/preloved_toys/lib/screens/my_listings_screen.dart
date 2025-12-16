@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/my_listings_provider.dart';
 import '../utils/app_colors.dart';
 import '../models/product_model.dart';
@@ -147,8 +148,13 @@ class _MyListingsScreenState extends State<MyListingsScreen>
               child: Container(
                 color: const Color(0xFFF9F9F9),
                 child: listingsData.isLoading
-                    ? const Center(
-                        child: BouncingDiceLoader(color: AppColors.primary),
+                    ? Container(
+                        color: Colors.black.withAlpha(
+                          120,
+                        ), // Semi-transparent black background
+                        child: const Center(
+                          child: BouncingDiceLoader(color: AppColors.primary),
+                        ),
                       )
                     : currentList.isEmpty
                     ? _buildEmptyState(isEditable)
@@ -341,7 +347,10 @@ class _MyListingsScreenState extends State<MyListingsScreen>
         ? product.images[0]
         : 'https://via.placeholder.com/150';
 
-    final dateStr = product.updatedAt;
+    // Format date to show only YYYY-MM-DD
+    final dateStr = product.updatedAt != null
+        ? DateFormat('MMM dd, yyyy').format(product.updatedAt!)
+        : 'N/A';
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -497,7 +506,7 @@ class _MyListingsScreenState extends State<MyListingsScreen>
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          dateStr.toString(),
+                          dateStr,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

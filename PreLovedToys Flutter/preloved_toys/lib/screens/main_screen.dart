@@ -1,5 +1,6 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:preloved_toys/providers/cart_provider.dart';
 import 'package:preloved_toys/screens/cart_screen.dart';
 import 'package:preloved_toys/screens/category_selection_screen.dart';
 import 'package:provider/provider.dart';
@@ -51,14 +52,21 @@ class _MainScreenState extends State<MainScreen> {
     );
     if (shouldLogout && context.mounted) {
       await Provider.of<AuthProvider>(context, listen: false).logout();
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
+      // Check mounted again after the async logout operation
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 
-  Future<bool> _onWillPop() async {
+  void _handleBackNavigation(bool didPop, Object? result) async {
+    if (didPop) {
+      return;
+    }
+
     if (_page != 0) {
       setState(() {
         _page = 0;
@@ -66,9 +74,9 @@ class _MainScreenState extends State<MainScreen> {
       });
       final navState = _bottomNavigationKey.currentState;
       navState?.setPage(0);
-      return false;
     } else {
-      return await showDialog(
+      final shouldExit =
+          await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Exit App'),
@@ -95,6 +103,11 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ) ??
           false;
+
+      // Use State's mounted property and context instead of callback parameter
+      if (shouldExit && mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -136,8 +149,9 @@ class _MainScreenState extends State<MainScreen> {
       ),
     ];
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _handleBackNavigation,
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.grey[50],
@@ -289,6 +303,27 @@ class _MainScreenState extends State<MainScreen> {
                   Icons.shopping_cart_outlined,
                   color: AppColors.textDark,
                   size: 24,
+                ),
+                Consumer<CartProvider>(
+                  builder: (context, cart, child) {
+                    return cart.items.isEmpty
+                        ? const SizedBox()
+                        : Positioned(
+                            top: 10,
+                            right: 10,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.redAccent,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 8,
+                                minHeight: 8,
+                              ),
+                            ),
+                          );
+                  },
                 ),
               ],
             ),

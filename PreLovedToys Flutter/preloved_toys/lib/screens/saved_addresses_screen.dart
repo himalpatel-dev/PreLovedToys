@@ -153,9 +153,14 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen>
                     // Content area
                     Expanded(
                       child: addressData.isLoading
-                          ? const Center(
-                              child: BouncingDiceLoader(
-                                color: AppColors.primary,
+                          ? Container(
+                              color: Colors.black.withAlpha(
+                                120,
+                              ), // Semi-transparent black background
+                              child: const Center(
+                                child: BouncingDiceLoader(
+                                  color: AppColors.primary,
+                                ),
                               ),
                             )
                           : Column(

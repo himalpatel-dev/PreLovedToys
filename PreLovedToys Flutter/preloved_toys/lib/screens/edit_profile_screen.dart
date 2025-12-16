@@ -138,8 +138,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (eligible('name') && _nameController.text.isNotEmpty) total += 20;
     if (eligible('email') && _emailController.text.isNotEmpty) total += 30;
-    if (eligible('collegeOrUniversity') && _collegeController.text.isNotEmpty)
+    if (eligible('collegeOrUniversity') && _collegeController.text.isNotEmpty) {
       total += 20;
+    }
     if (eligible('aboutMe') && _aboutController.text.isNotEmpty) total += 30;
     if (eligible('gender') && _selectedGender != null) total += 20;
     if (eligible('occupation') && _selectedOccupation != null) total += 20;
@@ -189,7 +190,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
-            backgroundColor: points > 0 ? Colors.green : AppColors.primary,
+            backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -335,30 +336,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                                   _buildLabelWithPoints("Gender", 'gender'),
                                   const SizedBox(height: 8),
-                                  Row(
-                                    children: ['Male', 'Female', 'Other'].map((
-                                      gender,
-                                    ) {
-                                      return Row(
-                                        children: [
-                                          Radio<String>(
-                                            value: gender,
-                                            groupValue: _selectedGender,
-                                            activeColor: AppColors.primary,
-                                            onChanged: (val) => setState(
-                                              () => _selectedGender = val,
-                                            ),
-                                          ),
-                                          Text(
-                                            gender,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                        ],
-                                      );
-                                    }).toList(),
+                                  _GenderRadioGroup(
+                                    selectedValue: _selectedGender,
+                                    onChanged: (val) =>
+                                        setState(() => _selectedGender = val),
                                   ),
 
                                   const SizedBox(height: 20),
@@ -591,7 +572,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // cover entire screen
                 width: double.infinity,
                 height: double.infinity,
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withAlpha(120),
                 child: const Center(child: BouncingDiceLoader()),
               ),
             ),
@@ -746,6 +727,65 @@ class ModalProgressHUD extends StatelessWidget {
       widgetList.add(modal);
     }
     return Stack(children: widgetList);
+  }
+}
+
+/// Custom Gender Radio Group that avoids deprecated groupValue parameter
+class _GenderRadioGroup extends StatelessWidget {
+  final String? selectedValue;
+  final ValueChanged<String?> onChanged;
+
+  const _GenderRadioGroup({
+    required this.selectedValue,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final genderOptions = ['Male', 'Female', 'Other'];
+
+    return Row(
+      children: genderOptions.map((gender) {
+        final isSelected = selectedValue == gender;
+
+        return Row(
+          children: [
+            GestureDetector(
+              onTap: () => onChanged(gender),
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : Colors.grey,
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => onChanged(gender),
+              child: Text(gender, style: const TextStyle(fontSize: 16)),
+            ),
+            const SizedBox(width: 10),
+          ],
+        );
+      }).toList(),
+    );
   }
 }
 

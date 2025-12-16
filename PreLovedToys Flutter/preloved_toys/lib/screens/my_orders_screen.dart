@@ -97,9 +97,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                     // Content area
                     Expanded(
                       child: orderData.isLoading
-                          ? const Center(
-                              child: BouncingDiceLoader(
-                                color: AppColors.primary,
+                          ? Container(
+                              color: Colors.black.withAlpha(
+                                120,
+                              ), // Semi-transparent black background
+                              child: const Center(
+                                child: BouncingDiceLoader(
+                                  color: AppColors.primary,
+                                ),
                               ),
                             )
                           : orders.isEmpty

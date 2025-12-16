@@ -152,6 +152,7 @@ class _BouncingDiceLoaderState extends State<BouncingDiceLoader>
         transform: Matrix4.identity()
           ..rotateX(xRot)
           ..rotateY(yRot)
+          // ignore: deprecated_member_use
           ..translate(0.0, 0.0, translateZ),
         alignment: Alignment.center,
         child: Container(
