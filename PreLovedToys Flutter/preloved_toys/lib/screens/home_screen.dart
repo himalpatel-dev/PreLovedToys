@@ -44,7 +44,13 @@ class HeaderCurvePainter extends CustomPainter {
 
 class HomeScreen extends StatefulWidget {
   final Function(bool isVisible) onScrollCallback;
-  const HomeScreen({super.key, required this.onScrollCallback});
+  final Function(int categoryId) onCategorySelected;
+
+  const HomeScreen({
+    super.key,
+    required this.onScrollCallback,
+    required this.onCategorySelected,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -179,8 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               offset: Offset(0, dy + 0),
                               child: GestureDetector(
                                 onTap: () {
-                                  // Add category selection logic here if needed
-                                  setState(() {});
+                                  widget.onCategorySelected(cat.id);
                                 },
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -285,11 +290,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 SliverFillRemaining(
                   child: Center(
                     child: productData.isLoading
-                        ? const LinearProgressIndicator(
-                            minHeight: 2,
+                        ? const BouncingDiceLoader(
+                            color: AppColors.primary,
                           ) // Show product-specific loader if loading
                         : const Text(
                             "No toys found!",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textDark,
+                            ),
                           ), // Show empty message if not loading
                   ),
                 )

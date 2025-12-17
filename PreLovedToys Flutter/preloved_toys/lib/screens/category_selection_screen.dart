@@ -9,7 +9,8 @@ import '../providers/auth_provider.dart';
 import 'subcategory_products_screen.dart';
 
 class CategorySelectionScreen extends StatefulWidget {
-  const CategorySelectionScreen({super.key});
+  final int? initialCategoryId;
+  const CategorySelectionScreen({super.key, this.initialCategoryId});
 
   @override
   State<CategorySelectionScreen> createState() =>
@@ -18,6 +19,7 @@ class CategorySelectionScreen extends StatefulWidget {
 
 class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   int _selectedIndex = 0; // Tracks which index in the list is selected
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -30,15 +32,73 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       catProvider
           .fetchCategories(isLoadFromDb: authProvider.isLoadDataFromDb)
           .then((_) {
-            // 2. Once categories load, fetch subcategories for the *first* one
-            if (catProvider.categories.isNotEmpty) {
-              catProvider.fetchSubCategories(
-                catProvider.categories[0].id,
-                isLoadFromDb: authProvider.isLoadDataFromDb,
-              );
-            }
+            _selectCategoryById(widget.initialCategoryId);
           });
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant CategorySelectionScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialCategoryId != oldWidget.initialCategoryId &&
+        widget.initialCategoryId != null) {
+      _selectCategoryById(widget.initialCategoryId);
+    }
+  }
+
+  void _selectCategoryById(int? categoryId) {
+    final catProvider = Provider.of<CategoryProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    if (catProvider.categories.isNotEmpty) {
+      int indexToSelect = 0;
+
+      // If an initial ID was passed, try to find it in the list
+      if (categoryId != null) {
+        final foundIndex = catProvider.categories.indexWhere(
+          (c) => c.id == categoryId,
+        );
+        if (foundIndex != -1) {
+          indexToSelect = foundIndex;
+        }
+      }
+
+      setState(() {
+        _selectedIndex = indexToSelect;
+      });
+
+      // Scroll to the selected index
+      // Estimate item height as ~110px.
+      // We can refine this or use scroll_to_index package if needed,
+      // but simple calculation works for now.
+      if (indexToSelect > 0) {
+        // Delay slightly to ensure list is built/ready if coming from cold start
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (_scrollController.hasClients) {
+            double estimatedOffset = indexToSelect * 110.0;
+            // Clamp isn't strictly necessary as animateTo handles out of bounds usually,
+            // but good practice. maxScrollExtent might not be accurate yet though.
+            _scrollController.animateTo(
+              estimatedOffset,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+
+      // 3. Fetch subcategories for the selected category
+      catProvider.fetchSubCategories(
+        catProvider.categories[indexToSelect].id,
+        isLoadFromDb: authProvider.isLoadDataFromDb,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -65,6 +125,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                 width: 90,
                 color: Colors.white,
                 child: ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.only(bottom: 50, top: 30),
                   itemCount: provider.categories.length,
                   itemBuilder: (ctx, index) {

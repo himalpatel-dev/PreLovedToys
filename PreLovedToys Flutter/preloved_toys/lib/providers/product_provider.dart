@@ -91,4 +91,20 @@ class ProductProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Create a new product
+  Future<void> addProduct(Map<String, dynamic> productData) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _apiService.post('/products', productData);
+      // Optionally refresh the list
+      // await fetchProducts();
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

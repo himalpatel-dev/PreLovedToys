@@ -12,6 +12,7 @@ import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'utils/app_colors.dart';
 import 'providers/order_provider.dart';
+import 'providers/master_data_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(create: (_) => AddressProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => MasterDataProvider()),
       ],
       child: MaterialApp(
         title: 'PreLoved Toys',

@@ -9,6 +9,7 @@ import '../providers/auth_provider.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'login_screen.dart';
+import 'sell_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -21,6 +22,7 @@ class _MainScreenState extends State<MainScreen> {
   int _page = 0;
   final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
   bool _isBottomNavVisible = true;
+  int? _initialCategoryId; // Store the selected category for the category tab
 
   void _toggleBottomNav(bool isVisible) {
     if (_isBottomNavVisible != isVisible) {
@@ -28,6 +30,17 @@ class _MainScreenState extends State<MainScreen> {
         _isBottomNavVisible = isVisible;
       });
     }
+  }
+
+  void _navigateToCategory(int categoryId) {
+    setState(() {
+      _initialCategoryId = categoryId;
+      _page = 1; // Switch to Category Tab
+      _isBottomNavVisible = true;
+    });
+    // Also update the bottom nav bar visually if needed
+    final navState = _bottomNavigationKey.currentState;
+    navState?.setPage(1);
   }
 
   void _handleLogout(BuildContext context) async {
@@ -71,6 +84,8 @@ class _MainScreenState extends State<MainScreen> {
       setState(() {
         _page = 0;
         _isBottomNavVisible = true;
+        _initialCategoryId =
+            null; // Reset category selection when going back to home
       });
       final navState = _bottomNavigationKey.currentState;
       navState?.setPage(0);
@@ -115,38 +130,22 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     // --- HEIGHT LOGIC ---
     // Only Home (0) gets the tall header (120). All others get standard (140).
-    final double headerHeight = 150.0;
+    final double headerHeight = _page == 0 || _page == 1 || _page == 4
+        ? 150.0
+        : 120.0;
 
     // This must match the value used in your HeaderClipper (size.height - 50)
     const double curveDepth = 50.0;
 
     final List<Widget> screens = [
-      Padding(
-        // SUBTRACT the curve depth so content starts at the "shoulders" of the header
-        padding: EdgeInsets.only(top: headerHeight - curveDepth),
-        child: HomeScreen(onScrollCallback: _toggleBottomNav),
+      HomeScreen(
+        onScrollCallback: _toggleBottomNav,
+        onCategorySelected: _navigateToCategory,
       ),
-      Padding(
-        padding: EdgeInsets.only(top: headerHeight - curveDepth),
-        child: const CategorySelectionScreen(),
-      ),
-      Padding(
-        padding: EdgeInsets.only(top: headerHeight - curveDepth),
-        child: Center(
-          child: Text(
-            "Is Load Data From DB: ${Provider.of<AuthProvider>(context).isLoadDataFromDb}",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-      Padding(
-        padding: EdgeInsets.only(top: headerHeight - curveDepth),
-        child: const Center(child: Text("Message Content Here")),
-      ),
-      Padding(
-        padding: EdgeInsets.only(top: headerHeight - curveDepth),
-        child: const ProfileScreen(),
-      ),
+      CategorySelectionScreen(initialCategoryId: _initialCategoryId),
+      const SellScreen(),
+      const Center(child: Text("Message Content Here")),
+      const ProfileScreen(),
     ];
 
     return PopScope(
@@ -154,12 +153,19 @@ class _MainScreenState extends State<MainScreen> {
       onPopInvokedWithResult: _handleBackNavigation,
       child: Scaffold(
         extendBody: true,
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Colors.grey[50], // Consistent background
         body: Stack(
           children: [
             // --- 1. SCREEN CONTENT ---
             // The screens now slide up behind the curved edges
-            Positioned.fill(child: screens[_page]),
+            Positioned.fill(
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                padding: EdgeInsets.only(top: headerHeight - curveDepth),
+                child: screens[_page],
+              ),
+            ),
 
             // --- 2. CUSTOM CURVED HEADER ---
             AnimatedPositioned(
@@ -184,7 +190,7 @@ class _MainScreenState extends State<MainScreen> {
                 maintainBottomViewPadding: true,
                 child: CurvedNavigationBar(
                   key: _bottomNavigationKey,
-                  index: 0,
+                  index: _page, // Ensure the index matches the page
                   height: 60.0,
                   color: AppColors.primary,
                   buttonBackgroundColor: AppColors.primary,
@@ -194,11 +200,7 @@ class _MainScreenState extends State<MainScreen> {
                   items: const <Widget>[
                     Icon(Icons.home_outlined, size: 30, color: Colors.white),
                     Icon(Icons.category_rounded, size: 30, color: Colors.white),
-                    Icon(
-                      Icons.add_circle_outline,
-                      size: 30,
-                      color: Colors.white,
-                    ),
+                    Icon(Icons.add_sharp, size: 30, color: Colors.white),
                     Icon(
                       Icons.chat_bubble_outline,
                       size: 30,
@@ -210,6 +212,9 @@ class _MainScreenState extends State<MainScreen> {
                     setState(() {
                       _page = index;
                       _isBottomNavVisible = true;
+                      // Optional: Reset initialCategoryId if manually navigating to categories?
+                      // keeping it might be fine, or clearer to reset if they tap the tab manually.
+                      // For now, let's leave it.
                     });
                   },
                 ),
@@ -228,7 +233,9 @@ class _MainScreenState extends State<MainScreen> {
       child: Container(
         color: AppColors.primary,
         // Adjust padding to center content vertically
-        padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+        padding: _page == 0 || _page == 1 || _page == 4
+            ? const EdgeInsets.fromLTRB(20, 25, 20, 20)
+            : const EdgeInsets.fromLTRB(20, 40, 20, 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -236,7 +243,7 @@ class _MainScreenState extends State<MainScreen> {
             if (_page == 0 || _page == 1)
               _buildSearchCategoryHeaderContent() // Home & Category
             else if (_page == 2)
-              _buildSimpleTitleContent("Sell") // Sell Page
+              _buildSimpleTitleContent("List your toy") // Sell Page
             else if (_page == 3)
               _buildSimpleTitleContent("Message") // Message Page
             else if (_page == 4)
@@ -340,7 +347,7 @@ class _MainScreenState extends State<MainScreen> {
         title,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 28,
+          fontSize: 22,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
