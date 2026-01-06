@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class SubCategory {
   final int id;
   final String name;
@@ -12,10 +14,15 @@ class SubCategory {
   });
 
   factory SubCategory.fromJson(Map<String, dynamic> json) {
+    String img = json['image'] ?? 'https://via.placeholder.com/150';
+    if (!img.startsWith('http')) {
+      img = '${Constants.imageBaseUrl}$img';
+    }
+
     return SubCategory(
       id: json['id'],
       name: json['name'] ?? '',
-      image: json['image'] ?? 'https://via.placeholder.com/150',
+      image: img,
       categoryId: json['categoryId'] ?? 0,
     );
   }

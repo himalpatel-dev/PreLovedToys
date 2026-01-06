@@ -5,7 +5,6 @@ import '../utils/app_colors.dart';
 import '../providers/category_provider.dart';
 import '../models/category_model.dart';
 import '../models/subcategory_model.dart';
-import '../providers/auth_provider.dart';
 import 'subcategory_products_screen.dart';
 
 class CategorySelectionScreen extends StatefulWidget {
@@ -26,14 +25,11 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     super.initState();
     // 1. Fetch Categories on load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final catProvider = Provider.of<CategoryProvider>(context, listen: false);
 
-      catProvider
-          .fetchCategories(isLoadFromDb: authProvider.isLoadDataFromDb)
-          .then((_) {
-            _selectCategoryById(widget.initialCategoryId);
-          });
+      catProvider.fetchCategories().then((_) {
+        _selectCategoryById(widget.initialCategoryId);
+      });
     });
   }
 
@@ -48,7 +44,6 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
 
   void _selectCategoryById(int? categoryId) {
     final catProvider = Provider.of<CategoryProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     if (catProvider.categories.isNotEmpty) {
       int indexToSelect = 0;
@@ -88,10 +83,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       }
 
       // 3. Fetch subcategories for the selected category
-      catProvider.fetchSubCategories(
-        catProvider.categories[indexToSelect].id,
-        isLoadFromDb: authProvider.isLoadDataFromDb,
-      );
+      catProvider.fetchSubCategories(catProvider.categories[indexToSelect].id);
     }
   }
 
@@ -191,12 +183,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
           _selectedIndex = index;
         });
         // Fetch subcategories for the clicked category
-        // Get the auth flag
-        final isLoadFromDb = Provider.of<AuthProvider>(
-          context,
-          listen: false,
-        ).isLoadDataFromDb;
-        provider.fetchSubCategories(category.id, isLoadFromDb: isLoadFromDb);
+        provider.fetchSubCategories(category.id);
       },
       child: Container(
         color: isSelected ? Colors.white : Colors.transparent,
@@ -236,6 +223,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                               );
                             }
 
+                            // Check if it is an asset (local) or network (url)
                             // Check if it is an asset (local) or network (url)
                             if (imagePath.startsWith('assets/')) {
                               return Image.asset(

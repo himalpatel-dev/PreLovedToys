@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:preloved_toys/providers/favorite_provider.dart';
-import '../providers/auth_provider.dart';
 import 'package:preloved_toys/widgets/custom_loader.dart';
 import 'package:preloved_toys/widgets/product_item2.dart';
 import '../providers/product_provider.dart';
@@ -76,12 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Initiate data fetching for all necessary resources
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       Provider.of<ProductProvider>(context, listen: false).fetchProducts();
-      Provider.of<CategoryProvider>(
-        context,
-        listen: false,
-      ).fetchCategories(isLoadFromDb: authProvider.isLoadDataFromDb);
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
       Provider.of<FavoriteProvider>(context, listen: false).fetchFavorites();
     });
   }
@@ -245,7 +240,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                               imagePath,
                                               height: 35,
                                               width: 35,
-                                              color: AppColors.primary,
                                               fit: BoxFit.contain,
                                               errorBuilder:
                                                   (context, error, stackTrace) {

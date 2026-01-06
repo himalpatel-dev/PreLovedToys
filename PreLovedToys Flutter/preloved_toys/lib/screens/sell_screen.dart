@@ -462,7 +462,7 @@ class _SellScreenState extends State<SellScreen> {
               child: Column(
                 children: [
                   DropdownButtonFormField<int>(
-                    value: _categoryId,
+                    initialValue: _categoryId,
                     dropdownColor: Colors.white,
                     decoration: dropDeco(
                       "Category",
@@ -492,7 +492,7 @@ class _SellScreenState extends State<SellScreen> {
                       catProvider.subCategories.isNotEmpty) ...[
                     DropdownButtonFormField<int>(
                       key: ValueKey(_categoryId),
-                      value: _subCategoryId,
+                      initialValue: _subCategoryId,
                       dropdownColor: Colors.white,
                       isExpanded: true, // Fixes overflow by constraining width
                       decoration: dropDeco(

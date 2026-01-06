@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class Category {
   final int id;
   final String name;
@@ -12,11 +14,16 @@ class Category {
   });
 
   factory Category.fromJson(Map<String, dynamic> json) {
+    String? img = json['image'];
+    if (img != null && img.isNotEmpty && !img.startsWith('http')) {
+      img = '${Constants.imageBaseUrl}$img';
+    }
+
     return Category(
       id: json['id'],
       name: json['name'],
       // Handle null images safely
-      image: json['image'],
+      image: img,
       isActive: json['isActive'] ?? true,
     );
   }

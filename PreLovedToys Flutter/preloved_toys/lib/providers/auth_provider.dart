@@ -11,12 +11,10 @@ class AuthProvider with ChangeNotifier {
 
   // --- NEW: Global Stats State ---
   Map<String, String> _stats = {'orders': '-', 'sells': '-', 'points': '-'};
-  bool _isLoadDataFromDb = false;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
   Map<String, String> get stats => _stats; // Getter for UI
-  bool get isLoadDataFromDb => _isLoadDataFromDb;
 
   // 1. Send OTP
   Future<dynamic> sendOtp(String mobile) async {
@@ -66,7 +64,6 @@ class AuthProvider with ChangeNotifier {
 
       // Step C: Fetch Stats immediately so they are ready for Profile Screen
       await fetchUserStats();
-      _isLoadDataFromDb = await getIsLoadDataFromDb();
     } catch (e) {
       rethrow;
     } finally {
@@ -90,7 +87,6 @@ class AuthProvider with ChangeNotifier {
 
         // Also fetch stats on auto-login!
         fetchUserStats();
-        _isLoadDataFromDb = await getIsLoadDataFromDb();
 
         notifyListeners();
         return true;
@@ -160,19 +156,5 @@ class AuthProvider with ChangeNotifier {
     _user = null;
     _stats = {'orders': '-', 'sells': '-', 'points': '-'}; // Reset stats
     notifyListeners();
-  }
-
-  Future<bool> getIsLoadDataFromDb() async {
-    try {
-      final response = await _apiService.get('/master/load-data-from');
-
-      // API returns: [{ "id": 1, "isloaddatafromdb": true }]
-      if (response is List && response.isNotEmpty) {
-        return response[0]['isloaddatafromdb'] ?? false;
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
   }
 }
