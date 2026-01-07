@@ -7,7 +7,8 @@ class CategoryProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
   List<Category> _categories = [];
-  List<SubCategory> _subCategories = []; // List to store subcategories
+  List<SubCategory> _allSubCategories = []; // Store ALL subcategories
+  List<SubCategory> _subCategories = []; // List to store filtered subcategories
 
   bool _isLoading = false;
   bool _isSubLoading = false; // Separate loading state for subcategories
@@ -27,6 +28,9 @@ class CategoryProvider with ChangeNotifier {
       _categories = (response as List)
           .map((i) => Category.fromJson(i))
           .toList();
+
+      // Also fetch all subcategories upfront
+      await fetchAllSubCategories();
     } catch (e) {
       rethrow;
     } finally {
@@ -35,25 +39,24 @@ class CategoryProvider with ChangeNotifier {
     }
   }
 
-  // --- NEW: Fetch Subcategories ---
-  Future<void> fetchSubCategories(int categoryId) async {
-    _isSubLoading = true;
-    _subCategories = []; // Clear previous data instantly for better UX
-    notifyListeners();
-
+  // Fetch ALL Subcategories upfront
+  Future<void> fetchAllSubCategories() async {
     try {
-      // GET /api/master/subcategoriesByCategory/:id
-      final response = await _apiService.get(
-        '/master/subcategoriesByCategory/$categoryId',
-      );
-      _subCategories = (response as List)
+      final response = await _apiService.get('/master/subcategories');
+      _allSubCategories = (response as List)
           .map((i) => SubCategory.fromJson(i))
           .toList();
     } catch (e) {
-      rethrow;
-    } finally {
-      _isSubLoading = false;
-      notifyListeners();
+      debugPrint("Error fetching all subcategories: $e");
     }
+  }
+
+  // Filter Subcategories locally
+  void fetchSubCategories(int categoryId) {
+    // No loading state needed as it's instant filtering
+    _subCategories = _allSubCategories
+        .where((sub) => sub.categoryId == categoryId)
+        .toList();
+    notifyListeners();
   }
 }

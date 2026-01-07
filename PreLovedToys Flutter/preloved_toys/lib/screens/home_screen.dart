@@ -76,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Initiate data fetching for all necessary resources
       Provider.of<ProductProvider>(context, listen: false).fetchProducts();
-      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
       Provider.of<FavoriteProvider>(context, listen: false).fetchFavorites();
     });
   }

@@ -6,6 +6,9 @@ import 'package:preloved_toys/screens/category_selection_screen.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
+import '../providers/category_provider.dart';
+import '../providers/master_data_provider.dart';
+import '../providers/product_provider.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'login_screen.dart';
@@ -23,6 +26,20 @@ class _MainScreenState extends State<MainScreen> {
   final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
   bool _isBottomNavVisible = true;
   int? _initialCategoryId; // Store the selected category for the category tab
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch global data once when the app (MainScreen) loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+      Provider.of<MasterDataProvider>(context, listen: false).fetchMasterData();
+      Provider.of<ProductProvider>(
+        context,
+        listen: false,
+      ).fetchSellEligibility();
+    });
+  }
 
   void _toggleBottomNav(bool isVisible) {
     if (_isBottomNavVisible != isVisible) {

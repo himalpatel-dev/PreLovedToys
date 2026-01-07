@@ -23,13 +23,18 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   @override
   void initState() {
     super.initState();
-    // 1. Fetch Categories on load
+    // 1. Check if categories are already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final catProvider = Provider.of<CategoryProvider>(context, listen: false);
 
-      catProvider.fetchCategories().then((_) {
+      if (catProvider.categories.isNotEmpty) {
         _selectCategoryById(widget.initialCategoryId);
-      });
+      } else if (!catProvider.isLoading) {
+        // Only fetch if not loaded and not currently loading
+        catProvider.fetchCategories().then((_) {
+          _selectCategoryById(widget.initialCategoryId);
+        });
+      }
     });
   }
 
@@ -137,7 +142,11 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                     children: [
                       Expanded(
                         child: provider.isSubLoading
-                            ? const Center(child: CircularProgressIndicator())
+                            ? const Center(
+                                child: BouncingDiceLoader(
+                                  color: AppColors.primary,
+                                ),
+                              )
                             : provider.subCategories.isEmpty
                             ? const Center(
                                 child: Text("No subcategories found"),

@@ -92,15 +92,63 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
+  // Sell Eligibility State
+  bool _canSellCash = false;
+  String? _eligibilityMessage;
+
+  bool get canSellCash => _canSellCash;
+  String? get eligibilityMessage => _eligibilityMessage;
+
+  // Check user sell eligibility and update state
+  Future<void> fetchSellEligibility() async {
+    try {
+      final response = await _apiService.get('/products/sell-eligibility');
+      final data = response as Map<String, dynamic>;
+      _canSellCash = data['canSellCash'] ?? false;
+      _eligibilityMessage = data['message'];
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error fetching sell eligibility: $e");
+    }
+  }
+
   // Create a new product
   Future<void> addProduct(Map<String, dynamic> productData) async {
     _isLoading = true;
     notifyListeners();
     try {
       await _apiService.post('/products', productData);
-      // Optionally refresh the list
-      // await fetchProducts();
+      // Refresh eligibility after adding a product
+      await fetchSellEligibility();
     } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Fetch other listings
+  Future<void> fetchOtherListings() async {
+    _isLoading = true;
+    _products = [];
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get('/products/other-listings');
+
+      List<dynamic> dataList = [];
+      if (response is List) {
+        dataList = response;
+      } else if (response['rows'] != null) {
+        dataList = response['rows'];
+      } else if (response['data'] != null) {
+        dataList = response['data'];
+      }
+
+      _products = dataList.map((item) => Product.fromJson(item)).toList();
+    } catch (e) {
+      _products = [];
       rethrow;
     } finally {
       _isLoading = false;
