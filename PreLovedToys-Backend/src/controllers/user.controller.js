@@ -2,6 +2,7 @@ const db = require('../models');
 const User = db.User;
 const walletService = require('../services/wallet.service');
 const userService = require('../services/user.service');
+const settingsService = require('../services/settings.service');
 
 // 1. Get All Users (Exclude Admins usually, or show all)
 const getAllUsers = async (req, res) => {
@@ -52,17 +53,9 @@ const updateProfile = async (req, res) => {
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Determine points to credit based on fields that are being ADDED (empty -> filled)
-        const pointsMap = {
-            name: 20,
-            email: 30,
-            gender: 20,
-            occupation: 20,
-            collegeOrUniversity: 20,
-            purpose: 30,
-            aboutMe: 30,
-            interestedIn: 30
-        };
+        // Determine points to credit based on fields that are being ADDED (empty -> filled).
+        // Points per field are set by admins in Settings.
+        const pointsMap = await settingsService.get('profilePoints');
 
         let pointsToCredit = 0;
         const awarded = [];
@@ -157,7 +150,17 @@ const getUserStats = async (req, res) => {
     }
 };
 
+/** GET /api/users/points-rules: current bonus amounts, so the app can show the right numbers. */
+const getPointsRules = async (req, res) => {
+    try {
+        res.status(200).json(await settingsService.getAll());
+    } catch (error) {
+        res.status(500).json({ message: 'Could not load points rules.' });
+    }
+};
+
 module.exports = {
+    getPointsRules,
     getAllUsers,
     toggleUserStatus,
     updateProfile,

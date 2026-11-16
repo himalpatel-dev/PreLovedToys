@@ -9,7 +9,7 @@ const sendOtp = async (req, res) => {
         const result = await authService.sendOtp(mobile);
         res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message, code: error.code });
     }
 };
 
@@ -25,7 +25,7 @@ const verifyOtp = async (req, res) => {
             ...result
         });
     } catch (error) {
-        res.status(401).json({ message: error.message });
+        res.status(error.status || 401).json({ message: error.message, code: error.code });
     }
 };
 

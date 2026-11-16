@@ -1,29 +1,45 @@
 const jwt = require('jsonwebtoken');
+const db = require('../models');
 
-const verifyToken = (req, res, next) => {
-    // 1. Get token from header (typically looks like: 'Bearer <TOKEN>')
+/**
+ * Requires a valid "Authorization: Bearer <token>" header.
+ *
+ * Also loads the account on every request, so a user who is banned (isActive = false) or
+ * deleted is locked out immediately, even though their token has not expired. req.user.role
+ * is taken from the database, not the token, so role changes apply at once too.
+ */
+const verifyToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ message: 'Access denied. No token provided or invalid format.' });
     }
 
-    // Extract the actual token string
     const token = authHeader.split(' ')[1];
 
+    let decoded;
     try {
-        // 2. Verify the token using the secret key
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // 3. Attach the decoded user info to the request object
-        req.user = decoded;
-
-
-        // Token is valid and role is admin, proceed to the next middleware/route handler
-        next();
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (ex) {
         // Token is expired, invalid, or corrupted
-        res.status(401).json({ message: 'Invalid token or session expired.' });
+        return res.status(401).json({ message: 'Invalid token or session expired.' });
+    }
+
+    try {
+        const user = await db.User.findByPk(decoded.id, { attributes: ['id', 'role', 'isActive'] });
+        if (!user) {
+            return res.status(401).json({ message: 'Account not found. Please sign in again.' });
+        }
+        if (user.isActive === false) {
+            return res.status(403).json({
+                message: 'This account has been blocked. Please contact support.',
+                code: 'ACCOUNT_BLOCKED'
+            });
+        }
+        req.user = { ...decoded, id: user.id, role: user.role };
+        next();
+    } catch (err) {
+        next(err);
     }
 };
 

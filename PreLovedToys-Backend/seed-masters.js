@@ -1,7 +1,10 @@
 const db = require('./src/models');
+const { categoryImage, subCategoryImage, isReplaceableImage } = require('./src/utils/catalog-images');
 
 // ---------------------------
 // Category data
+// Images come from uploads/catalog (see src/data/catalog-images.json); the placehold.co
+// URLs below are only used for categories that have no bundled image.
 // ---------------------------
 const categories = [
     { name: "Dolls & Accessories", image: "https://placehold.co/200x200/E91E63/white?text=Dolls" },
@@ -100,12 +103,25 @@ const materials = [
 // ---------------------------
 // Seeder functions
 // ---------------------------
+
+/**
+ * findOrCreate that also fills in the image on an existing row, but only when the stored
+ * image is a stand-in (empty, placeholder or app-asset path) so admin uploads are kept.
+ */
+async function findOrCreateWithImage(Model, where, defaults) {
+    const [row, created] = await Model.findOrCreate({ where, defaults });
+    if (!created && defaults.image && row.image !== defaults.image && isReplaceableImage(row.image)) {
+        await row.update({ image: defaults.image });
+    }
+    return row;
+}
+
 async function seedMasters() {
 
     console.log('🌱 Seeding Master Tables...');
 
     for (const cat of categories) {
-        await db.Category.findOrCreate({ where: { name: cat.name }, defaults: { image: cat.image } });
+        await findOrCreateWithImage(db.Category, { name: cat.name }, { image: categoryImage(cat.name) || cat.image });
     }
     console.log('✅ Categories seeded.');
 
@@ -116,14 +132,13 @@ async function seedMasters() {
             continue;
         }
 
-
-        const categorycolor = category.image.match(/200x200\/([^/]+)\//)?.[1] || 'CCCCCC';
+        // Placeholder colour (from the category's placehold.co URL) for subs without a bundled image
+        const seedCategory = categories.find((c) => c.name === item.categoryName);
+        const categorycolor = seedCategory?.image.match(/200x200\/([^/]+)\//)?.[1] || 'CCCCCC';
         for (const subName of item.subs) {
-            await db.SubCategory.findOrCreate({
-                where: { name: subName, categoryId: category.id },
-                // Auto-generate subcategory image using category's color code
-                defaults: { isActive: true, image: `https://placehold.co/200x200/${categorycolor}/white?text=${encodeURIComponent(subName)}` }
-            });
+            const image = subCategoryImage(item.categoryName, subName)
+                || `https://placehold.co/200x200/${categorycolor}/white?text=${encodeURIComponent(subName)}`;
+            await findOrCreateWithImage(db.SubCategory, { name: subName, categoryId: category.id }, { isActive: true, image });
         }
         console.log(` > Added subs for ${item.categoryName}`);
     }

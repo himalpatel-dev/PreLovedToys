@@ -1,5 +1,12 @@
 const orderService = require('../services/order.service');
 
+/** Sends AppError status codes (400/409/...); anything else is a 500. */
+const sendError = (res, err, label) => {
+    const status = err.status || 500;
+    if (status === 500) console.error(`${label} error:`, err);
+    return res.status(status).json({ message: err.message || 'Internal server error', code: err.code });
+};
+
 const placeOrder = async (req, res) => {
     try {
         const userId = req.user && req.user.id;
@@ -9,10 +16,14 @@ const placeOrder = async (req, res) => {
         if (!address) return res.status(400).json({ message: 'Address is required' });
 
         const order = await orderService.createOrder(userId, address);
-        return res.status(201).json({ message: 'Order placed successfully!', orderId: order.id });
+        return res.status(201).json({
+            message: 'Order placed successfully!',
+            orderId: order.id,
+            pointsTotal: order.pointsTotal,
+            cashTotal: order.cashTotal
+        });
     } catch (err) {
-        console.error('placeOrder error:', err);
-        return res.status(500).json({ message: err.message || 'Internal server error' });
+        return sendError(res, err, 'placeOrder');
     }
 };
 
@@ -24,42 +35,35 @@ const getMyOrders = async (req, res) => {
         const orders = await orderService.getUserOrders(userId);
         return res.status(200).json(orders);
     } catch (err) {
-        console.error('getMyOrders error:', err);
-        return res.status(500).json({ message: err.message || 'Internal server error' });
+        return sendError(res, err, 'getMyOrders');
     }
 };
 
 // ADMIN: GET ALL ORDERS
 const getAllOrdersAdmin = async (req, res) => {
     try {
-        // Optionally: check admin role here (e.g., req.user.role === 'admin')
         const orders = await orderService.getAllOrdersAdmin();
         return res.status(200).json(orders);
     } catch (err) {
-        console.error('getAllOrdersAdmin error:', err);
-        return res.status(500).json({ message: err.message || 'Internal server error' });
+        return sendError(res, err, 'getAllOrdersAdmin');
     }
 };
 
-// ADMIN: UPDATE ORDER STATUS
+// ADMIN: UPDATE ORDER STATUS (cancelling refunds points and puts listings back on sale)
 const updateOrderStatus = async (req, res) => {
     try {
-        // Optionally: check admin role here
         const { id } = req.params;
         const { status } = req.body;
 
         if (!status) return res.status(400).json({ message: 'Status is required' });
+        if (!orderService.ORDER_STATUSES.includes(status)) return res.status(400).json({ message: 'Invalid status value' });
 
-        const allowed = ['placed', 'packed', 'shipped', 'delivered', 'cancelled'];
-        if (!allowed.includes(status)) return res.status(400).json({ message: 'Invalid status value' });
+        const result = await orderService.updateOrderStatus(id, status);
+        if (!result) return res.status(404).json({ message: 'Order not found' });
 
-        const updated = await orderService.updateOrderStatus(id, status);
-        if (!updated) return res.status(404).json({ message: 'Order not found' });
-
-        return res.status(200).json({ message: 'Order status updated', order: updated });
+        return res.status(200).json({ message: 'Order status updated', order: result.order, reversal: result.reversal });
     } catch (err) {
-        console.error('updateOrderStatus error:', err);
-        return res.status(500).json({ message: err.message || 'Internal server error' });
+        return sendError(res, err, 'updateOrderStatus');
     }
 };
 

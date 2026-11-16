@@ -1,0 +1,74 @@
+<header class="page-header">
+  <div>
+    <h1>Products</h1>
+    <p class="muted">Every listing on the marketplace, including pending, sold and rejected ones.</p>
+  </div>
+  <button type="button" class="btn btn-ghost" (click)="list.reload()" [disabled]="list.loading()">
+    <app-icon name="refresh" /> Refresh
+  </button>
+</header>
+
+<div class="toolbar">
+  <label class="search">
+    <app-icon name="search" />
+    <input type="search" placeholder="Search by title, seller, category or #id" [ngModel]="list.query()"
+      (ngModelChange)="list.setSearch($event)" />
+  </label>
+  <div class="chips" role="group" aria-label="Filter by status">
+    <button type="button" class="chip" [class.active]="list.status() === 'all'" (click)="list.setStatus('all')">
+      All <span>{{ list.counts()['all'] || 0 }}</span>
+    </button>
+    @for (s of statuses; track s) {
+      <button type="button" class="chip" [class.active]="list.status() === s" (click)="list.setStatus(s)">
+        {{ s | titlecase }} <span>{{ list.counts()[s] || 0 }}</span>
+      </button>
+    }
+  </div>
+</div>
+
+@if (list.error()) {
+  <div class="alert">{{ list.error() }} <button type="button" class="link" (click)="list.reload()">Try again</button></div>
+}
+
+<section class="card" [class.is-loading]="list.loading() && list.items().length">
+  @if (list.loading() && !list.items().length) {
+    <div class="state"><span class="spinner"></span></div>
+  } @else if (!list.items().length) {
+    <div class="state muted">{{ list.unfiltered ? 'No products listed yet.' : 'No products match these filters.' }}</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Seller</th>
+            <th>Listed</th>
+            <th>Status</th>
+            <th class="num">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of list.items(); track p.id) {
+            <tr class="row-link" [routerLink]="['/products', p.id]">
+              <td>
+                <span class="cell-media">
+                  <app-thumb [path]="cover(p)" />
+                  <span class="strong">{{ p.title }}</span>
+                </span>
+              </td>
+              <td class="muted">
+                {{ p.category?.name || '—' }}@if (p.subcategory?.name) { · {{ p.subcategory?.name }} }
+              </td>
+              <td class="nowrap">{{ p.seller?.name || 'Unknown' }}</td>
+              <td class="muted nowrap">{{ p.createdAt | date: 'd MMM y' }}</td>
+              <td><app-badge [tone]="productTone(p.status)">{{ p.status }}</app-badge></td>
+              <td class="num strong nowrap">{{ formatAmount(p.price, p.isPoints) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <app-pager [page]="list.page()" [limit]="list.limit" [total]="list.total()" (pageChange)="list.goTo($event)" />
+</section>

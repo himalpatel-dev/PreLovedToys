@@ -1,0 +1,131 @@
+<header class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted">How the marketplace is doing. Rupees and points are counted separately.</p>
+  </div>
+  <button type="button" class="btn btn-ghost" (click)="load()" [disabled]="loading()">
+    <app-icon name="refresh" /> Refresh
+  </button>
+</header>
+
+<div class="toolbar">
+  <div class="segmented segmented-inline" role="radiogroup" aria-label="Time range">
+    @for (r of ranges; track r.key) {
+      <button type="button" role="radio" [attr.aria-checked]="range() === r.key" [class.active]="range() === r.key"
+        (click)="setRange(r.key)">{{ r.label }}</button>
+    }
+  </div>
+</div>
+
+@if (error()) {
+  <div class="alert">{{ error() }} <button type="button" class="link" (click)="load()">Try again</button></div>
+}
+
+<div class="dash" [class.is-refreshing]="loading() && data()">
+  <section class="kpi-grid" aria-label="Key numbers">
+    @for (m of metrics; track m.key) {
+      @let dl = delta(m);
+      <button type="button" class="kpi" [class.selected]="metricKey() === m.key" [attr.aria-pressed]="metricKey() === m.key"
+        (click)="metricKey.set(m.key)">
+        <span class="kpi-label">{{ m.label }}</span>
+        <span class="kpi-value">{{ loading() && !data() ? '—' : value(m) }}</span>
+        @if (data()) {
+          <span class="kpi-delta" [attr.data-tone]="dl.tone">{{ dl.text }} <span class="muted">vs {{ rangeInfo().previous }}</span></span>
+          <span class="kpi-note">{{ note(m) }}</span>
+        }
+      </button>
+    }
+  </section>
+
+  <section class="card">
+    <header class="card-header">
+      <div>
+        <h2>{{ chartTitle() }}</h2>
+        <p class="muted small">Last {{ rangeInfo().label }} · India time · pick a number above to chart it</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="showTable.set(!showTable())" [attr.aria-pressed]="showTable()">
+        {{ showTable() ? 'Show chart' : 'Show table' }}
+      </button>
+    </header>
+    <div class="card-pad">
+      @if (!data()) {
+        <div class="state"><span class="spinner"></span></div>
+      } @else if (showTable()) {
+        <div class="table-wrap chart-table">
+          <table class="table">
+            <thead><tr><th>{{ data()!.unit === 'month' ? 'Month' : 'Day' }}</th><th class="num">{{ metric().label }}</th></tr></thead>
+            <tbody>
+              @for (d of chartData(); track d.key) {
+                <tr><td>{{ d.label }}</td><td class="num">{{ metric().format(d.value) }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="chart-wrap">
+          <app-bar-chart [data]="chartData()" [name]="chartTitle()" [format]="metric().format" />
+          @if (chartEmpty()) {
+            <p class="chart-empty muted">Nothing in this period yet.</p>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <div class="dash-bottom">
+    <section class="card">
+      <header class="card-header">
+        <h2>Recent orders</h2>
+        <a class="link" routerLink="/orders">View all <app-icon name="chevron" [size]="14" /></a>
+      </header>
+      @if (!data()) {
+        <div class="state"><span class="spinner"></span></div>
+      } @else if (!data()!.recentOrders.length) {
+        <div class="state muted">No orders yet.</div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>Order</th><th>Customer</th><th>Date</th><th>Status</th><th class="num">Total</th></tr>
+            </thead>
+            <tbody>
+              @for (o of data()!.recentOrders; track o.id) {
+                <tr>
+                  <td class="strong">#{{ o.id }}</td>
+                  <td>{{ o.user?.name || '—' }}</td>
+                  <td class="muted nowrap">{{ o.createdAt | date: 'd MMM, h:mm a' }}</td>
+                  <td><app-badge [tone]="orderTone(o.status)">{{ o.status }}</app-badge></td>
+                  <td class="num strong nowrap">{{ orderTotal(o) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <section class="card">
+      <header class="card-header">
+        <h2>Orders by status</h2>
+        <span class="muted small">Last {{ rangeInfo().label }}</span>
+      </header>
+      @if (data()) {
+        @if (!statusTotal()) {
+          <div class="state muted">No orders in this period.</div>
+        } @else {
+          <ul class="status-list">
+            @for (s of statuses; track s) {
+              <li>
+                <app-badge [tone]="orderTone(s)">{{ s | titlecase }}</app-badge>
+                <span class="status-bar" aria-hidden="true">
+                  <span [style.width.%]="((data()!.statusBreakdown[s] || 0) / statusTotal()) * 100"></span>
+                </span>
+                <span class="strong num">{{ data()!.statusBreakdown[s] || 0 }}</span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  </div>
+</div>

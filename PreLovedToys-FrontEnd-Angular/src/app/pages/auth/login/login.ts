@@ -1,55 +1,63 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
+import { errorMessage } from '../../../core/utils';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './login.html',
-  styleUrls: ['./login.scss']
+  styleUrls: ['./login.scss'],
 })
 export class LoginComponent {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
-  mobile: string = '9727376727';
-  isLoading: boolean = false;
+  protected readonly mobile = signal('');
+  protected readonly loading = signal(false);
+  protected readonly error = signal(
+    inject(ActivatedRoute).snapshot.queryParamMap.has('expired')
+      ? 'Your session has ended. Please sign in again.'
+      : ''
+  );
+  private readonly input = viewChild<ElementRef<HTMLInputElement>>('mobileInput');
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  onSendOtp() {
-    if (!this.mobile || this.mobile.length < 10) {
-      alert('Please enter a valid mobile number');
-      return;
-    }
-
-    this.isLoading = true;
-
-    this.authService.sendOtp(this.mobile).subscribe({
-      next: (res: any) => {
-        console.log('Response:', res);
-        alert(`${res.message}`);
-        this.isLoading = false;
-
-        // Navigate to OTP page with mobile number
-        this.router.navigate(['/otp'], {
-          queryParams: { mobile: this.mobile }
-        });
-      },
-      error: (err) => {
-        console.error(err);
-        this.isLoading = false;
-        alert(err.error?.message || 'Something went wrong');
-      }
-    });
+  constructor() {
+    afterNextRender(() => this.input()?.nativeElement.focus());
   }
 
-  showTerms() {
-    console.log('Show Terms');
-    // Implement modal or navigation
+  protected onMobileInput(value: string): void {
+    this.mobile.set(value.replace(/\D/g, '').slice(0, 10));
+    this.error.set('');
+  }
+
+  protected sendOtp(): void {
+    const mobile = this.mobile();
+    if (mobile.length !== 10) {
+      this.error.set('Enter a 10-digit mobile number.');
+      return;
+    }
+    this.loading.set(true);
+    this.error.set('');
+    this.auth.sendOtp(mobile).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.router.navigate(['/otp'], { queryParams: { mobile } });
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(errorMessage(err, 'Could not send the OTP.'));
+      },
+    });
   }
 }

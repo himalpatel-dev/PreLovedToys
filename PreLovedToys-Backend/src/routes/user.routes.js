@@ -8,6 +8,7 @@ router.use(verifyToken); // Protect all routes
 
 // Protect these routes! Only logged-in Admins should access.
 // (Assuming verifyToken checks for valid user, you might want an 'isAdmin' middleware later)
+router.get('/points-rules', userController.getPointsRules); // welcome bonus, profile points, rupee-listing unlock
 router.get('/', userController.getAllUsers);
 router.put('/:id/status', userController.toggleUserStatus);
 // Allow authenticated user to update their own profile

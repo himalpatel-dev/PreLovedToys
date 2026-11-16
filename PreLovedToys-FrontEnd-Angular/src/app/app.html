@@ -1,1 +1,32 @@
-<router-outlet></router-outlet>
+<router-outlet />
+
+<div class="toast-stack" aria-live="polite">
+  @for (t of ui.toasts(); track t.id) {
+    <div class="toast" [attr.data-kind]="t.kind" role="status">
+      <app-icon [name]="t.kind === 'error' ? 'ban' : 'check'" />
+      <span>{{ t.message }}</span>
+      <button type="button" class="icon-btn" (click)="ui.dismiss(t.id)" aria-label="Dismiss">
+        <app-icon name="close" [size]="14" />
+      </button>
+    </div>
+  }
+</div>
+
+@if (ui.confirmState(); as c) {
+  <div class="overlay" (click)="ui.closeConfirm(false)"></div>
+  <div class="dialog dialog-sm" role="alertdialog" aria-modal="true" [attr.aria-label]="c.title">
+    <div class="dialog-body">
+      <h2 class="confirm-title">{{ c.title }}</h2>
+      @if (c.message) {
+        <p class="muted">{{ c.message }}</p>
+      }
+    </div>
+    <footer class="dialog-footer">
+      <button type="button" class="btn btn-ghost" (click)="ui.closeConfirm(false)">Cancel</button>
+      <button type="button" class="btn" [class.btn-danger]="c.danger" [class.btn-primary]="!c.danger"
+        (click)="ui.closeConfirm(true)">
+        {{ c.confirmText || 'Confirm' }}
+      </button>
+    </footer>
+  </div>
+}

@@ -27,6 +27,22 @@ const Order = sequelize.define('Order', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    // Separate totals so a cart with both points and rupee items is recorded correctly.
+    // totalAmount is kept for older clients: the rupee total if there is one, else the points total.
+    pointsTotal: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        defaultValue: 0
+    },
+    cashTotal: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        defaultValue: 0
+    },
+    cancelledAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
     // userId will be added automatically
 }, {
     tableName: 'tbl_orders',

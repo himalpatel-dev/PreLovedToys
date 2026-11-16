@@ -1,7 +1,0 @@
-{
-  "name": "PreLovedToys-FrontEnd",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "angular-standalone"
-}

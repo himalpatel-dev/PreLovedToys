@@ -10,28 +10,33 @@
                 <span class="logo-icon">🧸</span>
             </div>
             <h1>PreLoved Toys</h1>
-            <p>Memories Never Go Out of Play</p>
+            <p>Admin portal</p>
         </div>
 
-        <div class="form-section">
+        <form class="form-section" (ngSubmit)="sendOtp()">
             <div class="input-group">
-                <label for="mobile">Mobile Number</label>
+                <label for="mobile">Admin mobile number</label>
                 <div class="input-wrapper">
                     <span class="input-icon">📱</span>
-                    <input type="tel" id="mobile" [(ngModel)]="mobile" placeholder="Enter 10-digit number"
-                        maxlength="10" class="custom-input">
+                    <input #mobileInput type="tel" id="mobile" name="mobile" [ngModel]="mobile()" (ngModelChange)="onMobileInput($event)"
+                        placeholder="Enter 10-digit number" maxlength="10" inputmode="numeric" autocomplete="tel"
+                        class="custom-input">
                 </div>
             </div>
 
-            <button class="submit-btn" (click)="onSendOtp()" [disabled]="isLoading || !mobile">
-                <span *ngIf="!isLoading">Send OTP</span>
-                <span *ngIf="isLoading" class="loader"></span>
+            @if (error()) {
+                <p class="form-error" role="alert">{{ error() }}</p>
+            }
+
+            <button type="submit" class="submit-btn" [disabled]="loading() || !mobile()">
+                @if (loading()) {
+                    <span class="loader"></span>
+                } @else {
+                    <span>Send OTP</span>
+                }
             </button>
 
-            <p class="terms-text">
-                By continuing, you agree to our
-                <a (click)="showTerms()">Terms & Conditions</a>
-            </p>
-        </div>
+            <p class="terms-text">Only accounts with the admin role can sign in here.</p>
+        </form>
     </div>
 </div>

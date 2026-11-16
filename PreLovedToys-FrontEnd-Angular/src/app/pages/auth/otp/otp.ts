@@ -1,165 +1,142 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  signal,
+  viewChildren,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../../core/services/auth';
+import { AuthService, NotAdminError } from '../../../core/services/auth';
+import { UiService } from '../../../core/services/ui';
+import { errorMessage } from '../../../core/utils';
+
+const LENGTH = 4;
 
 @Component({
   selector: 'app-otp',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './otp.html',
-  styleUrls: ['./otp.scss']
+  styleUrls: ['./otp.scss'],
 })
-export class OtpComponent implements OnInit, OnDestroy {
+export class OtpComponent {
+  private readonly auth = inject(AuthService);
+  private readonly ui = inject(UiService);
+  private readonly router = inject(Router);
 
-  mobile: string = '';
-  otp: string = '';
-  otpDigits: string[] = ['', '', '', ''];
-  isLoading: boolean = false;
-  otpTimer: number = 60;
-  private timerInterval: any;
+  private readonly inputs = viewChildren<ElementRef<HTMLInputElement>>('box');
+  private timer?: ReturnType<typeof setInterval>;
 
-  @ViewChild('otp1') otp1!: ElementRef;
-  @ViewChild('otp2') otp2!: ElementRef;
-  @ViewChild('otp3') otp3!: ElementRef;
-  @ViewChild('otp4') otp4!: ElementRef;
+  protected readonly mobile: string = inject(ActivatedRoute).snapshot.queryParamMap.get('mobile') ?? '';
+  protected readonly digits = signal<string[]>(Array(LENGTH).fill(''));
+  protected readonly loading = signal(false);
+  protected readonly error = signal('');
+  protected readonly seconds = signal(60);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private authService: AuthService
-  ) { }
-
-  ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      if (params && params['mobile']) {
-        this.mobile = params['mobile'];
-      } else {
-        this.router.navigate(['/login']);
-      }
-    });
-
-    this.startOtpTimer();
-  }
-
-  ngOnDestroy() {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
-  }
-
-  onOtpInput(event: any, index: number) {
-    const value = event.target.value;
-
-    if (value && !/^[0-9]$/.test(value)) {
-      this.otpDigits[index] = '';
+  constructor() {
+    if (!/^\d{10}$/.test(this.mobile)) {
+      this.router.navigate(['/login']);
       return;
     }
-
-    this.otpDigits[index] = value;
-    this.otp = this.otpDigits.join('');
-
-    if (value && index < 3) {
-      const nextInput = this.getOtpInput(index + 1);
-      if (nextInput) {
-        nextInput.nativeElement.focus();
-      }
-    }
-
-    if (this.otp.length === 4) {
-      setTimeout(() => {
-        this.onVerify();
-      }, 300);
-    }
+    this.startTimer();
+    inject(DestroyRef).onDestroy(() => clearInterval(this.timer));
+    afterNextRender(() => this.focus(0));
   }
 
-  onOtpKeydown(event: KeyboardEvent, index: number) {
-    if (event.key === 'Backspace' && !this.otpDigits[index] && index > 0) {
-      const prevInput = this.getOtpInput(index - 1);
-      if (prevInput) {
-        prevInput.nativeElement.focus();
-      }
-    } else if (event.key === 'ArrowLeft' && index > 0) {
-      const prevInput = this.getOtpInput(index - 1);
-      if (prevInput) {
-        prevInput.nativeElement.focus();
-      }
-    } else if (event.key === 'ArrowRight' && index < 3) {
-      const nextInput = this.getOtpInput(index + 1);
-      if (nextInput) {
-        nextInput.nativeElement.focus();
-      }
-    }
+  protected get otp(): string {
+    return this.digits().join('');
   }
 
-  private getOtpInput(index: number): ElementRef | null {
-    switch (index) {
-      case 0: return this.otp1;
-      case 1: return this.otp2;
-      case 2: return this.otp3;
-      case 3: return this.otp4;
-      default: return null;
+  protected onInput(event: Event, index: number): void {
+    const el = event.target as HTMLInputElement;
+    const typed = el.value.replace(/\D/g, '');
+
+    if (typed.length >= LENGTH) {
+      // A pasted code fills every box at once.
+      const chars = typed.slice(0, LENGTH).split('');
+      this.digits.set(chars);
+      this.focus(LENGTH - 1);
+    } else {
+      // Typing into a filled box replaces its digit with the new one.
+      const digit = typed.slice(-1);
+      this.digits.update((d) => d.map((v, i) => (i === index ? digit : v)));
+      el.value = digit;
+      if (digit && index < LENGTH - 1) this.focus(index + 1);
     }
+
+    this.error.set('');
+    if (this.otp.length === LENGTH) this.verify();
   }
 
-  onVerify() {
-    if (!this.otp || this.otp.length < 4) {
-      alert('Please enter a valid OTP');
+  protected onKeydown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace' && !this.digits()[index] && index > 0) this.focus(index - 1);
+    else if (event.key === 'ArrowLeft' && index > 0) this.focus(index - 1);
+    else if (event.key === 'ArrowRight' && index < LENGTH - 1) this.focus(index + 1);
+  }
+
+  protected verify(): void {
+    if (this.loading()) return;
+    if (this.otp.length < LENGTH) {
+      this.error.set('Enter the 4-digit code.');
       return;
     }
-
-    this.isLoading = true;
-
-    this.authService.verifyOtp(this.mobile, this.otp).subscribe({
-      next: (res: any) => {
-        this.isLoading = false;
-        alert('Login Successful!');
-        this.router.navigate(['/home']);
+    this.loading.set(true);
+    this.auth.verifyOtp(this.mobile, this.otp).subscribe({
+      next: (user) => {
+        this.loading.set(false);
+        this.ui.toast(`Welcome back${user.name ? ', ' + user.name : ''}`);
+        this.router.navigate(['/dashboard']);
       },
-      error: (err: any) => {
-        this.isLoading = false;
-        alert(err.error?.message || 'Invalid OTP');
-      }
+      error: (err) => {
+        this.loading.set(false);
+        if (err instanceof NotAdminError) {
+          this.ui.error(err.message);
+          this.router.navigate(['/login']);
+          return;
+        }
+        this.error.set(errorMessage(err, 'Invalid OTP.'));
+        this.digits.set(Array(LENGTH).fill(''));
+        this.focus(0);
+      },
     });
   }
 
-  onResendOtp() {
-    this.isLoading = true;
-
-    this.authService.sendOtp(this.mobile).subscribe({
-      next: (res: any) => {
-        this.isLoading = false;
-        alert('OTP sent successfully');
-        this.otp = '';
-        this.otpDigits = ['', '', '', ''];
-        this.startOtpTimer();
+  protected resend(): void {
+    this.loading.set(true);
+    this.auth.sendOtp(this.mobile).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.error.set('');
+        this.digits.set(Array(LENGTH).fill(''));
+        this.ui.toast('A new OTP has been sent');
+        this.startTimer();
+        this.focus(0);
       },
-      error: (err: any) => {
-        this.isLoading = false;
-        alert(err.error?.message || 'Failed to resend OTP');
-      }
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(errorMessage(err, 'Could not resend the OTP.'));
+      },
     });
   }
 
-  private startOtpTimer() {
-    this.otpTimer = 60;
-
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
-
-    this.timerInterval = setInterval(() => {
-      this.otpTimer--;
-
-      if (this.otpTimer <= 0) {
-        clearInterval(this.timerInterval);
-        this.otpTimer = 0;
-      }
-    }, 1000);
-  }
-
-  changeMobile() {
+  protected changeMobile(): void {
     this.router.navigate(['/login']);
+  }
+
+  private focus(index: number): void {
+    setTimeout(() => this.inputs()[index]?.nativeElement.focus());
+  }
+
+  private startTimer(): void {
+    clearInterval(this.timer);
+    this.seconds.set(60);
+    this.timer = setInterval(() => {
+      this.seconds.update((s) => Math.max(s - 1, 0));
+      if (this.seconds() === 0) clearInterval(this.timer);
+    }, 1000);
   }
 }

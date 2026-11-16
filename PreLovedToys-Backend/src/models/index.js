@@ -17,6 +17,7 @@ const Wallet = require('./wallet.model');
 const WalletTransaction = require('./wallet_transaction.model');
 const Favorite = require('./favorite.model');
 const SavedAddress = require('./savedaddress.model');
+const Setting = require('./setting.model');
 
 const db = {};
 
@@ -37,6 +38,7 @@ db.Wallet = Wallet;
 db.WalletTransaction = WalletTransaction;
 db.Favorite = Favorite;
 db.SavedAddress = SavedAddress;
+db.Setting = Setting;
 
 // =========================================
 // DEFINE RELATIONSHIPS

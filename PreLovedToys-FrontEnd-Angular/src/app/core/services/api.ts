@@ -1,42 +1,26 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
+/** Thin wrapper over HttpClient. The auth header is added by authInterceptor. */
+@Injectable({ providedIn: 'root' })
 export class ApiService {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = environment.apiUrl;
 
-  private baseUrl = environment.apiUrl;
-
-  constructor(private http: HttpClient) { }
-
-  private getHeaders() {
-    const token = localStorage.getItem('token');
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('x-access-token', token);
-    }
-    return headers;
+  get<T>(endpoint: string, params?: Record<string, string | number>) {
+    return this.http.get<T>(`${this.baseUrl}/${endpoint}`, params ? { params } : {});
   }
 
-  get(endpoint: string) {
-    return this.http.get(`${this.baseUrl}/${endpoint}`, { headers: this.getHeaders() });
+  post<T>(endpoint: string, body: unknown) {
+    return this.http.post<T>(`${this.baseUrl}/${endpoint}`, body);
   }
 
-  post(endpoint: string, data: any) {
-    if (data instanceof FormData) {
-      let headers = this.getHeaders();
-      return this.http.post(`${this.baseUrl}/${endpoint}`, data, { headers });
-    }
-    return this.http.post(`${this.baseUrl}/${endpoint}`, data, { headers: this.getHeaders() });
+  put<T>(endpoint: string, body: unknown) {
+    return this.http.put<T>(`${this.baseUrl}/${endpoint}`, body);
   }
 
-  delete(endpoint: string) {
-    return this.http.delete(`${this.baseUrl}/${endpoint}`, { headers: this.getHeaders() });
-  }
-
-  put(endpoint: string, data: any) {
-    return this.http.put(`${this.baseUrl}/${endpoint}`, data, { headers: this.getHeaders() });
+  delete<T>(endpoint: string) {
+    return this.http.delete<T>(`${this.baseUrl}/${endpoint}`);
   }
 }

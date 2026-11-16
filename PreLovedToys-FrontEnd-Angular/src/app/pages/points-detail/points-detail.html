@@ -1,0 +1,97 @@
+<a class="back-link" routerLink="/points"><app-icon name="back" [size]="16" /> All balances</a>
+
+@if (list.loading() && !user()) {
+  <div class="state"><span class="spinner"></span></div>
+} @else if (!user()) {
+  <div class="alert">{{ list.error() || 'User not found.' }}</div>
+} @else {
+  @let u = user()!;
+  <header class="page-header">
+    <div>
+      <h1>{{ u.name || 'No name yet' }}</h1>
+      <p class="muted">+91 {{ u.mobile }} · {{ u.role | titlecase }} · joined {{ u.createdAt | date: 'd MMM y' }}</p>
+    </div>
+    @if (!u.isActive) {
+      <app-badge tone="danger">Banned</app-badge>
+    }
+  </header>
+
+  <div class="detail-grid points-grid">
+    <section class="card card-pad">
+      <span class="label">Current balance</span>
+      <p class="price">{{ formatAmount(balance(), true) }}</p>
+      <p class="muted small">{{ list.total() }} transaction{{ list.total() === 1 ? '' : 's' }} in total</p>
+    </section>
+
+    <section class="card card-pad">
+      <h2 class="card-title">Adjust points</h2>
+      <form class="form" (ngSubmit)="submit()">
+        <div class="segmented segmented-2" role="radiogroup" aria-label="Add or remove">
+          <button type="button" role="radio" [attr.aria-checked]="mode() === 'add'" [class.active]="mode() === 'add'"
+            data-tone="success" (click)="setMode('add')">Add points</button>
+          <button type="button" role="radio" [attr.aria-checked]="mode() === 'remove'" [class.active]="mode() === 'remove'"
+            data-tone="danger" (click)="setMode('remove')">Remove points</button>
+        </div>
+        <label class="field">
+          <span class="label">Amount</span>
+          <input class="input" name="amount" inputmode="numeric" autocomplete="off" placeholder="e.g. 100"
+            [ngModel]="amount()" (ngModelChange)="amount.set($event)" />
+          @if (amountError()) {
+            <p class="field-error">{{ amountError() }}</p>
+          }
+        </label>
+        <label class="field">
+          <span class="label">Reason (shown in their history)</span>
+          <input class="input" name="reason" maxlength="200" placeholder="e.g. Refund for cancelled order #123"
+            [ngModel]="reason()" (ngModelChange)="reason.set($event)" />
+        </label>
+        <button type="submit" class="btn" [class.btn-primary]="mode() === 'add'" [class.btn-danger]="mode() === 'remove'"
+          [disabled]="!canSubmit()">
+          {{ saving() ? 'Saving…' : mode() === 'add' ? 'Add points' : 'Remove points' }}
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <section class="card" [class.is-loading]="list.loading()">
+    <header class="card-header">
+      <h2>History</h2>
+    </header>
+    @if (!list.items().length) {
+      <div class="state muted">No points activity yet.</div>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Details</th>
+              <th class="num">Points</th>
+              <th class="num">Balance after</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of list.items(); track tx.id) {
+              <tr>
+                <td class="muted nowrap">{{ tx.createdAt | date: 'd MMM y, h:mm a' }}</td>
+                <td><app-badge [tone]="txTone(tx.type)">{{ tx.type }}</app-badge></td>
+                <td>
+                  {{ tx.description || '—' }}
+                  @if (tx.refUser) {
+                    <small class="muted block">With {{ tx.refUser.name || '+91 ' + tx.refUser.mobile }}</small>
+                  }
+                </td>
+                <td class="num strong nowrap" [class.amount-plus]="tx.type === 'credit'" [class.amount-minus]="tx.type === 'debit'">
+                  {{ signedAmount(tx) }}
+                </td>
+                <td class="num muted">{{ tx.balanceAfter != null ? formatAmount(tx.balanceAfter, true) : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <app-pager [page]="list.page()" [limit]="list.limit" [total]="list.total()" (pageChange)="list.goTo($event)" />
+  </section>
+}

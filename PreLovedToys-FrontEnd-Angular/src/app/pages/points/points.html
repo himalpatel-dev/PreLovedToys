@@ -1,0 +1,74 @@
+<header class="page-header">
+  <div>
+    <h1>Points</h1>
+    <p class="muted">Everyone's points balance. Open a user to see their history or add and remove points.</p>
+  </div>
+  <button type="button" class="btn btn-ghost" (click)="list.reload()" [disabled]="list.loading()">
+    <app-icon name="refresh" /> Refresh
+  </button>
+</header>
+
+<section class="stat-grid stat-grid-2" aria-label="Points summary">
+  <div class="stat-card stat-static">
+    <span class="stat-icon"><app-icon name="wallet" [size]="20" /></span>
+    <span class="stat-label">Points held by users</span>
+    <span class="stat-value">{{ list.summary() ? formatAmount(list.summary()!.totalPoints, true) : '—' }}</span>
+  </div>
+  <div class="stat-card stat-static">
+    <span class="stat-icon"><app-icon name="users" [size]="20" /></span>
+    <span class="stat-label">Users with points</span>
+    <span class="stat-value">{{ list.summary()?.holders ?? '—' }}</span>
+  </div>
+</section>
+
+<div class="toolbar">
+  <label class="search">
+    <app-icon name="search" />
+    <input type="search" placeholder="Search by name or mobile" [ngModel]="list.query()"
+      (ngModelChange)="list.setSearch($event)" />
+  </label>
+</div>
+
+@if (list.error()) {
+  <div class="alert">{{ list.error() }} <button type="button" class="link" (click)="list.reload()">Try again</button></div>
+}
+
+<section class="card" [class.is-loading]="list.loading() && list.items().length">
+  @if (list.loading() && !list.items().length) {
+    <div class="state"><span class="spinner"></span></div>
+  } @else if (!list.items().length) {
+    <div class="state muted">{{ list.unfiltered ? 'No users yet.' : 'No users match this search.' }}</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Mobile</th>
+            <th>Last change</th>
+            <th class="num">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of list.items(); track u.id) {
+            <tr class="row-link" [routerLink]="['/points', u.id]">
+              <td>
+                <span class="cell-media">
+                  <span class="avatar avatar-sm">{{ initials(u.name) }}</span>
+                  <span class="strong">{{ u.name || 'No name yet' }}</span>
+                  @if (!u.isActive) {
+                    <app-badge tone="danger">Banned</app-badge>
+                  }
+                </span>
+              </td>
+              <td class="nowrap">+91 {{ u.mobile }}</td>
+              <td class="muted nowrap">{{ u.lastActivity ? (u.lastActivity | date: 'd MMM y, h:mm a') : 'Never' }}</td>
+              <td class="num strong">{{ formatAmount(u.balance, true) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <app-pager [page]="list.page()" [limit]="list.limit" [total]="list.total()" (pageChange)="list.goTo($event)" />
+</section>

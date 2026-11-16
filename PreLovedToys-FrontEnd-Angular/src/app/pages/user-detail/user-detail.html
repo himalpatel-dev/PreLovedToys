@@ -1,0 +1,134 @@
+<a class="back-link" routerLink="/users"><app-icon name="back" [size]="16" /> All users</a>
+
+@if (loading() && !detail()) {
+  <div class="state"><span class="spinner"></span></div>
+} @else if (!detail()) {
+  <div class="alert">{{ error() || 'User not found.' }}</div>
+} @else {
+  @let d = detail()!;
+  @let u = d.user;
+  <header class="page-header">
+    <div class="cell-media">
+      <span class="avatar avatar-lg">{{ initials(u.name) }}</span>
+      <div>
+        <h1>{{ u.name || 'No name yet' }}</h1>
+        <p class="muted">+91 {{ u.mobile }} · {{ u.role | titlecase }} · joined {{ u.createdAt | date: 'd MMM y' }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <app-badge [tone]="u.isActive ? 'success' : 'danger'">{{ u.isActive ? 'Active' : 'Banned' }}</app-badge>
+      <button type="button" class="btn btn-sm" [class.btn-danger-ghost]="u.isActive" [class.btn-ghost]="!u.isActive"
+        [disabled]="busy()" (click)="toggleBan()">
+        <app-icon [name]="u.isActive ? 'ban' : 'check'" [size]="14" /> {{ u.isActive ? 'Ban' : 'Unban' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="kpi-grid kpi-grid-4" aria-label="Summary">
+    <a class="kpi" [routerLink]="['/points', u.id]">
+      <span class="kpi-label">Points balance</span>
+      <span class="kpi-value">{{ formatAmount(d.balance, true) }}</span>
+      <span class="kpi-note">History and adjustments →</span>
+    </a>
+    <button type="button" class="kpi" [class.selected]="tab() === 'listings'" (click)="tab.set('listings')">
+      <span class="kpi-label">Listings</span>
+      <span class="kpi-value">{{ d.listings['all'] || 0 }}</span>
+      <span class="kpi-note">{{ d.listings['active'] || 0 }} active · {{ d.listings['sold'] || 0 }} sold</span>
+    </button>
+    <button type="button" class="kpi" [class.selected]="tab() === 'purchases'" (click)="tab.set('purchases')">
+      <span class="kpi-label">Purchases</span>
+      <span class="kpi-value">{{ d.purchases.orders }}</span>
+      <span class="kpi-note">
+        {{ formatAmount(d.purchases.pointsSpent, true) }} · {{ formatAmount(d.purchases.cashSpent) }} spent{{ d.purchases.cancelled ? ' · ' + d.purchases.cancelled + ' cancelled' : '' }}
+      </span>
+    </button>
+    <button type="button" class="kpi" [class.selected]="tab() === 'sales'" (click)="tab.set('sales')">
+      <span class="kpi-label">Sales</span>
+      <span class="kpi-value">{{ d.sales.orders }}</span>
+      <span class="kpi-note">Orders with their items</span>
+    </button>
+  </section>
+
+  @if (profile().length) {
+    <section class="card card-pad">
+      <h2 class="card-title">About</h2>
+      <dl class="specs">
+        @for (f of profile(); track f[0]) {
+          <div><dt>{{ f[0] }}</dt><dd class="prewrap">{{ f[1] }}</dd></div>
+        }
+      </dl>
+    </section>
+  }
+
+  <section class="card">
+    <div class="tabs" role="tablist" aria-label="User activity">
+      <button type="button" role="tab" class="tab" [class.active]="tab() === 'listings'" [attr.aria-selected]="tab() === 'listings'"
+        (click)="tab.set('listings')">Listings <span>{{ listings.total() }}</span></button>
+      <button type="button" role="tab" class="tab" [class.active]="tab() === 'purchases'" [attr.aria-selected]="tab() === 'purchases'"
+        (click)="tab.set('purchases')">Purchases <span>{{ purchases.total() }}</span></button>
+      <button type="button" role="tab" class="tab" [class.active]="tab() === 'sales'" [attr.aria-selected]="tab() === 'sales'"
+        (click)="tab.set('sales')">Sales <span>{{ sales.total() }}</span></button>
+    </div>
+
+    @switch (tab()) {
+      @case ('listings') {
+        @if (!listings.items().length) {
+          <div class="state muted">{{ listings.loading() ? 'Loading…' : 'No listings.' }}</div>
+        } @else {
+          <div class="table-wrap" [class.is-dim]="listings.loading()">
+            <table class="table table-hover">
+              <thead><tr><th>Listing</th><th>Category</th><th>Listed</th><th>Status</th><th class="num">Price</th></tr></thead>
+              <tbody>
+                @for (p of listings.items(); track p.id) {
+                  <tr class="row-link" [routerLink]="['/products', p.id]">
+                    <td><span class="cell-media"><app-thumb [path]="cover(p)" /><span class="strong">{{ p.title }}</span></span></td>
+                    <td class="muted">{{ p.category?.name || '—' }}</td>
+                    <td class="muted nowrap">{{ p.createdAt | date: 'd MMM y' }}</td>
+                    <td><app-badge [tone]="productTone(p.status)">{{ p.status }}</app-badge></td>
+                    <td class="num strong nowrap">{{ formatAmount(p.price, p.isPoints) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        <app-pager [page]="listings.page()" [limit]="listings.limit" [total]="listings.total()" (pageChange)="listings.goTo($event)" />
+      }
+      @case ('purchases') {
+        <ng-container *ngTemplateOutlet="orderRows; context: { list: purchases, empty: 'No purchases yet.' }" />
+      }
+      @case ('sales') {
+        <ng-container *ngTemplateOutlet="orderRows; context: { list: sales, empty: 'Nothing sold yet.' }" />
+      }
+    }
+  </section>
+}
+
+<ng-template #orderRows let-list="list" let-empty="empty">
+  @if (!list.items().length) {
+    <div class="state muted">{{ list.loading() ? 'Loading…' : empty }}</div>
+  } @else {
+    <div class="table-wrap" [class.is-dim]="list.loading()">
+      <table class="table">
+        <thead><tr><th>Order</th><th>Buyer</th><th>Items</th><th>Date</th><th>Status</th><th class="num">Total</th></tr></thead>
+        <tbody>
+          @for (o of list.items(); track o.id) {
+            <tr>
+              <td class="strong">#{{ o.id }}</td>
+              <td>
+                @if (o.user?.id) {
+                  <a class="link" [routerLink]="['/users', o.user.id]">{{ o.user.name || '+91 ' + o.user.mobile }}</a>
+                } @else { — }
+              </td>
+              <td class="muted">{{ o.items?.length || 0 }}</td>
+              <td class="muted nowrap">{{ o.createdAt | date: 'd MMM y' }}</td>
+              <td><app-badge [tone]="orderTone(o.status)">{{ o.status }}</app-badge></td>
+              <td class="num strong nowrap">{{ orderTotal(o) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <app-pager [page]="list.page()" [limit]="list.limit" [total]="list.total()" (pageChange)="list.goTo($event)" />
+</ng-template>

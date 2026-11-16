@@ -1,0 +1,92 @@
+<header class="page-header">
+  <div>
+    <h1>Users</h1>
+    <p class="muted">Buyers and sellers registered in the app. Admin accounts are not listed.</p>
+  </div>
+  <button type="button" class="btn btn-ghost" (click)="list.reload()" [disabled]="list.loading()">
+    <app-icon name="refresh" /> Refresh
+  </button>
+</header>
+
+<div class="toolbar">
+  <label class="search">
+    <app-icon name="search" />
+    <input type="search" placeholder="Search by name, mobile or email" [ngModel]="list.query()"
+      (ngModelChange)="list.setSearch($event)" />
+  </label>
+  <div class="chips" role="group" aria-label="Filter users">
+    <button type="button" class="chip" [class.active]="list.status() === 'all'" (click)="list.setStatus('all')">
+      All <span>{{ list.counts()['all'] || 0 }}</span>
+    </button>
+    <button type="button" class="chip" [class.active]="list.status() === 'active'" (click)="list.setStatus('active')">
+      Active <span>{{ list.counts()['active'] || 0 }}</span>
+    </button>
+    <button type="button" class="chip" [class.active]="list.status() === 'banned'" (click)="list.setStatus('banned')">
+      Banned <span>{{ list.counts()['banned'] || 0 }}</span>
+    </button>
+  </div>
+</div>
+
+@if (list.error()) {
+  <div class="alert">{{ list.error() }} <button type="button" class="link" (click)="list.reload()">Try again</button></div>
+}
+
+<section class="card" [class.is-loading]="list.loading() && list.items().length">
+  @if (list.loading() && !list.items().length) {
+    <div class="state"><span class="spinner"></span></div>
+  } @else if (!list.items().length) {
+    <div class="state muted">{{ list.unfiltered ? 'No users yet.' : 'No users match these filters.' }}</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Mobile</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th class="num">Points</th>
+            <th>Status</th>
+            <th class="num"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of list.items(); track u.id) {
+            <tr>
+              <td>
+                <span class="cell-media">
+                  <span class="avatar avatar-sm">{{ initials(u.name) }}</span>
+                  <span>
+                    <a class="strong block link-plain" [routerLink]="['/users', u.id]">{{ u.name || 'No name yet' }}</a>
+                    @if (u.email) {
+                      <small class="muted">{{ u.email }}</small>
+                    }
+                  </span>
+                </span>
+              </td>
+              <td class="nowrap">+91 {{ u.mobile }}</td>
+              <td class="muted">{{ u.role | titlecase }}</td>
+              <td class="muted nowrap">{{ u.createdAt | date: 'd MMM y' }}</td>
+              <td class="num">
+                <a class="link" [routerLink]="['/points', u.id]" title="View points history">
+                  {{ formatAmount(u.balance, true) }}
+                </a>
+              </td>
+              <td>
+                <app-badge [tone]="u.isActive ? 'success' : 'danger'">{{ u.isActive ? 'Active' : 'Banned' }}</app-badge>
+              </td>
+              <td class="num">
+                <button type="button" class="btn btn-sm" [class.btn-danger-ghost]="u.isActive"
+                  [class.btn-ghost]="!u.isActive" [disabled]="busy() === u.id" (click)="toggle(u)">
+                  <app-icon [name]="u.isActive ? 'ban' : 'check'" [size]="14" />
+                  {{ u.isActive ? 'Ban' : 'Unban' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <app-pager [page]="list.page()" [limit]="list.limit" [total]="list.total()" (pageChange)="list.goTo($event)" />
+</section>

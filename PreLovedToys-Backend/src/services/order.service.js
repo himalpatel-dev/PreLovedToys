@@ -1,184 +1,208 @@
 // services/order.service.js
 const db = require('../models');
-const { Order, OrderItem, CartItem, Product, ProductImage, User, sequelize } = db;
+const { Order, OrderItem, CartItem, Product, ProductImage, User, Wallet } = db;
 const walletService = require('./wallet.service');
+const AppError = require('../utils/app-error');
+
+const ORDER_STATUSES = ['placed', 'packed', 'shipped', 'delivered', 'cancelled'];
+
+/** Locks the given users' wallets in id order, so concurrent orders can't deadlock. */
+async function lockWallets(userIds, transaction) {
+    const ids = [...new Set(userIds.map(Number))].sort((a, b) => a - b);
+    for (const userId of ids) {
+        await Wallet.findOne({ where: { userId }, transaction, lock: transaction.LOCK.UPDATE });
+    }
+}
 
 /**
- * Create an order for a user from their cart.
- * - Uses a transaction
- * - Moves cart items to order items
- * - For points-based products: deducts from buyer wallet, credits to seller wallet
- * - Empties the cart
+ * Create an order for a user from their cart, in one transaction:
+ * - locks the listings, so two buyers can't check out the same item at the same moment
+ * - keeps points and rupee totals separate (a cart may contain both)
+ * - takes the points from the buyer and pays each seller, with wallets locked
+ * - marks the listings sold and empties the cart
+ * If anything fails, nothing is saved.
  */
 const createOrder = async (userId, address) => {
-    // Start a transaction
-    const t = await db.sequelize.transaction();
+    return db.sequelize.transaction(async (transaction) => {
+        const cartItems = await CartItem.findAll({ where: { userId }, transaction });
+        if (cartItems.length === 0) throw new AppError('Cart is empty!');
 
-    try {
-        // A. Get all items from user's cart
-        const cartItems = await CartItem.findAll({
-            where: { userId },
-            include: [{ model: Product, as: 'product' }]
+        const productIds = [...new Set(cartItems.map((item) => item.productId))];
+        const products = await Product.findAll({
+            where: { id: productIds },
+            order: [['id', 'ASC']],
+            transaction,
+            lock: transaction.LOCK.UPDATE,
         });
+        const productById = new Map(products.map((p) => [p.id, p]));
 
-        if (cartItems.length === 0) {
-            throw new Error("Cart is empty!");
-        }
+        let pointsTotal = 0;
+        let cashTotal = 0;
+        const sellerCredits = new Map(); // sellerId -> points
 
-        // B. VALIDATION: Check if any product is ALREADY sold
-        // This prevents 2 people buying the same unique item at the same time
         for (const item of cartItems) {
-            if (item.product.status !== 'active') {
-                throw new Error(`Sorry, "${item.product.title}" has just been sold to someone else!`);
+            const product = productById.get(item.productId);
+            if (!product) throw new AppError('An item in your cart is no longer available. Please remove it and try again.', 409);
+            if (product.status !== 'active') {
+                throw new AppError(`Sorry, "${product.title}" has just been sold to someone else!`, 409);
             }
-        }
-
-        // C. Calculate Total Amount and Separate Points vs Real Money
-        let totalAmount = 0;
-        let pointsToDeduct = 0;
-        const sellerCredits = {}; // { sellerId: pointsAmount }
-
-        cartItems.forEach(item => {
-            const price = parseFloat(item.product.price);
-            const quantity = item.quantity;
-            const totalPrice = price * quantity;
-
-            if (item.product.isPoints) {
-                // Points-based purchase
-                pointsToDeduct += totalPrice;
-                if (!sellerCredits[item.product.userId]) {
-                    sellerCredits[item.product.userId] = 0;
-                }
-                sellerCredits[item.product.userId] += totalPrice;
-                totalAmount += totalPrice;
+            if (product.userId === userId) {
+                throw new AppError(`"${product.title}" is your own listing, so you can't buy it.`, 400);
+            }
+            const lineTotal = Number(product.price) * item.quantity;
+            if (product.isPoints) {
+                pointsTotal += lineTotal;
+                sellerCredits.set(product.userId, (sellerCredits.get(product.userId) || 0) + lineTotal);
             } else {
-                // Real money purchase
-                totalAmount += totalPrice;
+                cashTotal += lineTotal;
             }
-        });
-
-        // D. For Points purchases: Deduct from buyer's wallet FIRST
-        if (pointsToDeduct > 0) {
-            const buyerWallet = await db.Wallet.findOne({ where: { userId } });
-            if (!buyerWallet) {
-                throw new Error("Wallet not found for buyer");
-            }
-            const currentBalance = BigInt(buyerWallet.balance);
-            const pointsToDeductBigInt = BigInt(pointsToDeduct);
-
-            if (currentBalance < pointsToDeductBigInt) {
-                throw new Error(`Insufficient points. You have ${currentBalance} points but need ${pointsToDeduct}`);
-            }
-
-            const newBalance = currentBalance - pointsToDeductBigInt;
-            await db.Wallet.update(
-                { balance: newBalance.toString() },
-                { where: { userId }, transaction: t }
-            );
-
-            // Record buyer's debit transaction
-            await db.WalletTransaction.create({
-                walletId: buyerWallet.id,
-                type: 'debit',
-                amount: pointsToDeduct,
-                balanceAfter: newBalance.toString(),
-                description: `Purchase of items - ${cartItems.map(i => i.product.title).join(', ')}`
-            }, { transaction: t });
         }
 
-        // E. Create the Order
         const order = await Order.create({
             userId,
-            totalAmount: totalAmount || 0,
             shippingAddress: address,
             status: 'placed',
-            isPoints: pointsToDeduct > 0 ?? false,
-            paymentStatus: pointsToDeduct > 0 && totalAmount === 0 ? 'paid' : 'pending' // Mark as paid if only points
-        }, { transaction: t });
+            pointsTotal,
+            cashTotal,
+            // Single amount for older clients: rupees if any, otherwise points.
+            totalAmount: cashTotal > 0 ? cashTotal : pointsTotal,
+            isPoints: cashTotal === 0 && pointsTotal > 0,
+            // Points are paid now; rupee payment is not handled yet.
+            paymentStatus: cashTotal === 0 ? 'paid' : 'pending'
+        }, { transaction });
 
+        await OrderItem.bulkCreate(cartItems.map((item) => {
+            const product = productById.get(item.productId);
+            return {
+                orderId: order.id,
+                productId: product.id,
+                quantity: item.quantity,
+                priceAtPurchase: product.price,
+                isPoints: !!product.isPoints,
+                sellerId: product.userId
+            };
+        }), { transaction });
 
-        // F. Move Cart Items to Order Items
-        const orderItemsData = cartItems.map(item => ({
-            orderId: order.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            priceAtPurchase: item.product.price
-        }));
-
-        await OrderItem.bulkCreate(orderItemsData, { transaction: t });
-
-        // G. *** CRITICAL UPDATE: MARK PRODUCTS AS SOLD ***
-        // Collect all Product IDs
-        const productIds = cartItems.map(item => item.productId);
-
-        // Update their status to 'sold'
-        await Product.update(
-            { status: 'sold' },
-            {
-                where: { id: productIds },
-                transaction: t
-            }
-        );
-
-        // H. Empty the Cart
-        await CartItem.destroy({
-            where: { userId },
-            transaction: t
-        });
-
-        // I. Credit seller wallets for points-based products
-        // Note: These are now part of the DB transaction for atomicity
-        const sellerIds = Object.keys(sellerCredits);
-        for (const sellerId of sellerIds) {
-            const points = sellerCredits[sellerId];
-            const desc = `Sale of items to user ${userId}`;
-
-            try {
-                await walletService.credit(parseInt(sellerId), points, desc, { transaction: t });
-            } catch (err) {
-                console.error(`Failed to credit seller ${sellerId}:`, err.message);
-                // Continue — don't fail the order if seller credit fails
-            }
+        if (pointsTotal > 0 || sellerCredits.size) {
+            await lockWallets([userId, ...sellerCredits.keys()], transaction);
+        }
+        if (pointsTotal > 0) {
+            // Fails with "Insufficient points" and rolls everything back if the buyer can't pay.
+            await walletService.changeBalance(userId, -pointsTotal, {
+                transaction, type: 'debit', description: `Purchase: order #${order.id}`
+            });
+        }
+        for (const [sellerId, points] of sellerCredits) {
+            await walletService.changeBalance(sellerId, points, {
+                transaction, type: 'credit', refUserId: userId, description: `Sale: order #${order.id}`
+            });
         }
 
-        // J. Commit (Save everything)
-        await t.commit();
+        await Product.update({ status: 'sold' }, { where: { id: productIds }, transaction });
+        await CartItem.destroy({ where: { userId }, transaction });
 
         return order;
-
-    } catch (error) {
-        // If anything fails, Rollback (Undo everything)
-        await t.rollback();
-        throw error;
-    }
+    });
 };
 
 /**
- * Get orders for a specific user with items and one image per product
+ * Undoes an order's effects (called inside the cancel transaction):
+ * refunds the buyer's points, takes the points back from each seller, and puts the
+ * listings back on sale. A seller who already spent the points can go below zero.
+ */
+async function reverseOrder(order, transaction) {
+    const items = await OrderItem.findAll({
+        where: { orderId: order.id },
+        include: [{ model: Product, as: 'product', attributes: ['id', 'userId', 'isPoints'] }],
+        transaction
+    });
+
+    let refund = 0;
+    const reversals = new Map(); // sellerId -> points
+    for (const item of items) {
+        // Saved at purchase; older orders fall back to the listing's current values.
+        const isPoints = item.isPoints ?? item.product?.isPoints ?? false;
+        const sellerId = item.sellerId ?? item.product?.userId ?? null;
+        if (!isPoints) continue;
+        const lineTotal = Number(item.priceAtPurchase) * item.quantity;
+        refund += lineTotal;
+        if (sellerId) reversals.set(sellerId, (reversals.get(sellerId) || 0) + lineTotal);
+    }
+
+    if (refund > 0) {
+        await lockWallets([order.userId, ...reversals.keys()], transaction);
+        await walletService.changeBalance(order.userId, refund, {
+            transaction, type: 'credit', description: `Refund: order #${order.id} cancelled`
+        });
+        for (const [sellerId, points] of reversals) {
+            await walletService.changeBalance(sellerId, -points, {
+                transaction, type: 'debit', allowNegative: true, refUserId: order.userId,
+                description: `Reversal: order #${order.id} cancelled`
+            });
+        }
+    }
+
+    const productIds = items.map((item) => item.productId).filter(Boolean);
+    const [listingsRestored] = productIds.length
+        ? await Product.update({ status: 'active' }, { where: { id: productIds, status: 'sold' }, transaction })
+        : [0];
+
+    return { pointsRefunded: refund, sellersCharged: reversals.size, listingsRestored };
+}
+
+/**
+ * Changes an order's status. Cancelling refunds points and restores the listings (see
+ * reverseOrder). A cancelled order is final. Returns { order, reversal } or null if not found.
+ */
+const updateOrderStatus = async (orderId, status) => {
+    if (!ORDER_STATUSES.includes(status)) throw new AppError('Invalid status value');
+    const id = Number(orderId);
+    if (!Number.isInteger(id) || id < 1) return null;
+
+    return db.sequelize.transaction(async (transaction) => {
+        const order = await Order.findByPk(id, { transaction, lock: transaction.LOCK.UPDATE });
+        if (!order) return null;
+        if (order.status === status) return { order, reversal: null };
+        if (order.status === 'cancelled') {
+            throw new AppError('This order is cancelled and can no longer be changed.', 409);
+        }
+
+        let reversal = null;
+        if (status === 'cancelled') {
+            reversal = await reverseOrder(order, transaction);
+            order.cancelledAt = new Date();
+        }
+        order.status = status;
+        await order.save({ transaction });
+        return { order, reversal };
+    });
+};
+
+/** Items with their listing and photos (cover first). */
+const itemsInclude = () => ({
+    model: OrderItem,
+    as: 'items',
+    separate: true,
+    include: [{
+        model: Product,
+        as: 'product',
+        include: [{
+            model: ProductImage,
+            as: 'images',
+            attributes: ['id', 'imageUrl', 'isPrimary', 'sortOrder'],
+            separate: true,
+            order: [['sortOrder', 'ASC'], ['id', 'ASC']],
+        }],
+    }],
+});
+
+/**
+ * Get orders for a specific user with items and their photos
  */
 const getUserOrders = async (userId) => {
     return Order.findAll({
         where: { userId },
-        include: [
-            {
-                model: OrderItem,
-                as: 'items',
-                include: [
-                    {
-                        model: Product,
-                        as: 'product',
-                        include: [
-                            {
-                                model: ProductImage,
-                                as: 'images',
-                                attributes: ['imageUrl'],
-                                limit: 1,
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
+        include: [itemsInclude()],
         order: [['createdAt', 'DESC']],
     });
 };
@@ -189,47 +213,15 @@ const getUserOrders = async (userId) => {
 const getAllOrdersAdmin = async () => {
     return Order.findAll({
         include: [
-            {
-                model: User,
-                as: 'user',
-                attributes: ['id', 'name', 'mobile', 'email'],
-            },
-            {
-                model: OrderItem,
-                as: 'items',
-                include: [
-                    {
-                        model: Product,
-                        as: 'product',
-                        include: [
-                            {
-                                model: ProductImage,
-                                as: 'images',
-                                attributes: ['imageUrl'],
-                                limit: 1,
-                            },
-                        ],
-                    },
-                ],
-            },
+            { model: User, as: 'user', attributes: ['id', 'name', 'mobile', 'email'] },
+            itemsInclude(),
         ],
         order: [['createdAt', 'DESC']],
     });
 };
 
-/**
- * Update status of an order
- * returns updated order or null if not found
- */
-const updateOrderStatus = async (orderId, status) => {
-    const order = await Order.findByPk(orderId);
-    if (!order) return null;
-    order.status = status;
-    await order.save();
-    return order;
-};
-
 module.exports = {
+    ORDER_STATUSES,
     createOrder,
     getUserOrders,
     getAllOrdersAdmin,

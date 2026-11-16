@@ -1,0 +1,117 @@
+<app-modal title="Edit listing" [wide]="true" (closed)="close()">
+  @if (loadError()) {
+    <div class="alert">{{ loadError() }}</div>
+  }
+  @let f = form();
+  @let m = masters();
+  <form id="product-edit-form" class="form" (ngSubmit)="save()">
+    <label class="field">
+      <span class="label">Title</span>
+      <input class="input" name="title" maxlength="255" [ngModel]="f.title" (ngModelChange)="patch({ title: $event })" required />
+      @if (!f.title.trim()) {
+        <p class="field-error">A title is required.</p>
+      }
+    </label>
+
+    <label class="field">
+      <span class="label">Description</span>
+      <textarea class="input textarea" name="description" rows="4" maxlength="5000" [ngModel]="f.description"
+        (ngModelChange)="patch({ description: $event })" required></textarea>
+      @if (!f.description.trim()) {
+        <p class="field-error">A description is required.</p>
+      }
+    </label>
+
+    <div class="form-row">
+      <label class="field">
+        <span class="label">Price</span>
+        <input class="input" name="price" inputmode="numeric" [ngModel]="f.price" (ngModelChange)="patch({ price: $event })" />
+        @if (!priceValid()) {
+          <p class="field-error">Use a whole number, 0 or more.</p>
+        }
+      </label>
+      <label class="field">
+        <span class="label">Priced in</span>
+        <select class="select" name="isPoints" [ngModel]="f.isPoints" (ngModelChange)="patch({ isPoints: $event })">
+          <option [ngValue]="true">Points</option>
+          <option [ngValue]="false">Rupees (₹)</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">Condition</span>
+        <select class="select" name="condition" [ngModel]="f.condition" (ngModelChange)="patch({ condition: $event })">
+          @for (c of conditions; track c) {
+            <option [ngValue]="c">{{ c }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="form-row form-row-2">
+      <label class="field">
+        <span class="label">Category</span>
+        <select class="select" name="categoryId" [ngModel]="f.categoryId" (ngModelChange)="setCategory($event)" [disabled]="!m">
+          <option [ngValue]="null" disabled>Choose a category</option>
+          @for (c of m?.categories; track c.id) {
+            <option [ngValue]="c.id">{{ c.name }}{{ c.isActive === false ? ' (hidden)' : '' }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">Sub-category</span>
+        <select class="select" name="subCategoryId" [ngModel]="f.subCategoryId" (ngModelChange)="patch({ subCategoryId: $event })"
+          [disabled]="!m || !subcategories().length">
+          <option [ngValue]="null">None</option>
+          @for (s of subcategories(); track s.id) {
+            <option [ngValue]="s.id">{{ s.name }}{{ s.isActive === false ? ' (hidden)' : '' }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="form-row form-row-4">
+      <label class="field">
+        <span class="label">Age group</span>
+        <select class="select" name="ageGroupId" [ngModel]="f.ageGroupId" (ngModelChange)="patch({ ageGroupId: $event })" [disabled]="!m">
+          <option [ngValue]="null">Not set</option>
+          @for (o of m?.ageGroups; track o.id) {
+            <option [ngValue]="o.id">{{ o.name }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">Gender</span>
+        <select class="select" name="genderId" [ngModel]="f.genderId" (ngModelChange)="patch({ genderId: $event })" [disabled]="!m">
+          <option [ngValue]="null">Not set</option>
+          @for (o of m?.genders; track o.id) {
+            <option [ngValue]="o.id">{{ o.name }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">Color</span>
+        <select class="select" name="colorId" [ngModel]="f.colorId" (ngModelChange)="patch({ colorId: $event })" [disabled]="!m">
+          <option [ngValue]="null">Not set</option>
+          @for (o of m?.colors; track o.id) {
+            <option [ngValue]="o.id">{{ o.name }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">Material</span>
+        <select class="select" name="materialId" [ngModel]="f.materialId" (ngModelChange)="patch({ materialId: $event })" [disabled]="!m">
+          <option [ngValue]="null">Not set</option>
+          @for (o of m?.materials; track o.id) {
+            <option [ngValue]="o.id">{{ o.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </form>
+  <div modal-footer>
+    <button type="button" class="btn btn-ghost" (click)="close()" [disabled]="saving()">Cancel</button>
+    <button type="submit" form="product-edit-form" class="btn btn-primary" [disabled]="!canSave()">
+      {{ saving() ? 'Saving…' : 'Save changes' }}
+    </button>
+  </div>
+</app-modal>

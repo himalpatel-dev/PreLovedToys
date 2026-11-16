@@ -1,0 +1,109 @@
+<header class="page-header">
+  <div>
+    <h1>Orders</h1>
+    <p class="muted">Track every order and move it through packing, shipping and delivery.</p>
+  </div>
+  <button type="button" class="btn btn-ghost" (click)="list.reload()" [disabled]="list.loading()">
+    <app-icon name="refresh" /> Refresh
+  </button>
+</header>
+
+<div class="toolbar">
+  <label class="search">
+    <app-icon name="search" />
+    <input type="search" placeholder="Search by order #, customer or mobile" [ngModel]="list.query()"
+      (ngModelChange)="list.setSearch($event)" />
+  </label>
+  <div class="chips" role="group" aria-label="Filter by status">
+    <button type="button" class="chip" [class.active]="list.status() === 'all'" (click)="list.setStatus('all')">
+      All <span>{{ list.counts()['all'] || 0 }}</span>
+    </button>
+    @for (s of statuses; track s) {
+      <button type="button" class="chip" [class.active]="list.status() === s" (click)="list.setStatus(s)">
+        {{ s | titlecase }} <span>{{ list.counts()[s] || 0 }}</span>
+      </button>
+    }
+  </div>
+</div>
+
+@if (list.error()) {
+  <div class="alert">{{ list.error() }} <button type="button" class="link" (click)="list.reload()">Try again</button></div>
+}
+
+<section class="card" [class.is-loading]="list.loading() && list.items().length">
+  @if (list.loading() && !list.items().length) {
+    <div class="state"><span class="spinner"></span></div>
+  } @else if (!list.items().length) {
+    <div class="state muted">{{ list.unfiltered ? 'No orders yet.' : 'No orders match these filters.' }}</div>
+  } @else {
+    <ul class="order-list">
+      @for (o of list.items(); track o.id) {
+        <li class="order" [class.open]="expanded() === o.id">
+          <div class="order-row">
+            <button type="button" class="order-summary" (click)="toggle(o.id)" [attr.aria-expanded]="expanded() === o.id">
+              <app-icon name="chevron" class="order-caret" [size]="16" />
+              <span class="order-id">#{{ o.id }}</span>
+              <span class="order-customer">
+                <strong>{{ o.user?.name || 'Unnamed customer' }}</strong>
+                <small class="muted">{{ o.user?.mobile ? '+91 ' + o.user?.mobile : '' }}</small>
+              </span>
+              <span class="order-date muted">{{ o.createdAt | date: 'd MMM y, h:mm a' }}</span>
+              <span class="order-items muted">{{ o.items?.length || 0 }} item{{ o.items?.length === 1 ? '' : 's' }}</span>
+              <span class="order-amount strong">{{ orderTotal(o) }}</span>
+            </button>
+            <div class="order-status">
+              <app-badge [tone]="orderTone(o.status)">{{ o.status }}</app-badge>
+              <select #sel class="select select-sm" [value]="o.status" [disabled]="updating() === o.id || o.status === 'cancelled'"
+                (change)="changeStatus(o, sel)" aria-label="Change order status"
+                [title]="o.status === 'cancelled' ? 'Cancelled orders can’t be changed' : ''">
+                @for (s of statuses; track s) {
+                  <option [value]="s">{{ s | titlecase }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          @if (expanded() === o.id) {
+            <div class="order-detail">
+              <div class="order-meta">
+                <div>
+                  <span class="label">Ship to</span>
+                  <p>{{ o.shippingAddress || 'No address on file' }}</p>
+                </div>
+                <div>
+                  <span class="label">Payment</span>
+                  <p>{{ payment(o) }} · {{ (o.paymentStatus || 'pending') | titlecase }}</p>
+                </div>
+                @if (o.cancelledAt) {
+                  <div>
+                    <span class="label">Cancelled</span>
+                    <p>{{ o.cancelledAt | date: 'd MMM y, h:mm a' }} · points refunded, items relisted</p>
+                  </div>
+                }
+                @if (o.user?.email) {
+                  <div>
+                    <span class="label">Email</span>
+                    <p>{{ o.user?.email }}</p>
+                  </div>
+                }
+              </div>
+              <ul class="line-items">
+                @for (item of o.items; track item.id) {
+                  <li>
+                    <app-thumb [path]="item.product?.images?.[0]?.imageUrl" />
+                    <span class="grow">{{ item.product?.title || 'Product removed' }}</span>
+                    <span class="muted">× {{ item.quantity }}</span>
+                    @if (item.priceAtPurchase != null) {
+                      <span class="strong">{{ formatAmount(item.priceAtPurchase, item.isPoints ?? item.product?.isPoints ?? o.isPoints) }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+  <app-pager [page]="list.page()" [limit]="list.limit" [total]="list.total()" (pageChange)="list.goTo($event)" />
+</section>

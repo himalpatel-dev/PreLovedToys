@@ -29,6 +29,12 @@ const ProductImage = sequelize.define('ProductImage', {
     isPrimary: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    // Display order (0 = cover photo). The first image is also marked isPrimary.
+    sortOrder: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
     }
 }, {
     tableName: 'tbl_product_images',

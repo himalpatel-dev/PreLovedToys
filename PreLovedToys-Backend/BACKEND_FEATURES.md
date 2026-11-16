@@ -85,6 +85,56 @@ This document summarizes what the backend (PreLovedToys-Backend) currently provi
   - Controllers rely on `verifyToken` middleware to authenticate. Admin-only routes should explicitly check roles or have a role-check middleware.
 
 
+## Orders, points and listings: current behaviour
+
+- **Checkout** (`POST /api/orders`) runs in one transaction. The listings and wallets
+  involved are locked, so two buyers can't buy the same item and a wallet can't be
+  spent twice at the same moment. Points and rupee items are totalled separately
+  (`pointsTotal`, `cashTotal`); `totalAmount` is kept for older clients (the rupee total
+  if any, otherwise the points total). Each order item saves `isPoints` and `sellerId`.
+  Buying your own listing is refused.
+- **Cancelling** (`PUT /api/admin/orders/:id/status` with `cancelled`) refunds the
+  buyer's points, takes the points back from each seller (a seller who already spent
+  them can go below zero), and puts the listings back on sale. Cancelled orders are final.
+  Rupee payment is not handled yet.
+- **Banned users** (`isActive = false`) can't request or verify an OTP, and any token they
+  hold is refused at once (`403`, `code: ACCOUNT_BLOCKED`): `verifyToken` loads the account
+  on every request.
+- **Points rules** (welcome bonus, profile-completion points, point-based sales needed
+  before rupee listings) are stored in `tbl_settings`, edited in the admin portal, and
+  readable by the app at `GET /api/users/points-rules`. Defaults are the old values.
+- **Hidden catalogue entries**: categories and sub-categories with `isActive = false`
+  are left out of `/api/master/*` lists, and their listings are left out of the app's
+  product lists. Deleting a category, sub-category or attribute that is still in use is
+  refused (`409`) with a message; hide it instead.
+
+## App product endpoints
+
+- `GET /api/products`: active listings. Filters: `search`, `categoryId`,
+  `subCategoryId`, `ageGroupId`, `genderId`, `colorId`, `materialId`, `isPoints`,
+  `minPrice`, `maxPrice`, `sort` (`newest`, `oldest`, `price_asc`, `price_desc`). Without
+  `page`/`limit` it returns an array (as before); with them it returns
+  `{ data, total, page, limit, hasMore }`.
+- `GET /api/products/sub-category/:subCategoryId`, `GET /api/products/other-listings`
+  (everyone's but mine): same filters and paging.
+- `GET /api/products/sell-eligibility`: `{ canSellCash, message, completedPointsSales, requiredSales }`.
+- `PUT /api/products/:id`: the owner edits a listing (title, description, price,
+  isPoints, condition, category, sub-category, age group, gender, color, material, and
+  optionally `images` to replace all photos in order). Sold listings can't be edited.
+- Product images include `id` and `sortOrder`; the first image is the cover (`isPrimary`).
+
+## Admin API (`/api/admin`, admin accounts only)
+
+`stats?range=7d|30d|90d|12m`, `products` (+ `sellerId`), `PUT/DELETE products/:id`,
+`products/:id/images` (add, `order`, delete), `orders` (+ `userId`, `sellerId`),
+`PUT orders/:id/status`, `users`, `users/:id`, `wallets`, `wallets/:userId`,
+`POST wallets/:userId/adjust`, `categories`, `categories/:id/visibility`,
+`subcategories/:id/visibility`, `settings`. Lists take `page`, `limit`, `search`,
+`status` and return `{ items, total, page, limit, counts }`.
+
+To give existing categories and sub-categories the bundled icons, run
+`npm run images:apply` (see `migrations/apply_catalog_images.js`).
+
 ## Where to look in the codebase
 - `server.js` — main entry, route registration, DB sync
 - `src/controllers/` — controllers for auth, product, cart, order, master, user

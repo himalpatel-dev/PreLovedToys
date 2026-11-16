@@ -1,0 +1,79 @@
+<header class="page-header">
+  <div>
+    <h1>Points rules</h1>
+    <p class="muted">How many points people earn, and when sellers can start listing for rupees. Changes apply from now on; nothing already given is changed.</p>
+  </div>
+</header>
+
+@if (error()) {
+  <div class="alert">{{ error() }} <button type="button" class="link" (click)="load()">Try again</button></div>
+}
+
+@if (loading()) {
+  <div class="state"><span class="spinner"></span></div>
+} @else if (form(); as f) {
+  <form class="settings" (ngSubmit)="save()">
+    <section class="card card-pad">
+      <h2 class="card-title">New accounts</h2>
+      <label class="field field-inline">
+        <span>
+          <span class="strong block">Welcome bonus</span>
+          <small class="muted">Points every new account gets when it signs up.</small>
+        </span>
+        <span class="input-suffix">
+          <input class="input" name="welcomeBonus" inputmode="numeric" [ngModel]="f.welcomeBonus"
+            (ngModelChange)="setTop('welcomeBonus', $event)" [class.invalid]="!isValid(f.welcomeBonus, 100000)" />
+          <span>pts</span>
+        </span>
+      </label>
+      @if (!isValid(f.welcomeBonus, 100000)) {
+        <p class="field-error">Use a whole number from 0 to 1,00,000.</p>
+      }
+    </section>
+
+    <section class="card card-pad">
+      <h2 class="card-title">Selling for rupees</h2>
+      <label class="field field-inline">
+        <span>
+          <span class="strong block">Point-based sales needed</span>
+          <small class="muted">A seller must complete this many sales for points before they can list items for rupees. 0 lets everyone list for rupees.</small>
+        </span>
+        <span class="input-suffix">
+          <input class="input" name="cashUnlockSales" inputmode="numeric" [ngModel]="f.cashUnlockSales"
+            (ngModelChange)="setTop('cashUnlockSales', $event)" [class.invalid]="!isValid(f.cashUnlockSales, 100)" />
+          <span>sales</span>
+        </span>
+      </label>
+      @if (!isValid(f.cashUnlockSales, 100)) {
+        <p class="field-error">Use a whole number from 0 to 100.</p>
+      }
+    </section>
+
+    <section class="card card-pad">
+      <h2 class="card-title">Completing the profile</h2>
+      <p class="muted small">Points for filling in each profile field for the first time. A full profile earns {{ formatAmount(profileTotal(), true) }}.</p>
+      <div class="points-fields">
+        @for (field of fields; track field.key) {
+          <label class="field field-inline">
+            <span class="strong">{{ field.label }}</span>
+            <span class="input-suffix">
+              <input class="input" [name]="'pp-' + field.key" inputmode="numeric" [ngModel]="f.profilePoints[field.key]"
+                (ngModelChange)="setField(field.key, $event)" [class.invalid]="!isValid(f.profilePoints[field.key], 10000)" />
+              <span>pts</span>
+            </span>
+          </label>
+        }
+      </div>
+    </section>
+
+    <div class="settings-actions">
+      <p class="muted small">
+        Note: the app's profile screen still shows its own built-in numbers until it is updated to read these rules.
+      </p>
+      <button type="button" class="btn btn-ghost" (click)="reset()" [disabled]="!dirty() || saving()">Undo changes</button>
+      <button type="submit" class="btn btn-primary" [disabled]="!dirty() || !valid() || saving()">
+        {{ saving() ? 'Saving…' : 'Save rules' }}
+      </button>
+    </div>
+  </form>
+}

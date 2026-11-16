@@ -1,4 +1,6 @@
 const db = require('../models');
+const AppError = require('../utils/app-error');
+const Product = db.Product;
 const Category = db.Category;
 const SubCategory = db.SubCategory;
 const AgeGroup = db.AgeGroup;
@@ -6,8 +8,22 @@ const Color = db.Color;
 const Gender = db.Gender;
 const Material = db.Material;
 
+/**
+ * Refuses to delete a catalogue entry that is still in use, so listings never end up
+ * pointing at nothing. `uses` is a list of [count, singular, plural?] entries.
+ */
+function assertUnused(name, uses, hint) {
+    const parts = uses
+        .filter(([n]) => n > 0)
+        .map(([n, one, many]) => `${n} ${n === 1 ? one : many || `${one}s`}`);
+    if (parts.length) {
+        throw new AppError(`Can't delete “${name}”: it is still used by ${parts.join(' and ')}. ${hint}`, 409);
+    }
+}
+
 // ==========================================
 // 1. CATEGORY SERVICES
+// (The app only sees active entries; the admin portal lists all via /api/admin.)
 // ==========================================
 
 const createCategory = async (data) => {
@@ -18,13 +34,16 @@ const createCategory = async (data) => {
 
 const getAllCategories = async () => {
     return await Category.findAll({
+        where: { isActive: true },
         order: [['name', 'ASC']],
     });
 };
 
 const getAllCategoriesWithSubCategories = async () => {
     return await Category.findAll({
-        include: [{ model: SubCategory, as: 'subcategories' }]
+        where: { isActive: true },
+        include: [{ model: SubCategory, as: 'subcategories', where: { isActive: true }, required: false }],
+        order: [['name', 'ASC'], [{ model: SubCategory, as: 'subcategories' }, 'name', 'ASC']],
     });
 };
 
@@ -46,6 +65,13 @@ const deleteCategory = async (id) => {
     const category = await Category.findByPk(id);
     if (!category) return null;
 
+    const [subs, listings] = await Promise.all([
+        SubCategory.count({ where: { categoryId: category.id } }),
+        Product.count({ where: { categoryId: category.id } }),
+    ]);
+    assertUnused(category.name, [[subs, 'sub-category', 'sub-categories'], [listings, 'listing']],
+        'Hide it instead, or move or delete those first.');
+
     await category.destroy();
     return category;
 };
@@ -66,11 +92,16 @@ const createSubCategory = async (data) => {
 };
 
 const getAllSubCategories = async () => {
-    return await SubCategory.findAll({ include: ['category'] });
+    return await SubCategory.findAll({
+        where: { isActive: true },
+        // required: only subs whose parent category is visible too
+        include: [{ model: Category, as: 'category', where: { isActive: true }, required: true }],
+        order: [['name', 'ASC']],
+    });
 };
 
 const getSubCategoriesByCategoryId = async (categoryId) => {
-    const whereClause = {};
+    const whereClause = { isActive: true };
     if (categoryId) {
         whereClause.categoryId = categoryId;
     }
@@ -92,6 +123,9 @@ const updateSubCategory = async (id, data) => {
 const deleteSubCategory = async (id) => {
     const subCategory = await SubCategory.findByPk(id);
     if (!subCategory) return null;
+
+    const listings = await Product.count({ where: { subCategoryId: subCategory.id } });
+    assertUnused(subCategory.name, [[listings, 'listing']], 'Hide it instead, or move those listings first.');
 
     await subCategory.destroy();
     return subCategory;
@@ -121,7 +155,16 @@ const updateAgeGroup = async (id, data) => {
     return ageGroup;
 };
 
+/** Simple masters (age group, color, gender, material) can't be deleted while listings use them. */
+async function assertMasterUnused(Model, field, id) {
+    const row = await Model.findByPk(id, { attributes: ['id', 'name'] });
+    if (!row) return;
+    const listings = await Product.count({ where: { [field]: row.id } });
+    assertUnused(row.name, [[listings, 'listing']], 'Change those listings first.');
+}
+
 const deleteAgeGroup = async (id) => {
+    await assertMasterUnused(AgeGroup, 'ageGroupId', id);
     const deleted = await AgeGroup.destroy({ where: { id } });
     return deleted > 0;
 };
@@ -151,6 +194,7 @@ const updateColor = async (id, data) => {
 };
 
 const deleteColor = async (id) => {
+    await assertMasterUnused(Color, 'colorId', id);
     const deleted = await Color.destroy({ where: { id } });
     return deleted > 0;
 };
@@ -180,6 +224,7 @@ const updateGender = async (id, data) => {
 };
 
 const deleteGender = async (id) => {
+    await assertMasterUnused(Gender, 'genderId', id);
     const deleted = await Gender.destroy({ where: { id } });
     return deleted > 0;
 };
@@ -209,6 +254,7 @@ const updateMaterial = async (id, data) => {
 };
 
 const deleteMaterial = async (id) => {
+    await assertMasterUnused(Material, 'materialId', id);
     const deleted = await Material.destroy({ where: { id } });
     return deleted > 0;
 };

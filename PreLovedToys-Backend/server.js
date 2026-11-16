@@ -21,6 +21,7 @@ const statsRoutes = require('./src/routes/stats.routes');
 const walletRoutes = require('./src/routes/wallet.routes');
 const favoriteRoutes = require('./src/routes/favorite.routes');
 const savedAddressRoutes = require('./src/routes/savedaddress.routes');
+const adminRoutes = require('./src/routes/admin.routes');
 
 // 2. USE ROUTES
 app.use('/api/auth', authRoutes);
@@ -34,6 +35,7 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/addresses', savedAddressRoutes);
+app.use('/api/admin', adminRoutes); // admin portal only (token + admin role)
 
 // Test Route
 app.get('/', (req, res) => {

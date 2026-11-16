@@ -1,0 +1,92 @@
+<header class="page-header">
+  <div>
+    <h1>{{ config.title }}</h1>
+    <p class="muted">Options sellers pick from when they list a toy.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="open()">
+    <app-icon name="plus" /> Add {{ config.singular }}
+  </button>
+</header>
+
+<div class="toolbar">
+  <label class="search">
+    <app-icon name="search" />
+    <input type="search" [placeholder]="'Search ' + config.title.toLowerCase()" [ngModel]="query()"
+      (ngModelChange)="query.set($event)" />
+  </label>
+</div>
+
+@if (error()) {
+  <div class="alert">{{ error() }} <button type="button" class="link" (click)="load()">Try again</button></div>
+}
+
+<section class="card">
+  @if (loading()) {
+    <div class="state"><span class="spinner"></span></div>
+  } @else if (!filtered().length) {
+    <div class="state muted">
+      @if (items().length) {
+        Nothing matches “{{ query() }}”.
+      } @else {
+        <p>No {{ config.title.toLowerCase() }} yet.</p>
+        <button type="button" class="btn btn-primary" (click)="open()"><app-icon name="plus" /> Add the first one</button>
+      }
+    </div>
+  } @else {
+    <ul class="master-list">
+      @for (item of filtered(); track item.id) {
+        <li>
+          @if (config.hasHex) {
+            <span class="swatch swatch-lg" [style.background]="item.hexCode || 'transparent'"></span>
+          }
+          <span class="grow">
+            <span class="strong">{{ item.name }}</span>
+            @if (config.hasHex && item.hexCode) {
+              <small class="muted mono">{{ item.hexCode }}</small>
+            }
+          </span>
+          <span class="row-actions">
+            <button type="button" class="icon-btn" (click)="open(item)" [attr.aria-label]="'Edit ' + item.name">
+              <app-icon name="edit" [size]="16" />
+            </button>
+            <button type="button" class="icon-btn icon-btn-danger" (click)="remove(item)" [attr.aria-label]="'Delete ' + item.name">
+              <app-icon name="trash" [size]="16" />
+            </button>
+          </span>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+@if (form(); as f) {
+  <app-modal [title]="(f.id ? 'Edit ' : 'Add ') + config.singular" (closed)="close()">
+    <form id="master-form" class="form" (ngSubmit)="save()">
+      <label class="field">
+        <span class="label">Name</span>
+        <input class="input" name="name" [ngModel]="f.name" (ngModelChange)="patch({ name: $event })"
+          [placeholder]="config.placeholder" required />
+      </label>
+      @if (config.hasHex) {
+        <div class="field">
+          <span class="label">Color</span>
+          <div class="color-field">
+            <input type="color" class="color-input" name="hexPicker" aria-label="Pick a color"
+              [ngModel]="validHex(f.hexCode) ? f.hexCode : '#000000'" (ngModelChange)="patch({ hexCode: $event })" />
+            <input class="input mono" name="hexCode" [ngModel]="f.hexCode" (ngModelChange)="patch({ hexCode: $event })"
+              placeholder="#FF0000" maxlength="7" />
+          </div>
+          @if (f.hexCode && !validHex(f.hexCode)) {
+            <p class="field-error">Use a 6-digit hex code like #FF0000.</p>
+          }
+        </div>
+      }
+    </form>
+    <div modal-footer>
+      <button type="button" class="btn btn-ghost" (click)="close()" [disabled]="saving()">Cancel</button>
+      <button type="submit" form="master-form" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : f.id ? 'Save changes' : 'Add ' + config.singular }}
+      </button>
+    </div>
+  </app-modal>
+}

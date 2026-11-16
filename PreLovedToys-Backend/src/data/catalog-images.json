@@ -1,0 +1,156 @@
+{
+  "_about": "Category and subcategory icons (files in uploads/catalog). Used by seed-masters.js and migrations/apply_catalog_images.js. Icons: Microsoft Fluent Emoji 3D, MIT licensed (uploads/catalog/LICENSE-fluentui-emoji.txt).",
+  "categories": {
+    "Activity Games & Toys": "/uploads/catalog/cat-activity-games-and-toys.png",
+    "Art & Craft": "/uploads/catalog/cat-art-and-craft.png",
+    "Block Games": "/uploads/catalog/cat-block-games.png",
+    "Board Games": "/uploads/catalog/cat-board-games.png",
+    "Educational Toys & Games": "/uploads/catalog/cat-educational-toys-and-games.png",
+    "Electronic Toys": "/uploads/catalog/cat-electronic-toys.png",
+    "Gun": "/uploads/catalog/cat-gun.png",
+    "Musical Toys": "/uploads/catalog/cat-musical-toys.png",
+    "Others": "/uploads/catalog/cat-others.png",
+    "Push & Pull Toys": "/uploads/catalog/cat-push-and-pull-toys.png",
+    "Puzzles": "/uploads/catalog/cat-puzzles.png",
+    "Riders": "/uploads/catalog/cat-riders.png",
+    "Sports": "/uploads/catalog/cat-sports.png"
+  },
+  "subcategories": {
+    "Activity Games & Toys": {
+      "Ball Pool": "/uploads/catalog/sub-activity-games-and-toys-ball-pool.png",
+      "Bladders": "/uploads/catalog/sub-activity-games-and-toys-bladders.png",
+      "Flying Disk": "/uploads/catalog/sub-activity-games-and-toys-flying-disk.png",
+      "Hoopla Ring": "/uploads/catalog/sub-activity-games-and-toys-hoopla-ring.png",
+      "Hopscotch": "/uploads/catalog/sub-activity-games-and-toys-hopscotch.png",
+      "Magic Game": "/uploads/catalog/sub-activity-games-and-toys-magic-game.png",
+      "Other Activity Game": "/uploads/catalog/sub-activity-games-and-toys-other-activity-game.png",
+      "Play Gym": "/uploads/catalog/sub-activity-games-and-toys-play-gym.png",
+      "Play Tent House": "/uploads/catalog/sub-activity-games-and-toys-play-tent-house.png",
+      "Rings Toys": "/uploads/catalog/sub-activity-games-and-toys-rings-toys.png",
+      "Ringtoss": "/uploads/catalog/sub-activity-games-and-toys-ringtoss.png",
+      "Rolling Fun": "/uploads/catalog/sub-activity-games-and-toys-rolling-fun.png",
+      "Spinner": "/uploads/catalog/sub-activity-games-and-toys-spinner.png",
+      "Target & Aim Games": "/uploads/catalog/sub-activity-games-and-toys-target-and-aim-games.png",
+      "Teddy Ring": "/uploads/catalog/sub-activity-games-and-toys-teddy-ring.png"
+    },
+    "Art & Craft": {
+      "Clay Toys": "/uploads/catalog/sub-art-and-craft-clay-toys.png",
+      "Jewellery Making Games": "/uploads/catalog/sub-art-and-craft-jewellery-making-games.png",
+      "Others": "/uploads/catalog/sub-art-and-craft-others.png",
+      "Quilling Games": "/uploads/catalog/sub-art-and-craft-quilling-games.png",
+      "Scratching/ Colouring Games": "/uploads/catalog/sub-art-and-craft-scratching-colouring-games.png"
+    },
+    "Block Games": {
+      "Activity Blocks": "/uploads/catalog/sub-block-games-activity-blocks.png",
+      "Building Blocks": "/uploads/catalog/sub-block-games-building-blocks.png",
+      "Magnetic Blocks": "/uploads/catalog/sub-block-games-magnetic-blocks.png",
+      "Stick Blocks": "/uploads/catalog/sub-block-games-stick-blocks.png"
+    },
+    "Board Games": {
+      "Adventure Games": "/uploads/catalog/sub-board-games-adventure-games.png",
+      "Business": "/uploads/catalog/sub-board-games-business.png",
+      "Carrom": "/uploads/catalog/sub-board-games-carrom.png",
+      "Chess": "/uploads/catalog/sub-board-games-chess.png",
+      "Chinese Checker": "/uploads/catalog/sub-board-games-chinese-checker.png",
+      "Combos": "/uploads/catalog/sub-board-games-combos.png",
+      "D-Dart": "/uploads/catalog/sub-board-games-d-dart.png",
+      "Educational Board": "/uploads/catalog/sub-board-games-educational-board.png",
+      "Housie": "/uploads/catalog/sub-board-games-housie.png",
+      "Ludo & Snakes": "/uploads/catalog/sub-board-games-ludo-and-snakes.png",
+      "Monopoly": "/uploads/catalog/sub-board-games-monopoly.png",
+      "Tic Tac Toe": "/uploads/catalog/sub-board-games-tic-tac-toe.png",
+      "Wooden Board Games": "/uploads/catalog/sub-board-games-wooden-board-games.png",
+      "Word Games": "/uploads/catalog/sub-board-games-word-games.png"
+    },
+    "Educational Toys & Games": {
+      "Abacus": "/uploads/catalog/sub-educational-toys-and-games-abacus.png",
+      "Brainvita": "/uploads/catalog/sub-educational-toys-and-games-brainvita.png",
+      "Educational Numbers & Alphabets": "/uploads/catalog/sub-educational-toys-and-games-educational-numbers-and-alphabets.png",
+      "Educational Shapes": "/uploads/catalog/sub-educational-toys-and-games-educational-shapes.png",
+      "Flash Cards": "/uploads/catalog/sub-educational-toys-and-games-flash-cards.png",
+      "Magnetic Shapes & Colours": "/uploads/catalog/sub-educational-toys-and-games-magnetic-shapes-and-colours.png",
+      "Mechanical Games": "/uploads/catalog/sub-educational-toys-and-games-mechanical-games.png",
+      "Memory Games": "/uploads/catalog/sub-educational-toys-and-games-memory-games.png",
+      "Preschool Toys": "/uploads/catalog/sub-educational-toys-and-games-preschool-toys.png",
+      "Science Games": "/uploads/catalog/sub-educational-toys-and-games-science-games.png"
+    },
+    "Electronic Toys": {
+      "Electronic Educational Toys": "/uploads/catalog/sub-electronic-toys-electronic-educational-toys.png",
+      "Electronic Gun": "/uploads/catalog/sub-electronic-toys-electronic-gun.png",
+      "Electronic Musical Toys": "/uploads/catalog/sub-electronic-toys-electronic-musical-toys.png",
+      "Other Electronic Toys": "/uploads/catalog/sub-electronic-toys-other-electronic-toys.png"
+    },
+    "Gun": {
+      "Air Pressure": "/uploads/catalog/sub-gun-air-pressure.png",
+      "Bullet": "/uploads/catalog/sub-gun-bullet.png",
+      "Musical": "/uploads/catalog/sub-gun-musical.png"
+    },
+    "Musical Toys": {
+      "Jhoomer": "/uploads/catalog/sub-musical-toys-jhoomer.png",
+      "Musical Animals": "/uploads/catalog/sub-musical-toys-musical-animals.png",
+      "Musical Drum": "/uploads/catalog/sub-musical-toys-musical-drum.png",
+      "Musical Instrument Toys": "/uploads/catalog/sub-musical-toys-musical-instrument-toys.png",
+      "Musical Vehicles": "/uploads/catalog/sub-musical-toys-musical-vehicles.png",
+      "Rattles": "/uploads/catalog/sub-musical-toys-rattles.png",
+      "Roly Poly": "/uploads/catalog/sub-musical-toys-roly-poly.png",
+      "Xylophone": "/uploads/catalog/sub-musical-toys-xylophone.png"
+    },
+    "Others": {
+      "Activity Toys": "/uploads/catalog/sub-others-activity-toys.png",
+      "Almirah": "/uploads/catalog/sub-others-almirah.png",
+      "Baby Suitcase": "/uploads/catalog/sub-others-baby-suitcase.png",
+      "Beauty Set": "/uploads/catalog/sub-others-beauty-set.png",
+      "Cube": "/uploads/catalog/sub-others-cube.png",
+      "Cup Stackers": "/uploads/catalog/sub-others-cup-stackers.png",
+      "Doctor Set": "/uploads/catalog/sub-others-doctor-set.png",
+      "Dolls": "/uploads/catalog/sub-others-dolls.png",
+      "Kitchen Set": "/uploads/catalog/sub-others-kitchen-set.png",
+      "Pen Stand": "/uploads/catalog/sub-others-pen-stand.png",
+      "Piggy Bank": "/uploads/catalog/sub-others-piggy-bank.png",
+      "Teether": "/uploads/catalog/sub-others-teether.png",
+      "Warrior Fighter Set": "/uploads/catalog/sub-others-warrior-fighter-set.png"
+    },
+    "Push & Pull Toys": {
+      "Ambulance": "/uploads/catalog/sub-push-and-pull-toys-ambulance.png",
+      "Animals": "/uploads/catalog/sub-push-and-pull-toys-animals.png",
+      "Auto Rikshaw": "/uploads/catalog/sub-push-and-pull-toys-auto-rikshaw.png",
+      "Bike": "/uploads/catalog/sub-push-and-pull-toys-bike.png",
+      "Boats & Ships": "/uploads/catalog/sub-push-and-pull-toys-boats-and-ships.png",
+      "Bus": "/uploads/catalog/sub-push-and-pull-toys-bus.png",
+      "Cars": "/uploads/catalog/sub-push-and-pull-toys-cars.png",
+      "Fire Brigade": "/uploads/catalog/sub-push-and-pull-toys-fire-brigade.png",
+      "Friction Toys": "/uploads/catalog/sub-push-and-pull-toys-friction-toys.png",
+      "Helicopter": "/uploads/catalog/sub-push-and-pull-toys-helicopter.png",
+      "Jeep": "/uploads/catalog/sub-push-and-pull-toys-jeep.png",
+      "Plane": "/uploads/catalog/sub-push-and-pull-toys-plane.png",
+      "Pull Along Toys": "/uploads/catalog/sub-push-and-pull-toys-pull-along-toys.png",
+      "Push & Go Toys": "/uploads/catalog/sub-push-and-pull-toys-push-and-go-toys.png",
+      "Tractor": "/uploads/catalog/sub-push-and-pull-toys-tractor.png",
+      "Trains": "/uploads/catalog/sub-push-and-pull-toys-trains.png",
+      "Trucks & Dumpers": "/uploads/catalog/sub-push-and-pull-toys-trucks-and-dumpers.png"
+    },
+    "Puzzles": {
+      "Animal & Bird": "/uploads/catalog/sub-puzzles-animal-and-bird.png",
+      "Educational": "/uploads/catalog/sub-puzzles-educational.png",
+      "Fruit & Vegetable": "/uploads/catalog/sub-puzzles-fruit-and-vegetable.png",
+      "Fun Puzzle Games": "/uploads/catalog/sub-puzzles-fun-puzzle-games.png",
+      "Story": "/uploads/catalog/sub-puzzles-story.png",
+      "Transport": "/uploads/catalog/sub-puzzles-transport.png"
+    },
+    "Riders": {
+      "Ride On Cars": "/uploads/catalog/sub-riders-ride-on-cars.png",
+      "Rockers": "/uploads/catalog/sub-riders-rockers.png",
+      "Tricycle": "/uploads/catalog/sub-riders-tricycle.png"
+    },
+    "Sports": {
+      "Basket Ball": "/uploads/catalog/sub-sports-basket-ball.png",
+      "Bow & Arrow": "/uploads/catalog/sub-sports-bow-and-arrow.png",
+      "Bowling Games": "/uploads/catalog/sub-sports-bowling-games.png",
+      "Challenge Sports": "/uploads/catalog/sub-sports-challenge-sports.png",
+      "Cricket Sets": "/uploads/catalog/sub-sports-cricket-sets.png",
+      "Golf Set": "/uploads/catalog/sub-sports-golf-set.png",
+      "Hockey": "/uploads/catalog/sub-sports-hockey.png",
+      "Table Tennis": "/uploads/catalog/sub-sports-table-tennis.png"
+    }
+  }
+}

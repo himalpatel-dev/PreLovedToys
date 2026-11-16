@@ -1,4 +1,5 @@
 const db = require('../models');
+const AppError = require('../utils/app-error');
 
 const sequelize = db.sequelize;
 
@@ -29,92 +30,82 @@ async function getHistory(userId, { limit = 50, offset = 0 } = {}) {
     return { wallet, transactions };
 }
 
-async function credit(userId, amount, description = null, opts = {}) {
-    if (amount <= 0) throw new Error('Amount must be positive');
+/**
+ * The one place balances change. Adds `delta` points (negative removes them) and records
+ * a transaction row.
+ *
+ * The wallet row is locked (SELECT ... FOR UPDATE) for the rest of the transaction, so two
+ * changes to the same wallet at the same moment run one after the other instead of both
+ * reading the old balance. Pass options.transaction to join an existing transaction.
+ *
+ * options: { transaction, type, description, refUserId, allowNegative }
+ * allowNegative lets a reversal (e.g. taking back a seller's points after a cancelled
+ * order) go below zero instead of failing.
+ */
+async function changeBalance(userId, delta, options = {}) {
+    const amount = Number(delta);
+    if (!Number.isInteger(amount) || amount === 0) throw new AppError('Points amount must be a whole number other than 0.');
 
-    const executeCredit = async (t) => {
-        const tOptions = { transaction: t };
-        const wallet = await getOrCreateWallet(userId, tOptions);
-        const newBalance = BigInt(wallet.balance) + BigInt(amount);
-        await wallet.update({ balance: newBalance.toString() }, tOptions);
+    const run = async (transaction) => {
+        let wallet = await Wallet.findOne({ where: { userId }, transaction, lock: transaction.LOCK.UPDATE });
+        if (!wallet) wallet = await Wallet.create({ userId, balance: 0 }, { transaction });
+
+        const current = BigInt(wallet.balance);
+        const next = current + BigInt(amount);
+        if (next < 0n && !options.allowNegative) {
+            throw new AppError(`Insufficient points. You have ${current} points but need ${-amount}.`, 400, 'INSUFFICIENT_POINTS');
+        }
+
+        await wallet.update({ balance: next.toString() }, { transaction });
         const tx = await WalletTransaction.create({
             walletId: wallet.id,
-            type: 'credit',
-            amount,
-            balanceAfter: newBalance,
-            description
-        }, tOptions);
+            type: options.type || (amount > 0 ? 'credit' : 'debit'),
+            amount: Math.abs(amount),
+            balanceAfter: next.toString(),
+            refUserId: options.refUserId || null,
+            description: options.description ? String(options.description).slice(0, 255) : null
+        }, { transaction });
 
-        return { wallet, tx };
+        return { wallet, tx, balance: next.toString() };
     };
 
-    if (opts && opts.transaction) {
-        return executeCredit(opts.transaction);
-    }
+    return options.transaction ? run(options.transaction) : sequelize.transaction(run);
+}
 
-    return await sequelize.transaction(executeCredit);
+async function credit(userId, amount, description = null, opts = {}) {
+    if (amount <= 0) throw new AppError('Amount must be positive');
+    return changeBalance(userId, amount, { transaction: opts.transaction, type: 'credit', description });
 }
 
 async function debit(userId, amount, description = null, opts = {}) {
-    if (amount <= 0) throw new Error('Amount must be positive');
-
-    return await sequelize.transaction(async (t) => {
-        const tOptions = { transaction: t };
-        const wallet = await getOrCreateWallet(userId, tOptions);
-        const curBalance = BigInt(wallet.balance);
-        const amt = BigInt(amount);
-        if (curBalance < amt) throw new Error('Insufficient balance');
-        const newBalance = curBalance - amt;
-        await wallet.update({ balance: newBalance.toString() }, tOptions);
-        const tx = await WalletTransaction.create({
-            walletId: wallet.id,
-            type: 'debit',
-            amount,
-            balanceAfter: newBalance.toString(),
-            description
-        }, tOptions);
-        return { wallet, tx };
-    });
+    if (amount <= 0) throw new AppError('Amount must be positive');
+    return changeBalance(userId, -amount, { transaction: opts.transaction, type: 'debit', description });
 }
 
-async function transfer(fromUserId, toUserId, amount, description = null) {
-    if (fromUserId === toUserId) throw new Error('Cannot transfer to same user');
-    if (amount <= 0) throw new Error('Amount must be positive');
+async function transfer(fromUserIdRaw, toUserIdRaw, amount, description = null) {
+    const fromUserId = Number(fromUserIdRaw);
+    const toUserId = Number(toUserIdRaw);
+    if (fromUserId === toUserId) throw new AppError('Cannot transfer to same user');
+    if (amount <= 0) throw new AppError('Amount must be positive');
 
-    return await sequelize.transaction(async (t) => {
-        const tOptions = { transaction: t };
-        const fromWallet = await getOrCreateWallet(fromUserId, tOptions);
-        const toWallet = await getOrCreateWallet(toUserId, tOptions);
-
-        const fromBalance = BigInt(fromWallet.balance);
-        const amt = BigInt(amount);
-        if (fromBalance < amt) throw new Error('Insufficient balance');
-
-        const newFrom = fromBalance - amt;
-        const newTo = BigInt(toWallet.balance) + amt;
-
-        await fromWallet.update({ balance: newFrom.toString() }, tOptions);
-        await toWallet.update({ balance: newTo.toString() }, tOptions);
-
-        const txFrom = await WalletTransaction.create({
-            walletId: fromWallet.id,
-            type: 'transfer',
-            amount,
-            balanceAfter: newFrom.toString(),
-            refUserId: toUserId,
-            description: description || `Transfer to user ${toUserId}`
-        }, tOptions);
-
-        const txTo = await WalletTransaction.create({
-            walletId: toWallet.id,
-            type: 'transfer',
-            amount,
-            balanceAfter: newTo.toString(),
-            refUserId: fromUserId,
-            description: description || `Transfer from user ${fromUserId}`
-        }, tOptions);
-
-        return { fromWallet, toWallet, txFrom, txTo };
+    return await sequelize.transaction(async (transaction) => {
+        // Lock both wallets in a fixed order (lower user id first) so two opposite
+        // transfers can't deadlock each other.
+        const first = Math.min(fromUserId, toUserId);
+        const steps = {
+            [fromUserId]: () => changeBalance(fromUserId, -amount, {
+                transaction, type: 'transfer', refUserId: toUserId,
+                description: description || `Transfer to user ${toUserId}`
+            }),
+            [toUserId]: () => changeBalance(toUserId, amount, {
+                transaction, type: 'transfer', refUserId: fromUserId,
+                description: description || `Transfer from user ${fromUserId}`
+            })
+        };
+        const a = await steps[first]();
+        const b = await steps[first === fromUserId ? toUserId : fromUserId]();
+        const [from, to] = first === fromUserId ? [a, b] : [b, a];
+        return { fromWallet: from.wallet, toWallet: to.wallet, txFrom: from.tx, txTo: to.tx };
     });
 }
 
@@ -122,6 +113,7 @@ module.exports = {
     getOrCreateWallet,
     getBalance,
     getHistory,
+    changeBalance,
     credit,
     debit,
     transfer

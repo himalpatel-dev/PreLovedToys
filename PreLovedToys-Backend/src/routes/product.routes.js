@@ -5,25 +5,22 @@ const verifyToken = require('../middlewares/auth.middleware');
 
 router.use(verifyToken); // Protect all routes
 
-// 1. Specific Routes MUST be at the top
+// 1. Specific routes MUST come before "/:id", which would otherwise capture them.
 router.post('/', productController.addProduct);
-router.get('/my-listings', productController.getMyListings); // <--- MOVE THIS HERE
-router.get('/sales-count/points', productController.getPointsSalesCount); // Get completed points-based sales count
+router.get('/my-listings', productController.getMyListings);
+router.get('/sell-eligibility', productController.getSellEligibility);
+router.get('/sales-count/points', productController.getPointsSalesCount); // older name, same data
+router.get('/other-listings', productController.getOtherListings);
+router.get('/sub-category/:subCategoryId', productController.getProductsBySubCategory);
+router.get('/admin/all', productController.getAllProductsAdmin);
 
-// 2. General "Get All" route
+// 2. Browse / search active listings (array, or paged with ?page=&limit=)
 router.get('/', productController.getProducts);
 
-// 3. Variable ID Routes MUST be at the bottom
-// Because this acts like a wildcard, it will try to capture "my-listings" if placed above.
+// 3. Single listing
 router.get('/:id', productController.getProductById);
-
-// 4. Delete route (also uses ID)
+router.put('/:id', productController.updateListing); // owner edits their listing
 router.delete('/:id', productController.deleteListing);
-
-// PUT /api/products/:id/status
 router.put('/:id/status', productController.updateStatus);
-
-// ADMIN ROUTES
-router.get('/admin/all', productController.getAllProductsAdmin);
 
 module.exports = router;

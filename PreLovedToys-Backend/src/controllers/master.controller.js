@@ -12,7 +12,7 @@ const createCategory = async (req, res) => {
         const category = await masterService.createCategory({ name, image });
         res.status(201).json(category);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -21,7 +21,7 @@ const getAllCategories = async (req, res) => {
         const categories = await masterService.getAllCategories();
         res.status(200).json(categories);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -30,7 +30,7 @@ const getAllCategoriesWithSubCategories = async (req, res) => {
         const categories = await masterService.getAllCategoriesWithSubCategories();
         res.status(200).json(categories);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -40,7 +40,7 @@ const getCategoryById = async (req, res) => {
         if (!category) return res.status(404).json({ message: "Category not found" });
         res.status(200).json(category);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -52,7 +52,7 @@ const updateCategory = async (req, res) => {
 
         res.status(200).json({ message: "Category updated", category });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -63,7 +63,7 @@ const deleteCategory = async (req, res) => {
 
         res.status(200).json({ message: "Category deleted" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -77,7 +77,7 @@ const createSubCategory = async (req, res) => {
         const sub = await masterService.createSubCategory({ name, categoryId, image });
         res.status(201).json(sub);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -86,7 +86,7 @@ const getAllSubCategories = async (req, res) => {
         const data = await masterService.getAllSubCategories();
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -96,7 +96,7 @@ const getSubCategoryById = async (req, res) => {
         if (!sub) return res.status(404).json({ message: "SubCategory not found" });
         res.status(200).json(sub);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -108,7 +108,7 @@ const updateSubCategory = async (req, res) => {
 
         res.status(200).json({ message: "SubCategory updated", sub });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -119,7 +119,7 @@ const deleteSubCategory = async (req, res) => {
 
         res.status(200).json({ message: "SubCategory deleted" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -132,7 +132,7 @@ const createAgeGroup = async (req, res) => {
         const item = await masterService.createAgeGroup(req.body);
         res.status(201).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -141,7 +141,7 @@ const getAllAgeGroups = async (req, res) => {
         const data = await masterService.getAllAgeGroups();
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -151,7 +151,7 @@ const getAgeGroupById = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -161,7 +161,7 @@ const updateAgeGroup = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -171,7 +171,7 @@ const deleteAgeGroup = async (req, res) => {
         if (!deleted) return res.status(404).json({ message: "Not found" });
         res.status(200).json({ message: "Deleted" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -184,7 +184,7 @@ const createColor = async (req, res) => {
         const item = await masterService.createColor(req.body);
         res.status(201).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -193,7 +193,7 @@ const getAllColors = async (req, res) => {
         const data = await masterService.getAllColors();
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -203,7 +203,7 @@ const getColorById = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -213,7 +213,7 @@ const updateColor = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -223,7 +223,7 @@ const deleteColor = async (req, res) => {
         if (!deleted) return res.status(404).json({ message: "Not found" });
         res.status(200).json({ message: "Deleted" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -236,7 +236,7 @@ const createGender = async (req, res) => {
         const item = await masterService.createGender(req.body);
         res.status(201).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -245,7 +245,7 @@ const getAllGenders = async (req, res) => {
         const data = await masterService.getAllGenders();
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -255,7 +255,7 @@ const getGenderById = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -265,7 +265,7 @@ const updateGender = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -275,7 +275,7 @@ const deleteGender = async (req, res) => {
         if (!deleted) return res.status(404).json({ message: "Not found" });
         res.status(200).json({ message: "Deleted" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -288,7 +288,7 @@ const createMaterial = async (req, res) => {
         const item = await masterService.createMaterial(req.body);
         res.status(201).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -297,7 +297,7 @@ const getAllMaterials = async (req, res) => {
         const data = await masterService.getAllMaterials();
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -307,7 +307,7 @@ const getMaterialById = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -317,7 +317,7 @@ const updateMaterial = async (req, res) => {
         if (!item) return res.status(404).json({ message: "Not found" });
         res.status(200).json(item);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -327,7 +327,7 @@ const deleteMaterial = async (req, res) => {
         if (!deleted) return res.status(404).json({ message: "Not found" });
         res.status(200).json({ message: "Deleted" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 

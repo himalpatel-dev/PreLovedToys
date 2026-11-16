@@ -14,6 +14,15 @@ const OrderItem = sequelize.define('OrderItem', {
     priceAtPurchase: {
         type: DataTypes.BIGINT, // Important: We save the price AT THAT MOMENT
         allowNull: false
+    },
+    // Also saved at purchase time, so refunds stay correct even if the listing is edited later.
+    isPoints: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true
+    },
+    sellerId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     }
     // orderId and productId added automatically
 }, {

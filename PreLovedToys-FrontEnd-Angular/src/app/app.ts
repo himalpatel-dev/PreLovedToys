@@ -1,12 +1,15 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { UiService } from './core/services/ui';
+import { IconComponent } from './shared/icon';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, IconComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  host: { '(document:keydown.escape)': 'ui.closeConfirm(false)' },
 })
 export class App {
-  protected readonly title = signal('PreLovedToys-FrontEnd-Angular');
+  protected readonly ui = inject(UiService);
 }

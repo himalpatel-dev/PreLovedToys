@@ -1,3 +1,4 @@
+@use "sass:color";
 // Variables
 $primary-color: #2F4B4E; // Dark Teal
 $secondary-color: #A5B3B4; // Gray Green
@@ -76,7 +77,7 @@ $gray-light: #f5f7fa;
     .logo-container {
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, $primary-color, darken($primary-color, 10%));
+        background: linear-gradient(135deg, $primary-color, color.adjust($primary-color, $lightness: -10%));
         border-radius: 24px;
         display: flex;
         align-items: center;
@@ -104,7 +105,7 @@ $gray-light: #f5f7fa;
     }
 
     p {
-        color: darken($secondary-color, 20%);
+        color: color.adjust($secondary-color, $lightness: -20%);
         font-size: 14px;
         font-weight: 500;
         margin: 0;
@@ -149,7 +150,7 @@ $gray-light: #f5f7fa;
                 outline: none;
 
                 &::placeholder {
-                    color: darken($secondary-color, 10%);
+                    color: color.adjust($secondary-color, $lightness: -10%);
                     font-weight: 500;
                 }
 
@@ -182,7 +183,7 @@ $gray-light: #f5f7fa;
         &:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 15px 30px rgba($primary-color, 0.3);
-            background: lighten($primary-color, 5%);
+            background: color.adjust($primary-color, $lightness: 5%);
         }
 
         &:active:not(:disabled) {
@@ -207,7 +208,7 @@ $gray-light: #f5f7fa;
     .terms-text {
         text-align: center;
         font-size: 12px;
-        color: darken($secondary-color, 20%);
+        color: color.adjust($secondary-color, $lightness: -20%);
         line-height: 1.5;
 
         a {
