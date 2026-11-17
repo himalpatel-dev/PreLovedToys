@@ -1,10 +1,23 @@
-import 'dart:async'; // Required for Timer
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:preloved_toys/widgets/custom_loader.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../utils/app_colors.dart';
 import '../providers/auth_provider.dart';
-import '../utils/flutter_shapes.dart';
+import '../utils/app_colors.dart';
+import '../utils/error_message.dart';
+import '../widgets/auth_layout.dart';
+import '../widgets/custom_loader.dart';
+
+/// Number of digits in the code.
+const int _codeLength = 4;
+
+/// Width and height of each code box.
+const double _boxSize = 48;
+
+/// Seconds before a new code can be requested.
+const int _resendAfter = 20;
 
 class OtpScreen extends StatefulWidget {
   final String mobile;
@@ -16,383 +29,336 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  // --- OTP STATE ---
-  final List<TextEditingController> _controllers = List.generate(
-    4,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final TextEditingController _code = TextEditingController();
+  final FocusNode _codeFocus = FocusNode();
+  late final TapGestureRecognizer _resendTap;
 
-  // --- TIMER STATE ---
   Timer? _timer;
-  int _start = 30; // 30 seconds countdown
-  bool _isResendEnabled = false;
+  int _secondsLeft = _resendAfter;
+  bool _verifying = false;
+  bool _resending = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    startTimer(); // Start timer as soon as screen loads
+    _resendTap = TapGestureRecognizer()..onTap = _resend;
+    _codeFocus.addListener(() => setState(() {}));
+    _startTimer();
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // STOP timer when leaving screen to prevent crashes
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
+    _timer?.cancel();
+    _code.dispose();
+    _codeFocus.dispose();
+    _resendTap.dispose();
     super.dispose();
   }
 
-  // Timer Logic
-  void startTimer() {
-    setState(() {
-      _isResendEnabled = false;
-      _start = 20;
-    });
+  bool get _complete => _code.text.length == _codeLength;
 
+  /// "9876543210" -> "98765 43210", with a no-break space so it never splits across lines.
+  String get _prettyMobile {
+    final m = widget.mobile;
+    return m.length == 10 ? '${m.substring(0, 5)} ${m.substring(5)}' : m;
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _secondsLeft = _resendAfter;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_start == 0) {
-        setState(() {
-          _isResendEnabled = true; // Enable button
-          timer.cancel();
-        });
-      } else {
-        setState(() {
-          _start--;
-        });
-      }
+      if (_secondsLeft <= 1) timer.cancel();
+      setState(() => _secondsLeft--);
     });
   }
 
-  // Format 00:09 etc.
-  String get timerText {
-    return "00:${_start.toString().padLeft(2, '0')}";
-  }
-
-  // Resend Logic
-  void _handleResend() async {
-    try {
-      await Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).sendOtp(widget.mobile);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP Resent Successfully!')),
-        );
-        startTimer(); // Restart the 30s counter
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-      }
-    }
-  }
-
-  void _handleVerify() async {
-    String otp = _controllers.map((c) => c.text).join();
-
-    if (otp.length != 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a 4-digit OTP')),
-      );
+  Future<void> _verify() async {
+    if (_verifying) return;
+    if (!_complete) {
+      setState(() => _error = 'Enter all $_codeLength digits');
+      _codeFocus.requestFocus();
       return;
     }
 
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _verifying = true;
+      _error = null;
+    });
     try {
-      await Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).verifyOtp(widget.mobile, otp);
-
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
+      await context.read<AuthProvider>().verifyOtp(widget.mobile, _code.text);
+      if (!mounted) return;
+      // Clear the login screens so Back doesn't return to them.
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-      }
+      if (!mounted) return;
+      setState(() {
+        _verifying = false;
+        _error = friendlyError(e);
+      });
     }
   }
 
-  void _onOtpChanged(String value, int index) {
-    if (value.length == 1 && index < 3) {
-      _focusNodes[index + 1].requestFocus();
-    }
-    if (value.isEmpty && index > 0) {
-      _focusNodes[index - 1].requestFocus();
+  Future<void> _resend() async {
+    if (_secondsLeft > 0 || _resending || _verifying) return;
+    setState(() {
+      _resending = true;
+      _error = null;
+    });
+    try {
+      final response = await context.read<AuthProvider>().sendOtp(widget.mobile);
+      if (!mounted) return;
+      _code.clear();
+      _startTimer();
+      // The development backend returns the code; show it only in debug builds.
+      final debugCode = kDebugMode && response is Map ? response['otp'] : null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(debugCode == null ? 'We sent you a new code' : 'New code sent. Debug build: your code is $debugCode'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (mounted) setState(() => _error = friendlyError(e));
+    } finally {
+      if (mounted) setState(() => _resending = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isLoading = Provider.of<AuthProvider>(context).isLoading;
+    final error = _error;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // --- BACKGROUND LAYER ---
-          Positioned(
-            top: -80,
-            left: -70,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(180),
-                shape: BoxShape.circle,
+    return AuthLayout(
+      cardTarget: 260,
+      overlay: _verifying
+          ? ColoredBox(
+              color: Colors.white.withValues(alpha: 0.88),
+              child: const Center(child: BouncingDiceLoader(color: AppColors.primary)),
+            )
+          : null,
+      cardChildren: (s) => [
+        const Spacer(flex: 3),
+        Text(
+          'Verification',
+          style: TextStyle(fontSize: 20 * s, fontWeight: FontWeight.w800, color: AppColors.textDark),
+        ),
+        SizedBox(height: 4 * s),
+        const Spacer(flex: 1),
+        Text.rich(
+          TextSpan(
+            style: TextStyle(fontSize: 13 * s, height: 1.4, color: AppColors.textLight),
+            children: [
+              // ‑ is a non-breaking hyphen, so "4-digit" never splits across lines.
+              const TextSpan(text: 'Enter the 4‑digit code sent to '),
+              TextSpan(
+                text: _prettyMobile,
+                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark),
               ),
-            ),
-          ),
-          Positioned(
-            top: size.height * 0.52,
-            right: -30,
-            child: CustomPaint(
-              size: const Size(130, 130),
-              painter: BallPainter(
-                color: AppColors.primary.withAlpha(150),
-                stripeColor: AppColors.primary.withAlpha(80),
-              ),
-            ),
-          ),
-          Positioned(
-            top: size.height * 0.89,
-            right: -40,
-            child: CustomPaint(
-              size: const Size(120, 120),
-              painter: StarPainter(AppColors.primary.withAlpha(218)),
-            ),
-          ),
-          Positioned(
-            top: size.height * 0.08,
-            right: -20,
-            child: Transform.rotate(
-              angle: 5.9,
-              child: CustomPaint(
-                size: const Size(120, 130),
-                painter: TeddyPainter(
-                  bodyColor: AppColors.primary.withAlpha(218),
-                  eyeColor: AppColors.primary,
-                  noseColor: AppColors.primary.withAlpha(118),
+              // Word joiner: keeps the edit button on the same line as the number.
+              const TextSpan(text: '⁠'),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 6 * s),
+                  child: _buildEditButton(s),
                 ),
               ),
-            ),
+            ],
           ),
-          Positioned(
-            top: size.height * 0.55,
-            left: -10,
-            child: Transform.rotate(
-              angle: 0.3,
-              child: CustomPaint(
-                size: const Size(120, 130),
-                painter: GiftBoxPainter(
-                  boxColor: AppColors.light.withAlpha(188),
-                  ribbonColor: AppColors.primary,
-                ),
-              ),
-            ),
-          ),
+        ),
+        const Spacer(flex: 2),
+        _buildCodeField(hasError: error != null, s: s),
+        if (error != null) AuthErrorText(error, scale: s),
+        const Spacer(flex: 3),
+        AuthButton(
+          label: 'Verify & Login',
+          busyLabel: 'Verifying…',
+          icon: Icons.check_rounded,
+          ready: _complete,
+          busy: _verifying,
+          onPressed: _verify,
+          scale: s,
+        ),
+        SizedBox(height: 10 * s),
+        const Spacer(flex: 1),
+        _buildResendRow(s),
+        const Spacer(flex: 2),
+      ],
+    );
+  }
 
-          // --- CONTENT LAYER ---
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0,
-                          vertical: 24.0,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const SizedBox(height: 60),
+  static const TextStyle _linkStyle = TextStyle(
+    color: AppColors.primary,
+    fontWeight: FontWeight.w700,
+    decoration: TextDecoration.underline,
+  );
 
-                            // Title & Mobile Section
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Verification',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Enter the 4-digit code sent to',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: AppColors.textLight,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '+91 ${widget.mobile}',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textDark,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    InkWell(
-                                      onTap: () => Navigator.pop(context),
-                                      child: const Text(
-                                        "Change",
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.bold,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+  Widget _buildResendRow(double s) {
+    final base = TextStyle(fontSize: 11.5 * s, color: AppColors.textLight);
+    final InlineSpan action;
+    if (_resending) {
+      action = const TextSpan(text: 'Sending…');
+    } else if (_secondsLeft > 0) {
+      action = TextSpan(
+        text: 'Resend in 00:${_secondsLeft.toString().padLeft(2, '0')}',
+        style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
+      );
+    } else {
+      action = TextSpan(text: 'Resend OTP', style: _linkStyle, recognizer: _resendTap);
+    }
+    return Text.rich(
+      TextSpan(style: base, children: [const TextSpan(text: "Didn't receive the code? "), action]),
+      textAlign: TextAlign.center,
+    );
+  }
 
-                            const Spacer(),
+  /// Small pencil next to the number; goes back to the login screen to change it.
+  Widget _buildEditButton(double s) {
+    return Semantics(
+      button: true,
+      label: 'Change number',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => Navigator.of(context).maybePop(),
+        child: Container(
+          padding: EdgeInsets.all(5 * s),
+          decoration: BoxDecoration(color: AppColors.primary.withAlpha(22), shape: BoxShape.circle),
+          child: Icon(Icons.edit_rounded, size: 14 * s, color: AppColors.primary),
+        ),
+      ),
+    );
+  }
 
-                            // --- 4 OTP UNDERSCORES ---
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: List.generate(4, (index) {
-                                return SizedBox(
-                                  width: 50,
-                                  child: TextField(
-                                    controller: _controllers[index],
-                                    focusNode: _focusNodes[index],
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    maxLength: 1,
-                                    cursorColor: AppColors.primary,
-                                    onChanged: (value) =>
-                                        _onOtpChanged(value, index),
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textDark,
-                                    ),
-                                    decoration: InputDecoration(
-                                      counterText: "",
-                                      filled: false,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
-                                      enabledBorder: const UnderlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: AppColors.medium,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      focusedBorder: const UnderlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: AppColors.primary,
-                                          width: 3,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
+  /// Four boxes showing the code. Typing goes into one invisible text field laid over
+  /// them, so paste, backspace and SMS autofill all work like a normal field.
+  Widget _buildCodeField({required bool hasError, required double s}) {
+    final focused = _codeFocus.hasFocus;
+    final code = _code.text;
 
-                            const SizedBox(height: 30),
-
-                            // Verify Button
-                            SizedBox(
-                              height: 55,
-                              child: ElevatedButton(
-                                onPressed: _handleVerify,
-                                child: const Text(
-                                  'Verify & Login',
-                                  style: TextStyle(fontSize: 18),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            // --- RESEND OTP SECTION (FIXED HEIGHT) ---
-                            // Wrapping this in SizedBox(height: 50) stops the UI from jumping
-                            SizedBox(
-                              height: 40,
-                              child: Center(
-                                child: _isResendEnabled
-                                    ? TextButton(
-                                        onPressed: _handleResend,
-                                        child: const Text(
-                                          "Resend OTP",
-                                          style: TextStyle(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      )
-                                    : RichText(
-                                        text: TextSpan(
-                                          text: "Resend code in ",
-                                          style: const TextStyle(
-                                            color: AppColors.textLight,
-                                            fontSize: 14,
-                                          ),
-                                          children: [
-                                            TextSpan(
-                                              text: timerText,
-                                              style: const TextStyle(
-                                                color: AppColors.primary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+    return GestureDetector(
+      onTap: () => _codeFocus.requestFocus(),
+      child: SizedBox(
+        height: _boxSize * s,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0,
+                alwaysIncludeSemantics: true,
+                child: TextField(
+                  controller: _code,
+                  focusNode: _codeFocus,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.oneTimeCode],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(_codeLength),
+                  ],
+                  showCursor: false,
+                  enableInteractiveSelection: false,
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    counterText: '',
                   ),
-                );
-              },
-            ),
-          ),
-          if (isLoading)
-            // Use AbsorbPointer to block interactions with underlying widgets.
-            AbsorbPointer(
-              absorbing: true,
-              child: Container(
-                // cover entire screen
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.black.withOpacity(0.25),
-                child: const Center(child: BouncingDiceLoader()),
+                  onChanged: (_) => setState(() => _error = null),
+                  onSubmitted: (_) => _verify(),
+                ),
               ),
             ),
-        ],
+            IgnorePointer(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < _codeLength; i++) ...[
+                    if (i > 0) SizedBox(width: 14 * s),
+                    _buildBox(i, code, focused, hasError, s),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Colours follow the mobile field on the login screen: grey when empty, white with
+  /// a teal border for the box being typed into, a light teal tint once filled, red on error.
+  Widget _buildBox(int i, String code, bool focused, bool hasError, double s) {
+    final digit = i < code.length ? code[i] : '';
+    final filled = digit.isNotEmpty;
+    // The box the next digit goes into (the last box once the code is complete).
+    final active = focused && i == (code.length < _codeLength ? code.length : _codeLength - 1);
+
+    final Color fill;
+    final Color border;
+    var borderWidth = 1.2;
+    if (hasError) {
+      fill = Colors.red.shade50;
+      border = Colors.red.shade300;
+    } else if (active) {
+      fill = Colors.white;
+      border = AppColors.primary;
+      borderWidth = 1.8;
+    } else if (filled) {
+      fill = AppColors.primary.withAlpha(24);
+      border = AppColors.primary.withAlpha(150);
+    } else {
+      fill = const Color(0xFFF6F7F7);
+      border = AppColors.light;
+    }
+
+    final Widget content;
+    if (filled) {
+      content = Text(
+        digit,
+        key: ValueKey('$i:$digit'),
+        style: TextStyle(
+          fontSize: 20 * s,
+          fontWeight: FontWeight.w700,
+          color: hasError ? Colors.red.shade700 : AppColors.primary,
+        ),
+      );
+    } else if (active) {
+      // A small caret marks where the next digit goes.
+      content = Container(
+        key: const ValueKey('caret'),
+        width: 2,
+        height: 18 * s,
+        decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(1)),
+      );
+    } else {
+      content = const SizedBox.shrink(key: ValueKey('empty'));
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      width: _boxSize * s,
+      height: _boxSize * s,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border, width: borderWidth),
+        boxShadow: active && !hasError
+            ? [BoxShadow(color: AppColors.primary.withAlpha(40), blurRadius: 10, offset: const Offset(0, 3))]
+            : null,
+      ),
+      // Each digit pops in as it's typed.
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 160),
+        transitionBuilder: (child, animation) => ScaleTransition(
+          scale: Tween(begin: 0.6, end: 1.0).animate(animation),
+          child: FadeTransition(opacity: animation, child: child),
+        ),
+        child: content,
       ),
     );
   }

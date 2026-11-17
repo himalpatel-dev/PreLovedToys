@@ -94,7 +94,10 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      await logout();
+      // Only forget the session when the server rejects it (expired token, deleted or
+      // banned account). If the server just can't be reached, keep it for next time.
+      final rejected = RegExp(r'Error: (401|403|404) ').hasMatch(e.toString());
+      if (rejected) await logout();
       return false;
     }
   }

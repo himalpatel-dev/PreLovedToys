@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/category_provider.dart';
+import 'screens/auth_gate.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'utils/app_colors.dart';
@@ -102,8 +103,12 @@ class MyApp extends StatelessWidget {
         },
 
         // --- THE FIX ENDS HERE ---
-        home: const LoginScreen(),
-        routes: {'/home': (ctx) => const MainScreen()},
+        // Opens straight into the app when a saved session is still valid.
+        home: const AuthGate(),
+        routes: {
+          '/home': (ctx) => const MainScreen(),
+          '/login': (ctx) => const LoginScreen(),
+        },
       ),
     );
   }
